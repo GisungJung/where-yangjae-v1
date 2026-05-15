@@ -1,99 +1,382 @@
 /**
- * 양재어디가 — Supabase DB 타입 (수동 stub).
+ * 양재어디가 — Supabase DB 타입.
  *
- * TODO(원격 적용 후):
- *   `npx supabase login` → `npx supabase gen types typescript --project-id hkmtclkeuscfvmtvnzwn --schema public > src/types/database.ts`
- *   로 자동 생성된 타입으로 교체. 새 객체(rating_photos·restaurant_stats 변경·
- *   ratings_rate_limit 트리거 등)는 자동 반영된다.
+ * 본 파일은 원격 스키마를 기준으로 `supabase gen types typescript`(또는 MCP)
+ * 결과를 그대로 채택한다. 단, 아래 마이그레이션이 아직 원격에 적용되지 않은
+ * 상태이므로 수동으로 보강된 항목이 있다:
+ *   - 20260515000002_rating_photos_and_storage.sql → `rating_photos` 테이블 수동 추가
  *
- * 마이그레이션 산출물과 동기 상태를 유지: 도메인 Zod 타입을 재사용하여 컴파일 타임
- * 컨트랙트만 맞춰둔다.
+ * 원격 재생성 시점에 보강분이 자동 생성 결과에 흡수되면 수동 블록을 제거하면 된다.
  */
 
-import type {
-  Rating,
-  RatingPhoto,
-  Restaurant,
-  RestaurantStats,
-  Reviewer,
-} from './domain'
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
+  __InternalSupabase: {
+    PostgrestVersion: '14.5'
+  }
   public: {
     Tables: {
-      restaurants: {
-        Row: Restaurant
-        Insert: Omit<
-          Restaurant,
-          'id' | 'created_at' | 'updated_at' | 'status'
-        > & {
-          id?: string
-          created_at?: string
-          updated_at?: string
-          status?: Restaurant['status']
+      ratings: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          restaurant_id: string
+          reviewer_id: string
+          score: number
+          updated_at: string
         }
-        Update: Partial<Omit<Restaurant, 'id' | 'created_at'>>
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          restaurant_id: string
+          reviewer_id: string
+          score: number
+          updated_at?: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          restaurant_id?: string
+          reviewer_id?: string
+          score?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'ratings_restaurant_id_fkey'
+            columns: ['restaurant_id']
+            isOneToOne: false
+            referencedRelation: 'restaurant_stats'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'ratings_restaurant_id_fkey'
+            columns: ['restaurant_id']
+            isOneToOne: false
+            referencedRelation: 'restaurants'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'ratings_reviewer_id_fkey'
+            columns: ['reviewer_id']
+            isOneToOne: false
+            referencedRelation: 'reviewers'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      restaurants: {
+        Row: {
+          category: string
+          created_at: string
+          direction: string | null
+          id: string
+          kakao_place_id: string | null
+          lat: number | null
+          lng: number | null
+          menu: string | null
+          name: string
+          naver_url: string | null
+          note: string | null
+          registered_by: string | null
+          sheet_type: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          direction?: string | null
+          id?: string
+          kakao_place_id?: string | null
+          lat?: number | null
+          lng?: number | null
+          menu?: string | null
+          name: string
+          naver_url?: string | null
+          note?: string | null
+          registered_by?: string | null
+          sheet_type: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          direction?: string | null
+          id?: string
+          kakao_place_id?: string | null
+          lat?: number | null
+          lng?: number | null
+          menu?: string | null
+          name?: string
+          naver_url?: string | null
+          note?: string | null
+          registered_by?: string | null
+          sheet_type?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'restaurants_registered_by_fkey'
+            columns: ['registered_by']
+            isOneToOne: false
+            referencedRelation: 'reviewers'
+            referencedColumns: ['id']
+          },
+        ]
       }
       reviewers: {
-        Row: Reviewer
-        Insert: Omit<Reviewer, 'id' | 'created_at'> & {
-          id?: string
-          created_at?: string
+        Row: {
+          created_at: string
+          id: string
+          nickname: string
         }
-        Update: Partial<Omit<Reviewer, 'id' | 'created_at'>>
-      }
-      ratings: {
-        Row: Rating
-        Insert: Omit<Rating, 'id' | 'created_at' | 'updated_at'> & {
-          id?: string
+        Insert: {
           created_at?: string
-          updated_at?: string
+          id?: string
+          nickname: string
         }
-        Update: Partial<Omit<Rating, 'id' | 'created_at'>>
+        Update: {
+          created_at?: string
+          id?: string
+          nickname?: string
+        }
+        Relationships: []
       }
+      // ── 수동 보강: 20260515000002_rating_photos_and_storage.sql ─────────────
+      // 원격 적용 전이라 generate 결과에 빠져 있음. 마이그레이션 SQL과 1:1 매칭.
       rating_photos: {
-        Row: RatingPhoto
-        Insert: Omit<RatingPhoto, 'id' | 'created_at'> & {
-          id?: string
-          created_at?: string
+        Row: {
+          byte_size: number | null
+          created_at: string
+          height: number | null
+          id: string
+          rating_id: string
+          sort_order: number
+          storage_path: string
+          width: number | null
         }
-        Update: Partial<Omit<RatingPhoto, 'id' | 'created_at' | 'rating_id'>>
+        Insert: {
+          byte_size?: number | null
+          created_at?: string
+          height?: number | null
+          id?: string
+          rating_id: string
+          sort_order?: number
+          storage_path: string
+          width?: number | null
+        }
+        Update: {
+          byte_size?: number | null
+          created_at?: string
+          height?: number | null
+          id?: string
+          rating_id?: string
+          sort_order?: number
+          storage_path?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'rating_photos_rating_id_fkey'
+            columns: ['rating_id']
+            isOneToOne: false
+            referencedRelation: 'ratings'
+            referencedColumns: ['id']
+          },
+        ]
       }
     }
     Views: {
       restaurant_stats: {
-        Row: RestaurantStats
+        Row: {
+          avg_score: number | null
+          id: string | null
+          name: string | null
+          rating_count: number | null
+        }
+        Relationships: []
       }
     }
     Functions: {
-      /**
-       * 룰렛 페이지(`/roulette`)용 랜덤 추천 RPC.
-       *
-       * dba 영역. dev는 시그니처만 가지고 호출한다.
-       * - p_sheet_type: 'lunch'|'dinner' 또는 null(전체)
-       * - p_categories: 카테고리 배열 또는 null(전체)
-       * - p_include_closed: 휴업/폐업 포함 여부 (기본 false)
-       * 반환: 매칭 식당 0건이면 null, 1건이면 restaurants Row.
-       */
+      category_counts: {
+        Args: { p_sheet_type?: string }
+        Returns: {
+          category: string
+          count: number
+        }[]
+      }
       pick_random_restaurant: {
         Args: {
-          p_sheet_type: 'lunch' | 'dinner' | null
-          p_categories: string[] | null
-          p_include_closed: boolean
+          p_categories?: string[]
+          p_include_closed?: boolean
+          p_sheet_type?: string
         }
-        Returns: Restaurant | null
-      }
-      /**
-       * 카테고리별 식당 수 집계 RPC.
-       * sheet_type 필터(점심/저녁)에 따라 카운트가 달라진다.
-       * - p_sheet_type: 'lunch'|'dinner' 또는 null(전체)
-       * 반환: 카테고리·count 배열 (운영중 식당 기준).
-       */
-      category_counts: {
-        Args: { p_sheet_type: string | null }
-        Returns: { category: string; count: number }[]
+        Returns: {
+          category: string
+          created_at: string
+          direction: string | null
+          id: string
+          kakao_place_id: string | null
+          lat: number | null
+          lng: number | null
+          menu: string | null
+          name: string
+          naver_url: string | null
+          note: string | null
+          registered_by: string | null
+          sheet_type: string
+          status: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: '*'
+          to: 'restaurants'
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
     }
-    Enums: Record<string, never>
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
 }
+
+type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] &
+        DefaultSchema['Views'])
+    ? (DefaultSchema['Tables'] &
+        DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema['Tables']
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema['Tables']
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema['Enums']
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
+    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema['CompositeTypes']
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
+    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const
