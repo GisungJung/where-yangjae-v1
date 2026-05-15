@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 200" role="img" aria-label="양재어디가">
+  <title>양재어디가</title>
+  <desc>양재역 주변 맛집 평가 서비스 로고. 위치 핀과 손글씨 느낌의 한글, 큰 물음표가 특징.</desc>
+
+  <defs>
+    <style>
+      .logo-text {
+        font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Nanum Gothic', sans-serif;
+        font-weight: 900;
+        letter-spacing: -1px;
+      }
+    </style>
+  </defs>
+
+  <!-- soft brush stroke under -->
+  <path d="M 30 160 Q 240 175 440 150" stroke="#FFD4B8" stroke-width="12" fill="none" stroke-linecap="round"/>
+
+  <!-- pin icon left -->
+  <g transform="translate(30 86)">
+    <path d="M 0 0 C -14 -32 14 -36 14 -16 C 14 -4 7 4 0 18 C -7 4 -14 -4 -14 -16 C -14 -36 14 -32 0 0 Z" fill="#FF6B35"/>
+    <circle cx="0" cy="-18" r="6" fill="#FFFFFF"/>
+  </g>
+
+  <!-- 양재 어디 가 ? -->
+  <g class="logo-text">
+    <text x="92"  y="115" font-size="76" fill="#2E2A26"  transform="rotate(-3 92 115)">양</text>
+    <text x="148" y="121" font-size="76" fill="#2E2A26"  transform="rotate(2 148 121)">재</text>
+    <text x="216" y="111" font-size="76" fill="#FF6B35"  transform="rotate(-2 216 111)">어</text>
+    <text x="272" y="117" font-size="76" fill="#FF6B35"  transform="rotate(3 272 117)">디</text>
+    <text x="328" y="113" font-size="76" fill="#FF6B35"  transform="rotate(-2 328 113)">가</text>
+    <text x="402" y="124" font-size="92" fill="#D54E18"  transform="rotate(14 402 124)">?</text>
+  </g>
+</svg>

@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>양재어디가 · 시스템 기획서 v2.0</title>
+<style>
+  :root {
+    --brand: #2E75B6;
+    --brand-dark: #1F3864;
+    --brand-light: #D5E8F0;
+    --accent: #1D9E75;
+    --warn: #BA7517;
+    --danger: #A32D2D;
+    --text: #1a1a1a;
+    --text-mid: #555;
+    --text-mute: #888;
+    --border: #e5e5e5;
+    --border-mid: #ccc;
+    --bg: #fafafa;
+    --bg-soft: #f5f7fa;
+    --card-bg: #ffffff;
+    --tag-bg: #eef2f7;
+    --code-bg: #f4f4f6;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+    --shadow-md: 0 2px 8px rgba(0,0,0,0.06);
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Noto Sans KR", "Segoe UI", sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  .layout { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .sidebar { display: none; } }
+
+  .sidebar {
+    background: var(--card-bg);
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  .sidebar-brand {
+    padding: 0 20px 16px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .sidebar-brand .logo { font-size: 20px; font-weight: 800; color: var(--brand-dark); }
+  .sidebar-brand .ver { font-size: 11px; color: var(--text-mute); margin-top: 2px; letter-spacing: 0.5px; }
+  .sidebar nav a {
+    display: block;
+    padding: 7px 20px;
+    color: var(--text-mid);
+    text-decoration: none;
+    font-size: 13px;
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+  }
+  .sidebar nav a:hover { background: var(--bg-soft); color: var(--brand); border-left-color: var(--brand-light); }
+  .sidebar nav a.section-title {
+    color: var(--text-mute);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding-top: 16px;
+    pointer-events: none;
+    font-weight: 700;
+  }
+
+  main { padding: 0; max-width: 100%; overflow-x: hidden; }
+  .container { max-width: 980px; margin: 0 auto; padding: 48px 32px; }
+
+  /* Cover */
+  .cover {
+    background: linear-gradient(135deg, #1F3864 0%, #2E75B6 100%);
+    color: white;
+    padding: 80px 32px;
+    text-align: center;
+  }
+  .cover .badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 20px;
+    font-size: 12px;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+  }
+  .cover h1 { font-size: 56px; margin: 0 0 8px; font-weight: 800; letter-spacing: -1px; }
+  .cover .subtitle { font-size: 20px; opacity: 0.9; margin-bottom: 8px; font-weight: 400; }
+  .cover .meta { font-size: 13px; opacity: 0.7; margin-top: 28px; }
+
+  .cover-info {
+    background: white;
+    color: var(--text);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin: 32px auto 0;
+    max-width: 580px;
+    text-align: left;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  }
+  .cover-info table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .cover-info td { padding: 8px 4px; border-bottom: 1px solid var(--border); }
+  .cover-info td:first-child { color: var(--text-mute); width: 110px; font-weight: 600; }
+  .cover-info tr:last-child td { border-bottom: none; }
+
+  /* Headings */
+  h1 {
+    font-size: 32px;
+    color: var(--brand-dark);
+    margin: 56px 0 16px;
+    padding-bottom: 12px;
+    border-bottom: 3px solid var(--brand);
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  h1:first-of-type { margin-top: 0; }
+  h2 {
+    font-size: 22px;
+    color: var(--brand);
+    margin: 36px 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 700;
+  }
+  h3 {
+    font-size: 17px;
+    color: #2E4057;
+    margin: 24px 0 10px;
+    font-weight: 700;
+  }
+  p { margin: 0 0 14px; color: var(--text); }
+  ul, ol { padding-left: 22px; margin: 0 0 16px; }
+  li { margin: 4px 0; }
+  strong { color: var(--text); font-weight: 700; }
+
+  /* Tables */
+  table.data {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 20px;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    font-size: 14px;
+  }
+  table.data thead th {
+    background: var(--brand);
+    color: white;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+  }
+  table.data td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  table.data tbody tr:nth-child(even) { background: #fafbfc; }
+  table.data tbody tr:hover { background: #f0f7fc; }
+  table.data tbody tr:last-child td { border-bottom: none; }
+  table.data code {
+    font-size: 12px;
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--brand-dark);
+  }
+
+  /* Cards Grid */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+    margin: 16px 0 20px;
+  }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    transition: all 0.15s;
+  }
+  .card:hover { border-color: var(--brand-light); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+  .card-num {
+    display: inline-block;
+    background: var(--brand-light);
+    color: var(--brand-dark);
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 26px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .card-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .card-desc { font-size: 13px; color: var(--text-mid); line-height: 1.6; }
+
+  /* Highlight Box */
+  .highlight {
+    border-left: 4px solid var(--brand);
+    background: var(--brand-light);
+    padding: 14px 18px;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    margin: 18px 0;
+  }
+  .highlight.success { border-color: var(--accent); background: #E2EFDA; }
+  .highlight.warn { border-color: var(--warn); background: #FFF2CC; }
+  .highlight.danger { border-color: var(--danger); background: #FCE4D6; }
+  .highlight-title { font-weight: 700; margin-bottom: 6px; font-size: 14px; }
+  .highlight ul { margin-bottom: 0; }
+
+  /* Tags / Badges */
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+    margin-right: 4px;
+    margin-bottom: 4px;
+  }
+  .tag-blue { background: #E6F1FB; color: #0C447C; }
+  .tag-green { background: #EAF3DE; color: #27500A; }
+  .tag-amber { background: #FAEEDA; color: #633806; }
+  .tag-red { background: #FCEBEB; color: #791F1F; }
+  .tag-purple { background: #EEEDFE; color: #3C3489; }
+  .tag-gray { background: var(--tag-bg); color: var(--text-mid); }
+
+  /* Code */
+  pre {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 14px 0;
+    font-family: "Menlo", "Consolas", monospace;
+  }
+  pre .kw { color: #93c5fd; }
+  pre .str { color: #86efac; }
+  pre .com { color: #94a3b8; font-style: italic; }
+  pre .num { color: #fcd34d; }
+  code.inline {
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 13px;
+    color: var(--brand-dark);
+    font-family: "Menlo", "Consolas", monospace;
+  }
+
+  /* Comparison block */
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 16px 0 20px;
+  }
+  @media (max-width: 700px) { .compare { grid-template-columns: 1fr; } }
+  .compare-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+  }
+  .compare-card.winner { border: 2px solid var(--accent); position: relative; }
+  .compare-card.winner::before {
+    content: "✓ 채택";
+    position: absolute;
+    top: -10px;
+    right: 12px;
+    background: var(--accent);
+    color: white;
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .compare-card h4 { margin: 0 0 12px; font-size: 16px; }
+  .compare-card dl { margin: 0; }
+  .compare-card .row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .compare-card .row:last-child { border-bottom: none; }
+  .compare-card .lbl { color: var(--text-mute); }
+  .compare-card .val { font-weight: 600; }
+
+  /* Flow steps */
+  .flow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin: 16px 0;
+  }
+  .flow-step {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .flow-arrow { color: var(--text-mute); font-weight: 700; }
+
+  /* Stats */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .stat {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  .stat-label { font-size: 11px; color: var(--text-mute); text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-num { font-size: 24px; font-weight: 800; color: var(--brand-dark); margin: 4px 0; }
+  .stat-sub { font-size: 11px; color: var(--text-mid); }
+
+  /* Risk matrix */
+  .risk-table td.sev-high { background: #FCEBEB; color: #791F1F; font-weight: 700; text-align: center; }
+  .risk-table td.sev-mid { background: #FAEEDA; color: #633806; font-weight: 700; text-align: center; }
+  .risk-table td.sev-low { background: #EAF3DE; color: #27500A; font-weight: 700; text-align: center; }
+
+  /* Footer */
+  footer {
+    background: var(--brand-dark);
+    color: white;
+    padding: 28px 32px;
+    text-align: center;
+    font-size: 13px;
+    margin-top: 60px;
+  }
+  footer .links { margin-bottom: 8px; }
+  footer .links a { color: white; opacity: 0.8; margin: 0 8px; text-decoration: none; }
+  footer .links a:hover { opacity: 1; }
+  footer .copy { opacity: 0.6; font-size: 11px; }
+
+  /* TOC */
+  .toc {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 28px;
+    margin: 24px 0 36px;
+  }
+  .toc h3 { margin-top: 0; color: var(--brand-dark); }
+  .toc ol { columns: 2; column-gap: 32px; padding-left: 18px; }
+  @media (max-width: 700px) { .toc ol { columns: 1; } }
+  .toc a { color: var(--text-mid); text-decoration: none; }
+  .toc a:hover { color: var(--brand); }
+
+  /* ERD diagram */
+  .erd { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin: 16px 0; overflow-x: auto; }
+  .erd-table {
+    display: inline-block;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin: 8px 16px 8px 0;
+    min-width: 220px;
+    vertical-align: top;
+    box-shadow: var(--shadow-sm);
+  }
+  .erd-table-name {
+    background: var(--brand-dark);
+    color: white;
+    padding: 8px 14px;
+    border-radius: var(--radius) var(--radius) 0 0;
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .erd-table-row {
+    padding: 6px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-family: "Menlo", monospace;
+  }
+  .erd-table-row:last-child { border-bottom: none; }
+  .erd-table-row .pk { color: #185FA5; font-weight: 700; }
+  .erd-table-row .fk { color: #854F0B; font-weight: 700; }
+
+  /* Phase timeline */
+  .phase {
+    border-left: 3px solid var(--brand-light);
+    padding: 0 0 20px 24px;
+    position: relative;
+    margin-left: 12px;
+  }
+  .phase::before {
+    content: "";
+    position: absolute;
+    left: -10px;
+    top: 0;
+    width: 18px;
+    height: 18px;
+    background: var(--brand);
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 0 0 2px var(--brand);
+  }
+  .phase-num { font-size: 11px; color: var(--brand); font-weight: 700; letter-spacing: 1px; }
+  .phase-title { font-size: 16px; font-weight: 700; margin: 2px 0 6px; }
+  .phase-desc { color: var(--text-mid); font-size: 13px; }
+
+  /* Print */
+  @media print {
+    .sidebar, footer { display: none; }
+    .layout { grid-template-columns: 1fr; }
+    .container { padding: 20px; max-width: 100%; }
+    h1 { page-break-before: always; }
+    h1:first-of-type { page-break-before: auto; }
+    .cover { page-break-after: always; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="badge">SYSTEM PLANNING DOCUMENT</div>
+  <h1 style="font-size:56px; border:none; padding:0; color:white; margin:0;">양재어디가</h1>
+  <div class="subtitle">양재역 주변 맛집 평가 웹 서비스</div>
+  <div class="meta">v2.0 · Opus Enhanced · 2025년 4월</div>
+  <div class="cover-info">
+    <table>
+      <tr><td>프로젝트명</td><td>양재어디가 (Yangjai Where to Go)</td></tr>
+      <tr><td>버전</td><td>v2.0 (보강판)</td></tr>
+      <tr><td>기술 스택</td><td>React + TypeScript / Supabase / Vercel / 카카오맵</td></tr>
+      <tr><td>운영 비용</td><td>월 0원 (완전 무료 스택)</td></tr>
+      <tr><td>대상 사용자</td><td>양재역 인근 근무 팀원 (약 10~20명)</td></tr>
+      <tr><td>예상 데이터</td><td>식당 약 80개 / 평가자 9명+ / 평점 약 200건</td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="layout">
+
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">양재어디가</div>
+    <div class="ver">PLANNING v2.0</div>
+  </div>
+  <nav>
+    <a class="section-title">개요</a>
+    <a href="#sec-1">1. 프로젝트 개요</a>
+    <a href="#sec-2">2. 사용자 시나리오</a>
+    <a class="section-title">아키텍처</a>
+    <a href="#sec-3">3. 기술 스택</a>
+    <a href="#sec-4">4. 시스템 구조</a>
+    <a href="#sec-5">5. 지도 API 선정</a>
+    <a class="section-title">데이터</a>
+    <a href="#sec-6">6. DB 스키마</a>
+    <a href="#sec-7">7. 데이터 마이그레이션</a>
+    <a class="section-title">기능</a>
+    <a href="#sec-8">8. 기능 명세</a>
+    <a href="#sec-9">9. 페이지 구성</a>
+    <a class="section-title">품질</a>
+    <a href="#sec-10">10. 보안 & RLS</a>
+    <a href="#sec-11">11. UX 표준</a>
+    <a href="#sec-12">12. 성능 & PWA</a>
+    <a href="#sec-13">13. 테스트</a>
+    <a class="section-title">운영</a>
+    <a href="#sec-14">14. 폴더 구조</a>
+    <a href="#sec-15">15. 개발 단계</a>
+    <a href="#sec-16">16. 리스크</a>
+    <a href="#sec-17">17. 로드맵</a>
+  </nav>
+</aside>
+
+<main>
+<div class="container">
+
+<div class="toc">
+  <h3>목차</h3>
+  <ol>
+    <li><a href="#sec-1">프로젝트 개요</a></li>
+    <li><a href="#sec-2">사용자 시나리오</a></li>
+    <li><a href="#sec-3">기술 스택</a></li>
+    <li><a href="#sec-4">시스템 구조</a></li>
+    <li><a href="#sec-5">지도 API 선정</a></li>
+    <li><a href="#sec-6">DB 스키마</a></li>
+    <li><a href="#sec-7">데이터 마이그레이션</a></li>
+    <li><a href="#sec-8">기능 명세</a></li>
+    <li><a href="#sec-9">페이지 구성</a></li>
+    <li><a href="#sec-10">보안 & RLS 정책</a></li>
+    <li><a href="#sec-11">UX 표준 (로딩/에러)</a></li>
+    <li><a href="#sec-12">성능 & PWA</a></li>
+    <li><a href="#sec-13">테스트 전략</a></li>
+    <li><a href="#sec-14">폴더 구조</a></li>
+    <li><a href="#sec-15">개발 단계</a></li>
+    <li><a href="#sec-16">리스크 매트릭스</a></li>
+    <li><a href="#sec-17">로드맵</a></li>
+  </ol>
+</div>
+
+<h1 id="sec-1">1. 프로젝트 개요</h1>
+
+<h2>1.1 배경</h2>
+<p>양재역 주변 맛집 정보를 Google Sheets로 관리하던 팀 내 문화를 웹 서비스로 전환합니다. 기존 데이터(점심·저녁/회식 2개 시트, 약 80개 식당, 9명 평가자)를 그대로 마이그레이션하고, 누구나 익명(닉네임)으로 평가를 추가할 수 있는 환경을 만듭니다.</p>
+
+<h2>1.2 문제 정의</h2>
+<div class="card-grid">
+  <div class="card">
+    <div class="card-num">1</div>
+    <div class="card-title">스프레드시트의 한계</div>
+    <div class="card-desc">모바일 가독성 떨어짐, 평가자 늘어날 때 열 추가 번거로움, 동시 편집 시 충돌</div>
+  </div>
+  <div class="card">
+    <div class="card-num">2</div>
+    <div class="card-title">검색·필터 부재</div>
+    <div class="card-desc">"오늘 점심 한식 뭐 먹지?" 같은 일상 질문에 시트가 답을 주지 못함</div>
+  </div>
+  <div class="card">
+    <div class="card-num">3</div>
+    <div class="card-title">위치 정보 단절</div>
+    <div class="card-desc">방향 정보만 있고 실제 지도와 연결 안 됨, 처음 가는 사람은 매번 검색</div>
+  </div>
+  <div class="card">
+    <div class="card-num">4</div>
+    <div class="card-title">참여 진입장벽</div>
+    <div class="card-desc">시트 편집 권한, 서식 깨짐 우려로 평가 입력이 일부 인원에게 집중</div>
+  </div>
+</div>
+
+<h2>1.3 핵심 목표 (Success Criteria)</h2>
+<div class="stats-grid">
+  <div class="stat"><div class="stat-label">데이터 보존</div><div class="stat-num">100%</div><div class="stat-sub">유실 없는 마이그레이션</div></div>
+  <div class="stat"><div class="stat-label">모바일 응답</div><div class="stat-num">&lt; 2s</div><div class="stat-sub">FCP 기준</div></div>
+  <div class="stat"><div class="stat-label">운영 비용</div><div class="stat-num">₩0</div><div class="stat-sub">완전 무료 스택</div></div>
+  <div class="stat"><div class="stat-label">평가 참여</div><div class="stat-num">+50%</div><div class="stat-sub">월간 신규 평가 수</div></div>
+</div>
+
+<h2>1.4 비목표 (Out of Scope)</h2>
+<div class="highlight warn">
+  <div class="highlight-title">v1에서 다루지 않는 것</div>
+  <ul>
+    <li>일반 공개 서비스 — 사내·팀 단위 비공개 운영</li>
+    <li>예약·주문·결제 연동 — 기능 범위 명확히 제한</li>
+    <li>실명 인증 / SNS 로그인 — 익명 닉네임 기반 유지</li>
+    <li>관리자 대시보드 — 데이터 수정은 Supabase Studio 직접 이용</li>
+  </ul>
+</div>
+
+<h1 id="sec-2">2. 사용자 시나리오</h1>
+
+<h2>2.1 페르소나</h2>
+<table class="data">
+  <thead><tr><th>페르소나</th><th>특징</th><th>주요 행동</th></tr></thead>
+  <tbody>
+    <tr><td><strong>탐색가</strong> · 매일 점심 새 메뉴 시도</td><td>모바일 위주, 빠른 의사결정</td><td>홈에서 평점순 정렬, 카테고리 필터, 룰렛 자주 활용</td></tr>
+    <tr><td><strong>평가자</strong> · 음식 좋아하고 의견 적극</td><td>한줄평을 정성껏 작성</td><td>먹은 식당 즉시 평가, 다른 사람 한줄평 비교 참고</td></tr>
+    <tr><td><strong>관전자</strong> · 평가는 안 하지만 정보는 본다</td><td>로그인·평가 입력 부담스러움</td><td>익명으로 둘러보기만, 평점 높은 곳 위주 탐색</td></tr>
+    <tr><td><strong>큐레이터</strong> · 새 식당 잘 발견</td><td>맛집 등록을 적극적으로 함</td><td>지도 검색으로 빠르게 식당 추가, 메뉴·비고 꼼꼼히 작성</td></tr>
+  </tbody>
+</table>
+
+<h2>2.2 핵심 시나리오 (User Journey)</h2>
+
+<h3>시나리오 A — 11시 50분, 점심 메뉴 결정</h3>
+<div class="flow">
+  <span class="flow-step">홈 진입</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">"오늘 뭐먹지?" 클릭</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">한식·일식 체크</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">룰렛 결과 확인</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">상세에서 지도 확인</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">출발</span>
+</div>
+
+<h3>시나리오 B — 식사 후 평가 입력</h3>
+<div class="flow">
+  <span class="flow-step">상세 페이지</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">"평가하기" 버튼</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">닉네임 선택</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">★ 4.0 + 한줄평</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">제출</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">상세로 복귀</span>
+</div>
+
+<h3>시나리오 C — 새 식당 발견 후 등록</h3>
+<div class="flow">
+  <span class="flow-step">/add 진입</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">"손수동" 검색</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">카카오 결과 선택</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">카테고리·메뉴 입력</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">등록 완료</span>
+</div>
+
+<h1 id="sec-3">3. 기술 스택</h1>
+
+<p>모든 구성 요소는 무료 티어 또는 오픈소스로 운영합니다.</p>
+
+<table class="data">
+  <thead><tr><th>구분</th><th>기술</th><th>역할 및 선택 이유</th><th>대안</th></tr></thead>
+  <tbody>
+    <tr><td>Frontend</td><td><code>React 18 + TypeScript</code></td><td>Vite 기반 SPA, 타입 안전성, 컴포넌트 생태계</td><td>Vue, Svelte</td></tr>
+    <tr><td>Build</td><td><code>Vite</code></td><td>빠른 HMR, ESM 기반, 작은 번들</td><td>Next.js (오버스펙)</td></tr>
+    <tr><td>Routing</td><td><code>React Router v6</code></td><td>SPA 라우팅 표준, lazy load 지원</td><td>TanStack Router</td></tr>
+    <tr><td>Styling</td><td><code>Tailwind CSS</code></td><td>유틸리티 CSS, 반응형 빠름, 번들 작음 (purge)</td><td>CSS Modules, styled-components</td></tr>
+    <tr><td>State (Global)</td><td><code>Zustand</code></td><td>4KB 경량, boilerplate 없음, devtools 지원</td><td>Redux Toolkit, Jotai</td></tr>
+    <tr><td>State (Server)</td><td><code>TanStack Query</code></td><td>Supabase 데이터 캐싱·재요청·낙관적 업데이트</td><td>SWR</td></tr>
+    <tr><td>Form</td><td><code>React Hook Form + Zod</code></td><td>리렌더 최소화, 스키마 기반 검증</td><td>Formik</td></tr>
+    <tr><td>Database</td><td><code>Supabase</code></td><td>Postgres + Auth + RLS + Realtime, 무료 500MB</td><td>Firebase, PocketBase</td></tr>
+    <tr><td>지도 API</td><td><code>카카오맵</code></td><td>월 300만 건 무료, 카드 불필요, React 연동 간편</td><td>네이버(유료화), Google(과금)</td></tr>
+    <tr><td>배포</td><td><code>Vercel</code></td><td>GitHub 연동 자동 CI/CD, Preview URL, Edge CDN</td><td>Netlify, Cloudflare Pages</td></tr>
+    <tr><td>형상관리</td><td><code>GitHub</code></td><td>코드 버전 관리, Vercel 트리거</td><td>GitLab</td></tr>
+    <tr><td>Linter / Format</td><td><code>ESLint + Prettier</code></td><td>코드 스타일 통일, pre-commit 검증</td><td>Biome</td></tr>
+    <tr><td>Test</td><td><code>Vitest + React Testing Library</code></td><td>Vite 친화적, Jest 호환</td><td>Jest</td></tr>
+    <tr><td>아이콘</td><td><code>Lucide React</code></td><td>트리쉐이킹, 통일성 있는 아이콘</td><td>React Icons</td></tr>
+  </tbody>
+</table>
+
+<h2>3.1 배포 플로우</h2>
+<div class="flow">
+  <span class="flow-step">로컬 개발</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">feature 브랜치</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">PR 생성</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">Vercel Preview URL</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">팀 리뷰</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">main 머지</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">Production 배포</span>
+</div>
+
+<h1 id="sec-4">4. 시스템 구조</h1>
+
+<h2>4.1 아키텍처 개요</h2>
+
+<div class="erd">
+  <div style="text-align: center; font-family: monospace; font-size: 13px; line-height: 2; color: var(--text-mid);">
+    [ Browser / Mobile Web ]<br>
+    ↓<br>
+    <strong>[ Vercel Edge CDN ]</strong> ← React SPA 정적 호스팅<br>
+    ↓<br>
+    <strong>[ React App ]</strong><br>
+    ├ TanStack Query (캐시)<br>
+    ├ Zustand (UI 상태)<br>
+    └ React Router<br>
+    ↓ 네트워크 요청<br>
+    ┌─────────────────────────┬───────────────────────┐<br>
+    <strong>[ Supabase ]</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>[ 카카오맵 SDK ]</strong><br>
+    Postgres + Auth + RLS &nbsp; 지도 + 장소검색<br>
+  </div>
+</div>
+
+<h2>4.2 데이터 흐름 패턴</h2>
+
+<table class="data">
+  <thead><tr><th>패턴</th><th>설명</th><th>예시</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Read</strong></td><td>TanStack Query로 캐싱, 5분 stale time</td><td>식당 목록, 평점 조회</td></tr>
+    <tr><td><strong>Write</strong></td><td>Mutation 후 관련 쿼리 invalidate</td><td>평가 제출, 식당 등록</td></tr>
+    <tr><td><strong>Realtime</strong></td><td>Supabase 구독 (선택, v2)</td><td>다른 사람이 평가 추가하면 즉시 반영</td></tr>
+    <tr><td><strong>Optimistic</strong></td><td>UI 먼저 업데이트, 실패 시 rollback</td><td>별점 토글</td></tr>
+  </tbody>
+</table>
+
+<h1 id="sec-5">5. 지도 API 선정</h1>
+
+<div class="highlight success">
+  <div class="highlight-title">결론: 카카오맵 API 채택</div>
+  네이버 지도 API는 2025년 3월 신규 신청 차단 및 무료 이용량 종료를 공지했습니다. 카카오맵은 월 300만 건 무료, 신용카드 불필요, 소규모 팀 서비스 기준 무료 범위 초과 가능성이 사실상 없습니다.
+</div>
+
+<div class="compare">
+  <div class="compare-card">
+    <h4>네이버 지도 API</h4>
+    <div class="row"><span class="lbl">무료 쿼터</span><span class="val">종료 예정 ⚠️</span></div>
+    <div class="row"><span class="lbl">신규 신청</span><span class="val">2025.3 차단</span></div>
+    <div class="row"><span class="lbl">신용카드</span><span class="val">필수 등록</span></div>
+    <div class="row"><span class="lbl">장소 검색</span><span class="val">유료 (Geocoding)</span></div>
+    <div class="row"><span class="lbl">React 연동</span><span class="val">복잡</span></div>
+    <div class="row"><span class="lbl">최종</span><span class="val" style="color:var(--danger)">✕ 미채택</span></div>
+  </div>
+  <div class="compare-card winner">
+    <h4>카카오맵 API</h4>
+    <div class="row"><span class="lbl">무료 쿼터</span><span class="val">월 300만 건</span></div>
+    <div class="row"><span class="lbl">신규 신청</span><span class="val">즉시 사용</span></div>
+    <div class="row"><span class="lbl">신용카드</span><span class="val">불필요</span></div>
+    <div class="row"><span class="lbl">장소 검색</span><span class="val">무료 (300만건)</span></div>
+    <div class="row"><span class="lbl">React 연동</span><span class="val">SDK 1줄</span></div>
+    <div class="row"><span class="lbl">최종</span><span class="val" style="color:var(--accent)">✓ 채택</span></div>
+  </div>
+</div>
+
+<h2>5.1 카카오맵 활용 기능</h2>
+<ul>
+  <li><strong>맛집 상세 페이지</strong> — 카카오맵 임베드 + 위치 핀 표시</li>
+  <li><strong>맛집 등록 폼</strong> — 장소명 키워드 검색 → 주소·좌표 자동 입력</li>
+  <li><strong>마이그레이션 스크립트</strong> — 기존 식당명 일괄 검색해서 좌표 보완</li>
+  <li><strong>지도 뷰 (v2)</strong> — 전체 식당 핀 표시, 평점 색상 구분</li>
+</ul>
+
+<h2>5.2 사용 SDK & API</h2>
+<table class="data">
+  <thead><tr><th>API</th><th>용도</th><th>호출 위치</th></tr></thead>
+  <tbody>
+    <tr><td><code>Kakao Maps SDK (JS)</code></td><td>지도 렌더링, 마커</td><td>상세 페이지, 등록 폼</td></tr>
+    <tr><td><code>Places.keywordSearch</code></td><td>키워드로 장소 검색</td><td>등록 폼, 마이그레이션</td></tr>
+    <tr><td><code>Geocoder.addressSearch</code></td><td>주소로 좌표 조회 (보조)</td><td>예외 케이스</td></tr>
+  </tbody>
+</table>
+
+<h1 id="sec-6">6. 데이터베이스 스키마</h1>
+
+<p>Supabase (PostgreSQL) 기반. 3개 테이블로 단순하게 설계합니다.</p>
+
+<h2>6.1 ERD</h2>
+<div class="erd">
+  <div class="erd-table">
+    <div class="erd-table-name">restaurants</div>
+    <div class="erd-table-row"><span class="pk">PK</span> id : uuid</div>
+    <div class="erd-table-row">name : text</div>
+    <div class="erd-table-row">category : text</div>
+    <div class="erd-table-row">menu : text</div>
+    <div class="erd-table-row">sheet_type : text</div>
+    <div class="erd-table-row">naver_url : text</div>
+    <div class="erd-table-row">note : text</div>
+    <div class="erd-table-row">status : text</div>
+    <div class="erd-table-row">lat, lng : float8</div>
+    <div class="erd-table-row">kakao_place_id : text</div>
+    <div class="erd-table-row"><span class="fk">FK</span> registered_by</div>
+    <div class="erd-table-row">created_at : timestamptz</div>
+  </div>
+  <div class="erd-table">
+    <div class="erd-table-name">ratings</div>
+    <div class="erd-table-row"><span class="pk">PK</span> id : uuid</div>
+    <div class="erd-table-row"><span class="fk">FK</span> restaurant_id</div>
+    <div class="erd-table-row"><span class="fk">FK</span> reviewer_id</div>
+    <div class="erd-table-row">score : numeric(2,1)</div>
+    <div class="erd-table-row">comment : text</div>
+    <div class="erd-table-row">created_at : timestamptz</div>
+    <div class="erd-table-row">updated_at : timestamptz</div>
+    <div class="erd-table-row" style="background:#e3f2fd; font-weight:700;">1인 N평가 허용 · rate-limit</div>
+  </div>
+  <div class="erd-table">
+    <div class="erd-table-name">reviewers</div>
+    <div class="erd-table-row"><span class="pk">PK</span> id : uuid</div>
+    <div class="erd-table-row">nickname : text</div>
+    <div class="erd-table-row">created_at : timestamptz</div>
+  </div>
+  <div class="erd-table">
+    <div class="erd-table-name">rating_photos</div>
+    <div class="erd-table-row"><span class="pk">PK</span> id : uuid</div>
+    <div class="erd-table-row"><span class="fk">FK</span> rating_id (CASCADE)</div>
+    <div class="erd-table-row">storage_path : text</div>
+    <div class="erd-table-row">sort_order : smallint (0-2)</div>
+    <div class="erd-table-row">byte_size, width, height</div>
+    <div class="erd-table-row">created_at : timestamptz</div>
+    <div class="erd-table-row" style="background:#fff8e1; font-weight:700;">UNIQUE(rating_id, sort_order)</div>
+  </div>
+</div>
+
+<h2>6.2 restaurants 테이블</h2>
+<table class="data">
+  <thead><tr><th>컬럼</th><th>타입</th><th>제약</th><th>설명</th></tr></thead>
+  <tbody>
+    <tr><td><code>id</code></td><td>uuid</td><td>PK, default gen_random_uuid()</td><td>자동 생성</td></tr>
+    <tr><td><code>name</code></td><td>text</td><td>NOT NULL</td><td>상호명</td></tr>
+    <tr><td><code>category</code></td><td>text</td><td>CHECK</td><td>한식, 일식, 중식, 분식, 패스트푸드, 카페, 기타</td></tr>
+    <tr><td><code>menu</code></td><td>text</td><td>—</td><td>주/사이드 메뉴 설명</td></tr>
+    <tr><td><code>sheet_type</code></td><td>text</td><td>CHECK</td><td>lunch, dinner</td></tr>
+    <tr><td><code>naver_url</code></td><td>text</td><td>—</td><td>기존 네이버 지도 링크</td></tr>
+    <tr><td><code>note</code></td><td>text</td><td>—</td><td>비고, 팁</td></tr>
+    <tr><td><code>status</code></td><td>text</td><td>CHECK, DEFAULT '운영중'</td><td>운영중 · 휴업 · 폐업 (3가지 enum, soft delete)</td></tr>
+    <tr><td><code>lat</code></td><td>float8</td><td>—</td><td>위도</td></tr>
+    <tr><td><code>lng</code></td><td>float8</td><td>—</td><td>경도</td></tr>
+    <tr><td><code>kakao_place_id</code></td><td>text</td><td>—</td><td>카카오 장소 ID</td></tr>
+    <tr><td><code>registered_by</code></td><td>uuid</td><td>FK → reviewers (NULL 허용)</td><td>등록자 닉네임 (구글시트 컨셉: 본인 식별). 마이그레이션 데이터는 NULL</td></tr>
+    <tr><td><code>created_at</code></td><td>timestamptz</td><td>DEFAULT now()</td><td>—</td></tr>
+  </tbody>
+</table>
+
+<h3>인덱스</h3>
+<ul>
+  <li><code>idx_restaurants_category</code> — 카테고리 필터링</li>
+  <li><code>idx_restaurants_sheet_type</code> — 점심/저녁 필터</li>
+  <li><code>idx_restaurants_status</code> — 운영 상태 필터 (기본: 운영중)</li>
+</ul>
+
+<h2>6.3 reviewers 테이블</h2>
+<table class="data">
+  <thead><tr><th>컬럼</th><th>타입</th><th>제약</th><th>설명</th></tr></thead>
+  <tbody>
+    <tr><td><code>id</code></td><td>uuid</td><td>PK</td><td>자동 생성</td></tr>
+    <tr><td><code>nickname</code></td><td>text</td><td>NOT NULL (UNIQUE 제거)</td><td>표시 라벨. 사용자 식별은 <code>reviewer_id</code>(uuid, localStorage 영속)로 처리. 같은 닉네임이 서로 다른 reviewer_id를 갖는 케이스 허용.</td></tr>
+    <tr><td><code>created_at</code></td><td>timestamptz</td><td>DEFAULT now()</td><td>—</td></tr>
+  </tbody>
+</table>
+
+<h2>6.4 ratings 테이블</h2>
+<table class="data">
+  <thead><tr><th>컬럼</th><th>타입</th><th>제약</th><th>설명</th></tr></thead>
+  <tbody>
+    <tr><td><code>id</code></td><td>uuid</td><td>PK</td><td>—</td></tr>
+    <tr><td><code>restaurant_id</code></td><td>uuid</td><td>FK → restaurants ON DELETE CASCADE</td><td>—</td></tr>
+    <tr><td><code>reviewer_id</code></td><td>uuid</td><td>FK → reviewers</td><td>—</td></tr>
+    <tr><td><code>score</code></td><td>numeric(2,1)</td><td>CHECK 0.0 ≤ score ≤ 5.0</td><td>0.5 단위</td></tr>
+    <tr><td><code>comment</code></td><td>text</td><td>CHECK length ≤ 200</td><td>한줄평</td></tr>
+    <tr><td><code>created_at</code></td><td>timestamptz</td><td>DEFAULT now()</td><td>—</td></tr>
+    <tr><td><code>updated_at</code></td><td>timestamptz</td><td>—</td><td>수정 시 자동 갱신 트리거</td></tr>
+  </tbody>
+</table>
+
+<h3>제약 & 트리거</h3>
+<ul>
+  <li>1인 N평가 허용 — UNIQUE(restaurant_id, reviewer_id) 제거 (마이그레이션 <code>20260515000001</code>).</li>
+  <li>평균은 <code>restaurant_stats</code> 뷰에서 reviewer_id별 최신 1건만 집계해 도배에 의한 왜곡을 차단.</li>
+  <li><code>BEFORE INSERT</code> 트리거 <code>ratings_rate_limit</code> — reviewer_id별 분당 1회·시간당 10회 초과 시 <code>RAISE EXCEPTION</code> (ERRCODE 54000).</li>
+  <li><code>BEFORE UPDATE</code> 트리거로 <code>updated_at</code> 자동 갱신.</li>
+</ul>
+
+<h2>6.5 rating_photos 테이블 — 한줄평 사진 (v1.1)</h2>
+<p>한줄평당 최대 3장의 사진. 클라이언트에서 1024px 리사이즈·JPEG 0.8 압축·300KB 가드 후 업로드.</p>
+<table class="data">
+  <thead><tr><th>컬럼</th><th>타입</th><th>제약</th><th>설명</th></tr></thead>
+  <tbody>
+    <tr><td><code>id</code></td><td>uuid</td><td>PK</td><td>—</td></tr>
+    <tr><td><code>rating_id</code></td><td>uuid</td><td>FK → ratings ON DELETE CASCADE</td><td>—</td></tr>
+    <tr><td><code>storage_path</code></td><td>text</td><td>NOT NULL</td><td>bucket 제외 객체 경로 (<code>&lt;rating_id&gt;/&lt;nanoid&gt;.jpg</code>)</td></tr>
+    <tr><td><code>sort_order</code></td><td>smallint</td><td>CHECK 0-2</td><td>3장 슬롯 순서</td></tr>
+    <tr><td><code>byte_size</code></td><td>int</td><td>CHECK ≤ 300_000</td><td>리사이즈 후 바이트</td></tr>
+    <tr><td><code>width</code>, <code>height</code></td><td>int</td><td>—</td><td>리사이즈 후 px</td></tr>
+    <tr><td><code>created_at</code></td><td>timestamptz</td><td>DEFAULT now()</td><td>—</td></tr>
+  </tbody>
+</table>
+<ul>
+  <li><code>UNIQUE(rating_id, sort_order)</code> + idx_rating_photos_rating_id</li>
+  <li>Storage 버킷 <code>rating-photos</code> (public, 300KB 한도, jpeg/webp). 객체 경로는 <code>&lt;rating_id&gt;/...</code>.</li>
+  <li>rating 삭제 시 AFTER DELETE 트리거 <code>cleanup_rating_photo_object()</code>가 Storage 객체까지 함께 정리(CASCADE).</li>
+  <li>RLS — select_all / insert_uuid_prefix / delete_own (reviewer_id 헤더 매칭) / update_block.</li>
+</ul>
+
+<h2>6.6 뷰 (View) — 평점 집계 (정규화)</h2>
+<pre><span class="kw">CREATE VIEW</span> restaurant_stats <span class="kw">AS</span>
+<span class="kw">WITH</span> latest_per_reviewer <span class="kw">AS</span> (
+  <span class="kw">SELECT DISTINCT ON</span> (restaurant_id, reviewer_id)
+    restaurant_id, reviewer_id, score
+  <span class="kw">FROM</span> ratings
+  <span class="kw">ORDER BY</span> restaurant_id, reviewer_id, created_at <span class="kw">DESC</span>
+)
+<span class="kw">SELECT</span>
+  r.id,
+  r.name,
+  <span class="kw">COUNT</span>(l.score) <span class="kw">AS</span> rating_count,
+  <span class="kw">ROUND</span>(<span class="kw">AVG</span>(l.score)::numeric, <span class="num">1</span>) <span class="kw">AS</span> avg_score
+<span class="kw">FROM</span> restaurants r
+<span class="kw">LEFT JOIN</span> latest_per_reviewer l <span class="kw">ON</span> l.restaurant_id = r.id
+<span class="kw">GROUP BY</span> r.id, r.name;</pre>
+<p class="muted">reviewer_id별 최신 1건만 평균에 반영 — 같은 사용자의 N번째 평가는 "사실상 수정"으로 동작.</p>
+
+<h1 id="sec-7">7. 데이터 마이그레이션</h1>
+
+<h2>7.1 마이그레이션 순서</h2>
+<table class="data">
+  <thead><tr><th>단계</th><th>작업</th><th>도구</th><th>예상 시간</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Google Sheets → CSV 2개 파일 내보내기</td><td>수동</td><td>5분</td></tr>
+    <tr><td>2</td><td>CSV 파싱 → JSON 변환 (식당, 평가자, 평점)</td><td>Node.js 스크립트</td><td>10분</td></tr>
+    <tr><td>3</td><td>카카오 장소검색 API로 lat/lng 보완</td><td>Node.js + 카카오 API</td><td>15분</td></tr>
+    <tr><td>4</td><td>좌표 매칭 실패 식당 수동 보완</td><td>수동 (몇 개)</td><td>10분</td></tr>
+    <tr><td>5</td><td>Supabase seed.sql 생성 → 실행</td><td>SQL 스크립트</td><td>5분</td></tr>
+    <tr><td>6</td><td>reviewers 9명 → ratings 평점 일괄 삽입</td><td>SQL</td><td>5분</td></tr>
+    <tr><td>7</td><td>스키마 검증 (count, sample query)</td><td>Supabase Studio</td><td>5분</td></tr>
+  </tbody>
+</table>
+
+<h2>7.2 카테고리 매핑 규칙</h2>
+<table class="data">
+  <thead><tr><th>스프레드시트 표기</th><th>매핑 카테고리</th></tr></thead>
+  <tbody>
+    <tr><td>한식, 점심특선, 김치찌개, 부대찌개, 백반, 갈비탕, 곰탕, 순대국, 해장국, 제육, 곱창, 매운갈비찜</td><td><code>한식</code></td></tr>
+    <tr><td>일본식 돈까스, 일식 돈가스, 일식 라멘, 텐동, 우동, 회덮밥, 초밥, 일식</td><td><code>일식</code></td></tr>
+    <tr><td>중식, 짬뽕, 짜장</td><td><code>중식</code></td></tr>
+    <tr><td>분식, 김밥, 떡볶이, 국수</td><td><code>분식</code></td></tr>
+    <tr><td>버거킹, 롯데리아, KFC, 서브웨이, 패스트푸드</td><td><code>패스트푸드</code></td></tr>
+    <tr><td>쌀국수, 동남아음식, 태국음식, 베트남 쌀국수</td><td><code>아시안</code></td></tr>
+    <tr><td>점심 부페, 회덮밥+알탕, 기타</td><td><code>기타</code></td></tr>
+  </tbody>
+</table>
+
+<h2>7.3 주의 사항</h2>
+<div class="highlight warn">
+  <ul>
+    <li><strong>휴업·폐업 식당</strong> — <code>status</code> 필드(운영중/휴업/폐업)로 마킹, 레코드는 보존 (soft delete, 과거 평가 유지)</li>
+    <li><strong>좌표 보완 실패</strong> — <code>lat/lng = NULL</code> 허용, 지도 영역만 미표시</li>
+    <li><strong>한줄평 없는 점수</strong> — <code>comment = NULL</code>로 정상 삽입</li>
+    <li><strong>닉네임 중복 허용</strong> — UNIQUE 없음. 같은 닉네임이 reviewer_id로 분리되어 중복 가능 (사칭 위험은 §16 리스크 표 참조).</li>
+    <li><strong>점수 형식</strong> — "3.5", "4" 모두 numeric으로 변환, 빈 셀은 SKIP</li>
+  </ul>
+</div>
+
+<h1 id="sec-8">8. 기능 명세</h1>
+
+<h2>8.1 맛집 목록 (홈)</h2>
+<div class="card-grid">
+  <div class="card">
+    <div class="card-title">필터</div>
+    <div class="card-desc">카테고리(다중), 시트(점심/저녁), 휴업·폐업 포함 보기 토글</div>
+  </div>
+  <div class="card">
+    <div class="card-title">정렬</div>
+    <div class="card-desc">평점 높은 순(기본), 평가 많은 순, 이름 가나다 순</div>
+  </div>
+  <div class="card">
+    <div class="card-title">검색</div>
+    <div class="card-desc">식당명, 메뉴 실시간 검색 (debounce 300ms)</div>
+  </div>
+  <div class="card">
+    <div class="card-title">카드 정보</div>
+    <div class="card-desc">이름, 카테고리, 평균 평점, 평가 수, 한줄 비고</div>
+  </div>
+</div>
+
+<h2>8.2 맛집 상세</h2>
+<ul>
+  <li>카카오맵 임베드 (260px 높이) + 위치 핀</li>
+  <li>평균 평점 (큰 별점) + 평가 수 + 카테고리 배지</li>
+  <li>평가자별 점수 막대그래프 (간단 시각화)</li>
+  <li>한줄평 목록 — 닉네임 / 점수 / 코멘트 / 작성일</li>
+  <li>"평가하기" CTA 버튼</li>
+  <li>네이버 지도 원본 링크</li>
+</ul>
+
+<h2>8.3 평가 입력</h2>
+<ul>
+  <li>닉네임 — 자유 입력 (1~20자). 같은 닉네임 중복 허용. localStorage의 <code>reviewer_id</code>로 본인 식별. 변경 시 본인 reviewers row UPDATE.</li>
+  <li>별점 — 0.5점 단위, 터치/클릭으로 선택, 키보드 접근성</li>
+  <li>한줄평 — textarea (200자 제한, 카운터 표시)</li>
+  <li>사진 첨부 — 최대 3장, 클라이언트 1024px·JPEG 0.8 리사이즈 후 업로드. 첫 장 즉시·나머지 lazy.</li>
+  <li>기존 본인 평가가 있어도 차단하지 않음 — "수정" 버튼 또는 새 평가 작성 둘 다 가능, 평균은 최신 1건만 반영.</li>
+  <li>제출 버튼 — 로딩 상태, 성공 시 토스트 + 상세로 이동.</li>
+</ul>
+
+<h2>8.4 맛집 등록</h2>
+<div class="highlight">
+  <div class="highlight-title">컨셉: 구글시트 등록 방식 그대로</div>
+  로그인 없이 닉네임만 선택하면 등록 가능. 누가 추가했는지 흔적만 남기는 가벼운 식별 (Google Sheets에서 행 추가하던 워크플로우의 디지털 버전).
+</div>
+<ul>
+  <li><strong>등록자 닉네임 (필수)</strong> — 자유 입력. localStorage의 <code>reviewer_id</code>로 본인 식별, <code>reviewers</code> 테이블 자동 upsert.</li>
+  <li>장소 검색 — 카카오 키워드 검색, 결과 5개 카드 표시</li>
+  <li>선택 시 — 이름·주소·좌표·kakao_place_id 자동 채움</li>
+  <li>카테고리·시트 — 드롭다운 선택</li>
+  <li>메뉴·비고 — textarea (선택 입력)</li>
+  <li>중복 검사 — 같은 kakao_place_id 또는 이름 매칭 시 경고 banner</li>
+  <li>등록 완료 시 — <code>restaurants.registered_by</code>에 닉네임 FK 저장</li>
+</ul>
+
+<h2>8.5 오늘 뭐먹지? (랜덤 추천)</h2>
+<div class="highlight">
+  <div class="highlight-title">UX 흐름</div>
+  <ol style="margin:8px 0 0;">
+    <li>카테고리 멀티 체크 (선택 안 하면 전체)</li>
+    <li>점심/저녁 토글</li>
+    <li>"굴려라!" 버튼 클릭 → 룰렛 슬롯 애니메이션 (1.5초)</li>
+    <li>결과 카드 — 식당명, 평점, 메뉴, 거리</li>
+    <li>"이 식당 갈래!" → 상세 페이지 / "다시 굴리기" 재시도</li>
+  </ol>
+</div>
+<ul>
+  <li>풀 산정 — 필터 적용 + <code>status = '운영중'</code> + 평점 무조건 무관</li>
+  <li>가중치 옵션 (v2) — 평점 높은 식당 더 자주 노출</li>
+  <li>최근 뽑힌 식당 5개 일시 제외 옵션</li>
+</ul>
+
+<h2>8.6 운영 상태 관리 (휴업 · 폐업)</h2>
+<div class="highlight">
+  <div class="highlight-title">모델: status 필드 기반 soft delete</div>
+  실제 레코드를 삭제하지 않고 <code>status</code>를 <code>운영중 → 휴업 → 폐업</code>으로 전이시킵니다. 과거 평가·한줄평은 모두 보존되며 실수 시 복구 가능합니다. <strong>물리 삭제(DELETE)는 Supabase Studio에서만 수행</strong>합니다.
+</div>
+
+<table class="data">
+  <thead><tr><th>status</th><th>의미</th><th>목록 노출</th><th>룰렛 풀</th><th>평가 입력</th></tr></thead>
+  <tbody>
+    <tr><td><code>운영중</code></td><td>정상 영업 (기본값)</td><td>○ 항상</td><td>○ 포함</td><td>○ 허용</td></tr>
+    <tr><td><code>휴업</code></td><td>일시 휴업 (재오픈 가능성 있음)</td><td>△ 토글 ON일 때만</td><td>✕ 제외</td><td>△ 경고 후 허용</td></tr>
+    <tr><td><code>폐업</code></td><td>영구 폐업</td><td>△ 토글 ON일 때만</td><td>✕ 제외</td><td>✕ 차단</td></tr>
+  </tbody>
+</table>
+
+<h3>UX 흐름</h3>
+<ul>
+  <li><strong>상세 페이지 ⋯ 메뉴</strong> — "휴업으로 표시", "폐업으로 표시", "운영중으로 복구"</li>
+  <li><strong>확인 다이얼로그</strong> — 폐업 처리 시 "이 식당을 폐업 처리할까요? 목록에서 숨겨지지만 데이터는 보존됩니다" 안내</li>
+  <li><strong>홈 필터 토글</strong> — "휴업·폐업 포함 보기" (기본 OFF), 토글 ON 시 회색·취소선으로 디그레이드 노출</li>
+  <li><strong>배지 컬러</strong> — 휴업 <span class="tag tag-amber">warn</span> · 폐업 <span class="tag tag-gray">gray</span></li>
+  <li><strong>RLS</strong> — <code>UPDATE status</code>는 누구나 가능 (어뷰징 방지는 Rate Limit으로 대응)</li>
+</ul>
+
+<h1 id="sec-9">9. 페이지 구성 (라우팅)</h1>
+<table class="data">
+  <thead><tr><th>URL</th><th>페이지명</th><th>설명</th><th>인증</th></tr></thead>
+  <tbody>
+    <tr><td><code>/</code></td><td>홈 · 목록</td><td>맛집 카드 그리드, 필터, 검색</td><td>—</td></tr>
+    <tr><td><code>/restaurant/:id</code></td><td>맛집 상세</td><td>지도, 평점, 한줄평</td><td>—</td></tr>
+    <tr><td><code>/rate/:id</code></td><td>평가 입력</td><td>닉네임, 별점, 한줄평</td><td>닉네임 선택</td></tr>
+    <tr><td><code>/add</code></td><td>맛집 등록</td><td>카카오 장소 검색</td><td>—</td></tr>
+    <tr><td><code>/roulette</code></td><td>오늘 뭐먹지?</td><td>랜덤 추천 룰렛</td><td>—</td></tr>
+    <tr><td><code>/map</code> (v2)</td><td>지도 뷰</td><td>전체 식당 핀</td><td>—</td></tr>
+    <tr><td><code>*</code></td><td>404</td><td>홈 복귀 안내</td><td>—</td></tr>
+  </tbody>
+</table>
+
+<h1 id="sec-10">10. 보안 & RLS 정책</h1>
+
+<div class="highlight danger">
+  <div class="highlight-title">익명 시스템의 보안 핵심</div>
+  Supabase RLS(Row Level Security)로 직접 SQL 주입을 막고, 클라이언트 키만 노출되어도 안전한 구조를 만듭니다. 추가로 어뷰징 방지 장치를 둡니다.
+</div>
+
+<h2>10.1 RLS 정책</h2>
+<table class="data">
+  <thead><tr><th>테이블</th><th>SELECT</th><th>INSERT</th><th>UPDATE</th><th>DELETE</th></tr></thead>
+  <tbody>
+    <tr><td>restaurants</td><td>모두 허용</td><td>모두 허용</td><td>모두 허용</td><td>차단 (Studio만)</td></tr>
+    <tr><td>reviewers</td><td>모두 허용</td><td>모두 허용</td><td>본인만 (id ↔ x-reviewer-id 헤더)</td><td>차단</td></tr>
+    <tr><td>ratings</td><td>모두 허용</td><td>모두 허용</td><td>본인 reviewer_id 평가만</td><td>본인 reviewer_id 평가만</td></tr>
+    <tr><td>rating_photos</td><td>모두 허용</td><td>본인 rating에만</td><td>차단</td><td>본인 reviewer_id 평가만</td></tr>
+  </tbody>
+</table>
+
+<h2>10.2 정책 SQL 예시</h2>
+<pre><span class="com">-- restaurants: 누구나 조회·생성 가능, 삭제 차단</span>
+<span class="kw">ALTER TABLE</span> restaurants <span class="kw">ENABLE ROW LEVEL SECURITY</span>;
+
+<span class="kw">CREATE POLICY</span> "Anyone can read restaurants"
+  <span class="kw">ON</span> restaurants <span class="kw">FOR SELECT USING</span> (<span class="kw">true</span>);
+
+<span class="kw">CREATE POLICY</span> "Anyone can insert restaurants"
+  <span class="kw">ON</span> restaurants <span class="kw">FOR INSERT WITH CHECK</span> (<span class="kw">true</span>);
+
+<span class="com">-- ratings: 본인이 등록한 평가만 수정 가능 (localStorage 닉네임 검증)</span>
+<span class="kw">CREATE POLICY</span> "Update own rating"
+  <span class="kw">ON</span> ratings <span class="kw">FOR UPDATE</span>
+  <span class="kw">USING</span> (reviewer_id::text = current_setting(<span class="str">'request.headers'</span>, <span class="kw">true</span>)::json->><span class="str">'x-reviewer-id'</span>);</pre>
+
+<h2>10.3 어뷰징 방지</h2>
+<div class="card-grid">
+  <div class="card">
+    <div class="card-title">Rate Limit</div>
+    <div class="card-desc">Supabase Edge Function 또는 Vercel Middleware로 IP당 분당 30회 제한</div>
+  </div>
+  <div class="card">
+    <div class="card-title">평균 정규화</div>
+    <div class="card-desc">1인 N평가는 허용하되 <code>restaurant_stats</code> 뷰가 reviewer_id별 최신 1건만 평균에 반영해 도배에 의한 왜곡 차단</div>
+  </div>
+  <div class="card">
+    <div class="card-title">평가 Rate-limit</div>
+    <div class="card-desc"><code>ratings_rate_limit</code> 트리거가 reviewer_id별 분당 1회·시간당 10회 초과를 차단 (ERRCODE 54000)</div>
+  </div>
+  <div class="card">
+    <div class="card-title">댓글 길이 제한</div>
+    <div class="card-desc">200자 CHECK 제약 + 클라이언트 검증</div>
+  </div>
+  <div class="card">
+    <div class="card-title">금칙어 필터</div>
+    <div class="card-desc">기본 욕설 사전 + Zod refine 검증 (v2)</div>
+  </div>
+  <div class="card">
+    <div class="card-title">대량 삽입 차단</div>
+    <div class="card-desc">맛집 등록 시 같은 IP에서 10분 내 5건 이상 차단</div>
+  </div>
+  <div class="card">
+    <div class="card-title">CORS</div>
+    <div class="card-desc">Supabase에서 Vercel 도메인만 허용</div>
+  </div>
+</div>
+
+<h2>10.4 환경변수 관리</h2>
+<table class="data">
+  <thead><tr><th>변수</th><th>설명</th><th>위치</th></tr></thead>
+  <tbody>
+    <tr><td><code>VITE_SUPABASE_URL</code></td><td>Supabase 프로젝트 URL</td><td>Vercel + .env.local</td></tr>
+    <tr><td><code>VITE_SUPABASE_ANON_KEY</code></td><td>Supabase Anon Key (RLS 보호 전제)</td><td>Vercel + .env.local</td></tr>
+    <tr><td><code>VITE_KAKAO_MAP_KEY</code></td><td>카카오맵 JS Key (도메인 제한 필수)</td><td>Vercel + .env.local</td></tr>
+    <tr><td><code>KAKAO_REST_KEY</code></td><td>마이그레이션용 (서버 사이드만)</td><td>로컬 스크립트만</td></tr>
+  </tbody>
+</table>
+
+<h1 id="sec-11">11. UX 표준 (로딩/에러/빈 상태)</h1>
+
+<h2>11.1 로딩 패턴</h2>
+<table class="data">
+  <thead><tr><th>상황</th><th>패턴</th><th>최소 표시 시간</th></tr></thead>
+  <tbody>
+    <tr><td>초기 페이지 로드</td><td>Skeleton UI (카드 형태)</td><td>200ms 이하 깜빡임 방지</td></tr>
+    <tr><td>버튼 클릭 후 작업</td><td>버튼 내 스피너 + disabled</td><td>—</td></tr>
+    <tr><td>지도 로드</td><td>회색 박스 → 페이드인</td><td>—</td></tr>
+    <tr><td>검색 입력 중</td><td>입력창 우측 작은 스피너</td><td>debounce 300ms</td></tr>
+  </tbody>
+</table>
+
+<h2>11.2 에러 처리</h2>
+<ul>
+  <li><strong>전역 Error Boundary</strong> — React Router의 errorElement 활용, "다시 시도" 버튼 + 홈 링크</li>
+  <li><strong>네트워크 에러</strong> — TanStack Query retry 3회 + 토스트</li>
+  <li><strong>422 Validation</strong> — 폼 inline 에러 메시지 (한국어)</li>
+  <li><strong>404</strong> — 홈으로 안내, 친근한 일러스트</li>
+  <li><strong>지도 SDK 로드 실패</strong> — 좌표만 텍스트 표시 + 외부 지도 링크</li>
+</ul>
+
+<h2>11.3 빈 상태 (Empty State)</h2>
+<table class="data">
+  <thead><tr><th>상황</th><th>메시지</th><th>액션</th></tr></thead>
+  <tbody>
+    <tr><td>검색 결과 없음</td><td>"'양꼬치'에 해당하는 식당이 없어요"</td><td>"새로 등록하기"</td></tr>
+    <tr><td>한줄평 없음</td><td>"아직 한줄평이 없어요. 첫 평가를 남겨보세요!"</td><td>"평가하기"</td></tr>
+    <tr><td>룰렛 풀 0개</td><td>"조건에 맞는 식당이 없어요"</td><td>"필터 초기화"</td></tr>
+    <tr><td>맛집 0개 (초기)</td><td>"첫 맛집을 등록해주세요"</td><td>"맛집 등록"</td></tr>
+  </tbody>
+</table>
+
+<h2>11.4 디자인 토큰 (가이드)</h2>
+<div class="card-grid">
+  <div class="card">
+    <div class="card-title">Color</div>
+    <div class="card-desc">Primary #2E75B6, Accent #FF6B35 (식욕), Success #1D9E75, Warn #F4A700</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Typography</div>
+    <div class="card-desc">Pretendard 우선, Heading 700, Body 400, 한글 가독성 우선</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Spacing</div>
+    <div class="card-desc">4px grid, 모바일 padding 16px, 카드 gap 12px</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Radius</div>
+    <div class="card-desc">버튼 8px, 카드 12px, 입력 6px, 둥근 박스 통일감</div>
+  </div>
+</div>
+
+<h1 id="sec-12">12. 성능 & PWA</h1>
+
+<h2>12.1 성능 목표</h2>
+<div class="stats-grid">
+  <div class="stat"><div class="stat-label">LCP</div><div class="stat-num">&lt; 2.0s</div><div class="stat-sub">Largest Contentful Paint</div></div>
+  <div class="stat"><div class="stat-label">FID</div><div class="stat-num">&lt; 100ms</div><div class="stat-sub">First Input Delay</div></div>
+  <div class="stat"><div class="stat-label">CLS</div><div class="stat-num">&lt; 0.1</div><div class="stat-sub">Cumulative Layout Shift</div></div>
+  <div class="stat"><div class="stat-label">번들</div><div class="stat-num">&lt; 200KB</div><div class="stat-sub">초기 JS gzip</div></div>
+</div>
+
+<h2>12.2 최적화 전략</h2>
+<ul>
+  <li><strong>Code Splitting</strong> — React.lazy로 페이지별 분할, 지도 SDK는 상세/등록 페이지에서만 로드</li>
+  <li><strong>이미지 최적화</strong> — 식당 사진 없음 (v1), v2에서 추가 시 WebP + lazy loading</li>
+  <li><strong>Tailwind Purge</strong> — 사용하지 않는 클래스 제거</li>
+  <li><strong>TanStack Query</strong> — 5분 staleTime, 식당 목록 캐싱</li>
+  <li><strong>Vite Build</strong> — Terser minify, ES2020 타겟</li>
+</ul>
+
+<h2>12.3 PWA (Progressive Web App)</h2>
+<div class="highlight">
+  <div class="highlight-title">왜 PWA인가?</div>
+  점심시간 모바일에서 빠르게 진입해야 하는 서비스 특성 → 홈 화면 추가 + 오프라인 캐시로 1초 이내 진입 보장
+</div>
+<ul>
+  <li><code>vite-plugin-pwa</code> 사용 — manifest.json, service worker 자동 생성</li>
+  <li>오프라인 지원 — 식당 목록 stale-while-revalidate</li>
+  <li>홈 화면 추가 — 아이콘, 스플래시 스크린</li>
+  <li>iOS Safari "공유 → 홈 화면에 추가" 가이드</li>
+</ul>
+
+<h1 id="sec-13">13. 테스트 전략</h1>
+
+<table class="data">
+  <thead><tr><th>레벨</th><th>도구</th><th>대상</th><th>커버리지 목표</th></tr></thead>
+  <tbody>
+    <tr><td>Unit</td><td>Vitest</td><td>유틸 함수, hooks, store</td><td>핵심 로직 80%+</td></tr>
+    <tr><td>Component</td><td>RTL + Vitest</td><td>주요 컴포넌트 렌더링·이벤트</td><td>주요 컴포넌트만</td></tr>
+    <tr><td>Integration</td><td>RTL + MSW</td><td>API mock + 페이지 흐름</td><td>핵심 시나리오</td></tr>
+    <tr><td>E2E (선택)</td><td>Playwright</td><td>주요 사용자 여정</td><td>v2에서 도입 검토</td></tr>
+    <tr><td>Manual QA</td><td>—</td><td>모바일 실기기, 다크모드, 네트워크 슬로우</td><td>배포 전 필수</td></tr>
+  </tbody>
+</table>
+
+<h2>13.1 테스트 우선순위</h2>
+<ol>
+  <li>평가 제출 — 정상 케이스, rate-limit(분당 1·시간당 10) 차단 케이스, 동일 사용자 N번째 평가가 평균에 1건만 반영되는지</li>
+  <li>룰렛 — 빈 풀, 단일 결과, 휴업·폐업 제외</li>
+  <li>필터·정렬 — 다중 조합, 빈 결과</li>
+  <li>지도 SDK 로드 실패 폴백</li>
+</ol>
+
+<h1 id="sec-14">14. 폴더 구조 & 코딩 컨벤션</h1>
+
+<h2>14.1 폴더 구조</h2>
+<pre>yangjai/
+├── public/                 <span class="com"># 정적 파일 (favicon, manifest)</span>
+├── src/
+│   ├── pages/              <span class="com"># 라우트 단위 페이지</span>
+│   │   ├── HomePage.tsx
+│   │   ├── RestaurantDetailPage.tsx
+│   │   ├── RatePage.tsx
+│   │   ├── AddRestaurantPage.tsx
+│   │   ├── RoulettePage.tsx
+│   │   └── LeaderboardPage.tsx
+│   ├── components/         <span class="com"># 재사용 컴포넌트</span>
+│   │   ├── ui/             <span class="com"># Button, Card, Input 등 원자</span>
+│   │   ├── restaurant/     <span class="com"># RestaurantCard, RatingBar</span>
+│   │   ├── rating/         <span class="com"># StarRating, CommentList</span>
+│   │   └── layout/         <span class="com"># Header, Footer, Nav</span>
+│   ├── features/           <span class="com"># 도메인 단위 (선택)</span>
+│   │   ├── restaurants/
+│   │   ├── ratings/
+│   │   └── roulette/
+│   ├── lib/                <span class="com"># 외부 연동 클라이언트</span>
+│   │   ├── supabase.ts     <span class="com"># Supabase client</span>
+│   │   └── kakao.ts        <span class="com"># Kakao Maps SDK loader</span>
+│   ├── api/                <span class="com"># 쿼리·뮤테이션 함수</span>
+│   │   ├── restaurants.ts
+│   │   └── ratings.ts
+│   ├── hooks/              <span class="com"># 커스텀 훅</span>
+│   ├── store/              <span class="com"># Zustand 스토어</span>
+│   ├── types/              <span class="com"># 공용 타입 (DB 스키마 기반)</span>
+│   ├── utils/              <span class="com"># 헬퍼 함수</span>
+│   ├── styles/             <span class="com"># Tailwind config, globals.css</span>
+│   ├── App.tsx
+│   └── main.tsx
+├── scripts/                <span class="com"># 마이그레이션 스크립트</span>
+│   ├── parse-csv.ts
+│   ├── enrich-coords.ts
+│   └── generate-seed.ts
+├── supabase/
+│   ├── migrations/         <span class="com"># DB 마이그레이션</span>
+│   └── seed.sql
+├── .env.local
+├── tailwind.config.js
+├── vite.config.ts
+└── package.json</pre>
+
+<h2>14.2 명명 규칙</h2>
+<ul>
+  <li>컴포넌트 — <code>PascalCase</code> (RestaurantCard.tsx)</li>
+  <li>훅 — <code>useCamelCase</code> (useRestaurants.ts)</li>
+  <li>유틸 — <code>camelCase</code> (formatScore.ts)</li>
+  <li>상수 — <code>UPPER_SNAKE</code> (CATEGORIES, DIRECTIONS)</li>
+  <li>타입 — <code>PascalCase</code> (Restaurant, Rating)</li>
+</ul>
+
+<h2>14.3 Git 커밋 컨벤션</h2>
+<pre><span class="kw">feat</span>: 평가 입력 폼 별점 컴포넌트 추가
+<span class="kw">fix</span>: 룰렛 휴업·폐업 식당 제외 누락 수정
+<span class="kw">refactor</span>: 식당 카드 prop 정리
+<span class="kw">style</span>: Tailwind 클래스 정렬
+<span class="kw">docs</span>: README 배포 가이드 추가
+<span class="kw">chore</span>: 의존성 업데이트</pre>
+
+<h1 id="sec-15">15. 개발 단계</h1>
+
+<div class="phase">
+  <div class="phase-num">PHASE 1</div>
+  <div class="phase-title">기획 (완료)</div>
+  <div class="phase-desc">시스템 설계, DB 스키마, API 선정 — 본 문서</div>
+</div>
+<div class="phase">
+  <div class="phase-num">PHASE 2</div>
+  <div class="phase-title">디자인 (다음 단계)</div>
+  <div class="phase-desc">화면 목업 — 홈, 상세, 룰렛, 평가 입력 / 디자인 토큰 확정</div>
+</div>
+<div class="phase">
+  <div class="phase-num">PHASE 3</div>
+  <div class="phase-title">환경 구성</div>
+  <div class="phase-desc">GitHub 레포, Supabase 프로젝트, Vercel 연동, 카카오 앱 등록, ESLint·Prettier 설정</div>
+</div>
+<div class="phase">
+  <div class="phase-num">PHASE 4</div>
+  <div class="phase-title">데이터 마이그레이션</div>
+  <div class="phase-desc">CSV 파싱 → 카카오 좌표 보완 → seed SQL → 데이터 검증</div>
+</div>
+<div class="phase">
+  <div class="phase-num">PHASE 5</div>
+  <div class="phase-title">프론트 개발</div>
+  <div class="phase-desc">레이아웃·라우팅 → 페이지 단위 구현 → 카카오맵 연동 → 인터랙션</div>
+</div>
+<div class="phase">
+  <div class="phase-num">PHASE 6</div>
+  <div class="phase-title">QA & 배포</div>
+  <div class="phase-desc">모바일 실기기 테스트, 네트워크 슬로우, 다크모드, Production 배포</div>
+</div>
+
+<h1 id="sec-16">16. 리스크 매트릭스</h1>
+
+<table class="data risk-table">
+  <thead><tr><th>리스크</th><th>발생 가능성</th><th>영향도</th><th>대응 방안</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>카카오 API 정책 변경 (유료화)</td>
+      <td class="sev-low">낮음</td>
+      <td class="sev-mid">중간</td>
+      <td>월 사용량 모니터링, OpenStreetMap (Leaflet) 대체 준비</td>
+    </tr>
+    <tr>
+      <td>Supabase 무료 티어 초과</td>
+      <td class="sev-low">매우 낮음</td>
+      <td class="sev-mid">중간</td>
+      <td>한줄평 사진은 클라이언트에서 1024px·JPEG 0.8·300KB 가드 후 업로드 — 평가당 최대 3장, 평가 200건 기준 ~180MB 예상 (500MB 한도 내)</td>
+    </tr>
+    <tr>
+      <td>익명 어뷰징 (욕설, 도배)</td>
+      <td class="sev-mid">중간</td>
+      <td class="sev-mid">중간</td>
+      <td>Rate-limit 트리거(분당 1·시간당 10), 평균 정규화 뷰(reviewer_id별 최신 1건), 댓글 200자 CHECK, 금칙어 필터(v2)</td>
+    </tr>
+    <tr>
+      <td>닉네임 중복 사용 (사칭)</td>
+      <td class="sev-mid">중간</td>
+      <td class="sev-low">낮음</td>
+      <td>localStorage 기반 본인 확인 토큰, v2에서 PIN 옵션 검토</td>
+    </tr>
+    <tr>
+      <td>데이터 마이그레이션 좌표 매칭 실패</td>
+      <td class="sev-mid">중간</td>
+      <td class="sev-low">낮음</td>
+      <td>매칭 실패 식당 수동 보완, 좌표 NULL 허용 (지도만 미표시)</td>
+    </tr>
+    <tr>
+      <td>모바일 Safari 호환성</td>
+      <td class="sev-mid">중간</td>
+      <td class="sev-mid">중간</td>
+      <td>실기기 QA 필수, vite-plugin-legacy 폴백 검토</td>
+    </tr>
+    <tr>
+      <td>RLS 정책 미흡으로 데이터 변조</td>
+      <td class="sev-low">낮음</td>
+      <td class="sev-high">높음</td>
+      <td>배포 전 정책 점검, Supabase Studio 차단 검증</td>
+    </tr>
+    <tr>
+      <td>Vercel 빌드 실패 / 무료 티어 한도</td>
+      <td class="sev-low">매우 낮음</td>
+      <td class="sev-low">낮음</td>
+      <td>월 100GB 대역폭 = 사실상 무제한, 빌드 시간 모니터링</td>
+    </tr>
+  </tbody>
+</table>
+
+<h1 id="sec-17">17. 로드맵 (v2, v3)</h1>
+
+<h2>v2 — 사용 경험 강화</h2>
+<div class="card-grid">
+  <div class="card">
+    <div class="card-title">전체 지도 뷰</div>
+    <div class="card-desc">/map 라우트, 모든 식당 핀, 평점별 색상 마커</div>
+  </div>
+  <div class="card">
+    <div class="card-title">사진 워터마크 / AI 모더레이션</div>
+    <div class="card-desc">v1.1에서 사진 업로드 도입(<code>rating_photos</code> + Storage). v2는 워터마크 자동 부착, 부적절 이미지 자동 감지·차단</div>
+  </div>
+  <div class="card">
+    <div class="card-title">실시간 업데이트</div>
+    <div class="card-desc">Supabase Realtime 구독, 새 평가 즉시 반영</div>
+  </div>
+  <div class="card">
+    <div class="card-title">방문 체크인</div>
+    <div class="card-desc">"오늘 갔다왔다" 버튼, 방문 횟수 기록</div>
+  </div>
+</div>
+
+<h2>v3 — 확장</h2>
+<div class="card-grid">
+  <div class="card">
+    <div class="card-title">PIN 인증</div>
+    <div class="card-desc">닉네임 + 4자리 PIN으로 사칭 방지</div>
+  </div>
+  <div class="card">
+    <div class="card-title">추천 알고리즘</div>
+    <div class="card-desc">선호 카테고리 기반 개인화 추천</div>
+  </div>
+  <div class="card">
+    <div class="card-title">관리자 대시보드</div>
+    <div class="card-desc">통계, 어뷰징 신고 처리, 데이터 정리</div>
+  </div>
+  <div class="card">
+    <div class="card-title">팀 확장</div>
+    <div class="card-desc">다른 지역 (강남, 판교) 분기 운영, 팀별 격리</div>
+  </div>
+</div>
+
+<h1 id="sec-cost">부록 A. 비용 요약</h1>
+<div class="highlight success">
+  <div class="highlight-title">전체 운영 비용 0원</div>
+  <ul>
+    <li>Supabase 무료 티어 — Postgres 500MB, API 무제한, Auth, RLS 포함</li>
+    <li>카카오맵 API — 지도 + 장소검색 월 300만 건 무료 (신용카드 불필요)</li>
+    <li>Vercel 무료 티어 — 빌드, CDN, Preview URL, 100GB 대역폭/월</li>
+    <li>GitHub 무료 — 레포, Actions CI/CD</li>
+    <li>도메인 — vercel.app 서브도메인 무료 사용</li>
+  </ul>
+</div>
+
+<h1 id="sec-glossary">부록 B. 용어 정리</h1>
+<table class="data">
+  <thead><tr><th>용어</th><th>설명</th></tr></thead>
+  <tbody>
+    <tr><td><strong>RLS</strong></td><td>Row Level Security. Postgres 행 단위 접근 제어, Supabase 핵심 기능</td></tr>
+    <tr><td><strong>SPA</strong></td><td>Single Page Application. 브라우저에서 라우팅, 페이지 전체 새로고침 없음</td></tr>
+    <tr><td><strong>FCP/LCP</strong></td><td>First/Largest Contentful Paint. 페이지 콘텐츠 첫·주요 표시 시간</td></tr>
+    <tr><td><strong>PWA</strong></td><td>Progressive Web App. 웹앱을 네이티브앱처럼 설치·오프라인 사용</td></tr>
+    <tr><td><strong>Optimistic UI</strong></td><td>요청 결과 받기 전 UI 먼저 업데이트, 실패 시 rollback</td></tr>
+    <tr><td><strong>Stale-while-revalidate</strong></td><td>캐시 즉시 반환 + 백그라운드 재요청 패턴</td></tr>
+  </tbody>
+</table>
+
+</div>
+</main>
+</div>
+
+<footer>
+  <div>양재어디가 · 시스템 기획서 v2.0 · Opus Enhanced</div>
+  <div class="copy">© 2025 — 양재역 점심을 더 즐겁게</div>
+</footer>
+
+</body>
+</html>

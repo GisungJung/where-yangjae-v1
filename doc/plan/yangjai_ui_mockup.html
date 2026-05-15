@@ -1,0 +1,4068 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>양재어디가 · 모바일 UI 목업 v1</title>
+    <style>
+      :root {
+        /* 기획서 디자인 토큰 */
+        --primary: #2e75b6;
+        --primary-dark: #1f3864;
+        --primary-light: #d5e8f0;
+        --accent: #ff6b35;
+        --accent-soft: #ffe9dc;
+        --success: #1d9e75;
+        --success-soft: #e2efda;
+        --warn: #f4a700;
+        --warn-soft: #fff2cc;
+        --danger: #a32d2d;
+        --text: #1a1a1a;
+        --text-mid: #555;
+        --text-mute: #888;
+        --border: #e5e5e5;
+        --border-soft: #f0f0f0;
+        --bg-canvas: #2a2d34;
+        --bg-app: #fafafa;
+        --bg-card: #ffffff;
+        --bg-soft: #f5f7fa;
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg-canvas);
+        color: #e8eaed;
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Pretendard', 'Noto Sans KR',
+          'Segoe UI', sans-serif;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+        padding: 48px 32px 80px;
+      }
+
+      /* Board header */
+      .board-header {
+        max-width: 1400px;
+        margin: 0 auto 40px;
+      }
+      .board-header h1 {
+        font-size: 28px;
+        font-weight: 800;
+        color: #fff;
+        margin: 0 0 6px;
+        letter-spacing: -0.5px;
+      }
+      .board-header .sub {
+        color: #9aa0a6;
+        font-size: 14px;
+      }
+      .board-header .meta {
+        display: inline-block;
+        margin-top: 12px;
+        padding: 4px 10px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        font-size: 11px;
+        color: #c7cad1;
+        letter-spacing: 0.5px;
+      }
+
+      /* Tokens panel */
+      .tokens {
+        max-width: 1400px;
+        margin: 0 auto 40px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 20px 24px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        color: #c7cad1;
+        font-size: 13px;
+      }
+      .tokens .group-label {
+        font-size: 11px;
+        color: #8d929b;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        margin-bottom: 8px;
+        font-weight: 700;
+      }
+      .swatch-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .swatch {
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        flex-shrink: 0;
+      }
+      .swatch-row code {
+        font-size: 11px;
+        color: #9aa0a6;
+        font-family: 'Menlo', 'Consolas', monospace;
+      }
+
+      /* Screens stack — vertical rows, each row = phone + notes column */
+      .screens-stack {
+        max-width: 1240px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 64px;
+      }
+      .screen-row {
+        display: grid;
+        grid-template-columns: 425px 1fr;
+        gap: 48px;
+        align-items: flex-start;
+      }
+      .screen-wrap {
+        width: 375px;
+        flex-shrink: 0;
+      }
+      .screen-label {
+        color: #9aa0a6;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+      }
+      .screen-name {
+        color: #fff;
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .screen-route {
+        color: #8ab4f8;
+        font-size: 12px;
+        font-family: 'Menlo', 'Consolas', monospace;
+        margin-bottom: 16px;
+      }
+
+      /* Phone frame */
+      .phone {
+        width: 375px;
+        background: var(--bg-app);
+        border-radius: 38px;
+        overflow: hidden;
+        box-shadow:
+          0 0 0 10px #111418,
+          0 12px 40px rgba(0, 0, 0, 0.5);
+        color: var(--text);
+        font-size: 14px;
+        line-height: 1.5;
+        position: relative;
+      }
+
+      /* iOS status bar */
+      .statusbar {
+        height: 44px;
+        background: var(--bg-app);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 22px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+        position: relative;
+      }
+      .statusbar::before {
+        content: '';
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120px;
+        height: 28px;
+        background: #111418;
+        border-radius: 18px;
+      }
+      .statusbar .time {
+        z-index: 2;
+      }
+      .statusbar .right {
+        z-index: 2;
+        display: flex;
+        gap: 6px;
+        font-size: 12px;
+        align-items: center;
+      }
+
+      /* App header */
+      .app-header {
+        height: 56px;
+        background: #fff;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        gap: 12px;
+      }
+      .app-header .title {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--primary-dark);
+        letter-spacing: -0.3px;
+        flex: 1;
+      }
+      .app-header .title.center {
+        text-align: center;
+        font-size: 16px;
+        color: var(--text);
+      }
+      .app-header .icon-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 18px;
+        background: var(--bg-soft);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-mid);
+        font-size: 18px;
+      }
+      .app-header .back {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        color: var(--text);
+      }
+      .app-header .add-btn {
+        background: var(--primary);
+        color: #fff;
+        font-weight: 700;
+      }
+
+      /* Scroll area (mock content area) */
+      .scroll {
+        overflow: hidden;
+        background: var(--bg-app);
+        min-height: 600px;
+        position: relative;
+      }
+
+      /* Search & filter strip (Home) */
+      .search-strip {
+        padding: 12px 16px;
+        background: #fff;
+        border-bottom: 1px solid var(--border-soft);
+      }
+      .search-input {
+        background: var(--bg-soft);
+        border-radius: 10px;
+        padding: 10px 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-mute);
+        font-size: 14px;
+      }
+      .search-input .ico {
+        font-size: 14px;
+      }
+
+      .filter-row {
+        display: flex;
+        gap: 8px;
+        padding: 12px 16px;
+        background: #fff;
+        border-bottom: 1px solid var(--border-soft);
+        overflow-x: auto;
+      }
+      .chip {
+        flex-shrink: 0;
+        padding: 6px 14px;
+        border-radius: 16px;
+        background: var(--bg-soft);
+        font-size: 13px;
+        color: var(--text-mid);
+        font-weight: 500;
+        border: 1px solid var(--border-soft);
+      }
+      .chip.active {
+        background: var(--primary);
+        color: #fff;
+        border-color: var(--primary);
+        font-weight: 700;
+      }
+
+      /* Sort bar */
+      .sort-bar {
+        padding: 12px 16px 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+        color: var(--text-mid);
+      }
+      .sort-bar .count {
+        font-weight: 600;
+        color: var(--text);
+      }
+      .sort-bar .sort-pill {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--text);
+        font-weight: 500;
+      }
+
+      /* Restaurant card */
+      .rest-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin: 0 16px 10px;
+        border: 1px solid var(--border-soft);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+      }
+      .rest-card .row1 {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 6px;
+      }
+      .rest-card .name {
+        font-weight: 700;
+        font-size: 15px;
+        color: var(--text);
+      }
+      .rest-card .rating {
+        font-size: 13px;
+        color: var(--accent);
+        font-weight: 700;
+      }
+      .rest-card .rating .count {
+        color: var(--text-mute);
+        font-weight: 500;
+        margin-left: 3px;
+        font-size: 12px;
+      }
+      .rest-card .badges {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 6px;
+        flex-wrap: wrap;
+      }
+      .badge {
+        font-size: 11px;
+        padding: 2px 7px;
+        border-radius: 9px;
+        font-weight: 600;
+        background: var(--primary-light);
+        color: var(--primary-dark);
+      }
+      .badge.green {
+        background: var(--success-soft);
+        color: #1a6b4f;
+      }
+      .badge.orange {
+        background: var(--accent-soft);
+        color: #b0451f;
+      }
+      .badge.gray {
+        background: var(--bg-soft);
+        color: var(--text-mid);
+      }
+      .badge.danger {
+        background: #fce4d6;
+        color: var(--danger);
+      }
+      .rest-card .note {
+        font-size: 12px;
+        color: var(--text-mid);
+        line-height: 1.5;
+        margin-top: 4px;
+      }
+
+      /* Bottom tab bar */
+      .tab-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border-top: 1px solid var(--border);
+        display: flex;
+        height: 64px;
+        padding-bottom: 12px;
+      }
+      .tab-bar .tab {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        font-size: 11px;
+        color: var(--text-mute);
+        font-weight: 500;
+      }
+      .tab-bar .tab .ico {
+        font-size: 22px;
+      }
+      .tab-bar .tab.active {
+        color: var(--primary);
+        font-weight: 700;
+      }
+
+      /* Home indicator */
+      .home-indicator {
+        position: absolute;
+        bottom: 4px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 134px;
+        height: 5px;
+        background: var(--text);
+        border-radius: 3px;
+        opacity: 0.85;
+      }
+
+      /* ============ DETAIL PAGE ============ */
+      .map-block {
+        height: 200px;
+        background: linear-gradient(135deg, #dce5e8 0%, #c5d1d6 100%);
+        position: relative;
+        border-bottom: 1px solid var(--border);
+      }
+      .map-block::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image:
+          repeating-linear-gradient(
+            90deg,
+            transparent 0 49px,
+            rgba(255, 255, 255, 0.4) 49px 50px
+          ),
+          repeating-linear-gradient(
+            0deg,
+            transparent 0 49px,
+            rgba(255, 255, 255, 0.4) 49px 50px
+          );
+      }
+      .map-pin {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -100%);
+        font-size: 32px;
+        color: var(--accent);
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+      }
+      .map-tag {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        background: #fff;
+        padding: 4px 10px;
+        border-radius: 16px;
+        font-size: 11px;
+        color: var(--text-mid);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+        font-weight: 600;
+      }
+
+      .detail-head {
+        padding: 16px 16px 12px;
+        background: #fff;
+        border-bottom: 1px solid var(--border-soft);
+      }
+      .detail-head .h-name {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--text);
+        letter-spacing: -0.3px;
+        margin-bottom: 6px;
+      }
+      .detail-head .menu {
+        font-size: 13px;
+        color: var(--text-mid);
+        line-height: 1.6;
+        margin-top: 6px;
+      }
+
+      .rating-block {
+        padding: 16px;
+        background: #fff;
+        border-bottom: 8px solid var(--bg-soft);
+        display: flex;
+        gap: 16px;
+        align-items: center;
+      }
+      .rating-big {
+        text-align: center;
+        padding-right: 16px;
+        border-right: 1px solid var(--border-soft);
+        flex-shrink: 0;
+      }
+      .rating-big .num {
+        font-size: 36px;
+        font-weight: 800;
+        color: var(--accent);
+        line-height: 1;
+      }
+      .rating-big .stars {
+        color: var(--accent);
+        font-size: 14px;
+        margin: 4px 0;
+        letter-spacing: 1px;
+      }
+      .rating-big .total {
+        font-size: 11px;
+        color: var(--text-mute);
+      }
+      .rating-dist {
+        flex: 1;
+      }
+      .dist-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        color: var(--text-mute);
+        margin-bottom: 3px;
+      }
+      .dist-row .lbl {
+        width: 22px;
+      }
+      .dist-row .bar {
+        flex: 1;
+        height: 5px;
+        background: var(--bg-soft);
+        border-radius: 3px;
+        overflow: hidden;
+      }
+      .dist-row .bar-fill {
+        height: 100%;
+        background: var(--accent);
+        border-radius: 3px;
+      }
+      .dist-row .cnt {
+        width: 16px;
+        text-align: right;
+      }
+
+      .note-box {
+        margin: 12px 16px;
+        padding: 10px 12px;
+        background: var(--warn-soft);
+        border-left: 3px solid var(--warn);
+        border-radius: 0 8px 8px 0;
+        font-size: 12px;
+        color: #5c3a00;
+        line-height: 1.5;
+      }
+
+      .review-section {
+        background: #fff;
+        padding: 16px 16px 88px;
+      }
+      .review-section h3 {
+        font-size: 15px;
+        font-weight: 700;
+        margin: 0 0 12px;
+        color: var(--text);
+      }
+      .review-item {
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border-soft);
+      }
+      .review-item:last-child {
+        border-bottom: none;
+      }
+      .review-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+      .reviewer-name {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text);
+      }
+      .review-date {
+        font-size: 11px;
+        color: var(--text-mute);
+      }
+      .review-score {
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 700;
+        margin-right: 8px;
+      }
+      .review-comment {
+        font-size: 13px;
+        color: var(--text-mid);
+        line-height: 1.55;
+      }
+
+      .floating-cta {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 12px 16px 24px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(8px);
+        border-top: 1px solid var(--border-soft);
+      }
+      .cta-btn {
+        width: 100%;
+        height: 50px;
+        background: var(--accent);
+        color: #fff;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+      }
+      .cta-btn.outline {
+        background: #fff;
+        color: var(--primary);
+        border: 1.5px solid var(--primary);
+        box-shadow: none;
+      }
+
+      /* ============ RATE PAGE ============ */
+      .rest-mini {
+        margin: 16px;
+        padding: 12px 14px;
+        background: #fff;
+        border: 1px solid var(--border-soft);
+        border-radius: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .rest-mini .name {
+        font-weight: 700;
+        font-size: 14px;
+      }
+      .rest-mini .cat {
+        font-size: 11px;
+        color: var(--text-mute);
+        margin-top: 2px;
+      }
+
+      .form-section {
+        padding: 0 16px;
+      }
+      .form-group {
+        margin-bottom: 20px;
+      }
+      .form-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 8px;
+      }
+      .form-label .required {
+        color: var(--danger);
+        margin-left: 2px;
+      }
+      .form-label .hint {
+        font-size: 11px;
+        color: var(--text-mute);
+        font-weight: 400;
+      }
+
+      .select-box {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px 14px;
+        font-size: 14px;
+        color: var(--text);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .select-box .chev {
+        color: var(--text-mute);
+        font-size: 12px;
+      }
+
+      .star-picker {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 20px 14px;
+        text-align: center;
+      }
+      .star-picker .stars-big {
+        font-size: 36px;
+        color: var(--accent);
+        letter-spacing: 4px;
+        margin-bottom: 6px;
+      }
+      .star-picker .stars-big .empty {
+        color: #e0e0e0;
+      }
+      .star-picker .score-text {
+        font-size: 13px;
+        color: var(--text-mid);
+      }
+      .star-picker .score-text strong {
+        color: var(--accent);
+        font-weight: 800;
+        font-size: 16px;
+      }
+
+      .textarea-box {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px 14px;
+        min-height: 92px;
+        font-size: 14px;
+        color: var(--text);
+        position: relative;
+      }
+      .textarea-box .placeholder {
+        color: var(--text-mute);
+      }
+      .textarea-box .counter {
+        position: absolute;
+        bottom: 8px;
+        right: 12px;
+        font-size: 11px;
+        color: var(--text-mute);
+      }
+
+      .hint-box {
+        margin: 0 0 16px;
+        padding: 10px 12px;
+        background: var(--primary-light);
+        border-radius: 8px;
+        font-size: 12px;
+        color: var(--primary-dark);
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        line-height: 1.5;
+      }
+
+      /* ============ Closure toggle (Home sort bar) ============ */
+      .toggle-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--bg-soft);
+        padding: 4px 10px 4px 6px;
+        border-radius: 14px;
+        font-size: 12px;
+        color: var(--text-mid);
+        border: 1px solid var(--border-soft);
+        font-weight: 500;
+      }
+      .toggle-pill .switch {
+        width: 22px;
+        height: 14px;
+        background: var(--border);
+        border-radius: 7px;
+        position: relative;
+        transition: background 0.15s;
+      }
+      .toggle-pill .switch::after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 10px;
+        height: 10px;
+        background: #fff;
+        border-radius: 50%;
+        transition: transform 0.15s;
+      }
+      .toggle-pill.on {
+        color: var(--primary-dark);
+        background: var(--primary-light);
+        border-color: var(--primary-light);
+      }
+      .toggle-pill.on .switch {
+        background: var(--primary);
+      }
+      .toggle-pill.on .switch::after {
+        transform: translateX(8px);
+      }
+
+      /* Restaurant card variants for 휴업·폐업 */
+      .rest-card.dimmed {
+        opacity: 0.75;
+        background: #fafafa;
+      }
+      .rest-card.dimmed .name {
+        color: var(--text-mid);
+      }
+      .rest-card.dimmed .note {
+        text-decoration: line-through;
+        color: var(--text-mute);
+      }
+      .badge.warn-pill {
+        background: var(--warn-soft);
+        color: #7a5200;
+      }
+
+      /* ============ Action sheet (Detail closure menu) ============ */
+      .action-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 20;
+        display: flex;
+        align-items: flex-end;
+      }
+      .action-sheet {
+        width: 100%;
+        padding: 8px 8px 30px;
+      }
+      .sheet-group {
+        background: rgba(250, 250, 252, 0.95);
+        backdrop-filter: blur(8px);
+        border-radius: 14px;
+        margin-bottom: 8px;
+        overflow: hidden;
+      }
+      .sheet-title {
+        padding: 10px 16px 8px;
+        font-size: 11px;
+        color: var(--text-mute);
+        text-align: center;
+        border-bottom: 0.5px solid var(--border);
+      }
+      .sheet-item {
+        padding: 14px 16px;
+        font-size: 16px;
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 0.5px solid var(--border);
+        background: rgba(255, 255, 255, 0.85);
+      }
+      .sheet-item:last-child {
+        border-bottom: none;
+      }
+      .sheet-item .ico {
+        width: 22px;
+        text-align: center;
+        font-size: 18px;
+      }
+      .sheet-item.danger {
+        color: var(--danger);
+      }
+      .sheet-item.cancel {
+        text-align: center;
+        justify-content: center;
+        font-weight: 700;
+        color: var(--primary);
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 14px;
+      }
+
+      /* ============ Confirm dialog (iOS-style centered alert) ============ */
+      .confirm-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 30;
+        padding: 0 24px;
+      }
+      .confirm-dialog {
+        background: rgba(252, 252, 252, 0.97);
+        backdrop-filter: blur(16px);
+        border-radius: 16px;
+        width: 280px;
+        text-align: center;
+        overflow: hidden;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+      }
+      .confirm-icon {
+        font-size: 38px;
+        margin: 22px 0 4px;
+        line-height: 1;
+      }
+      .confirm-title {
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--text);
+        padding: 6px 18px 6px;
+      }
+      .confirm-message {
+        font-size: 13px;
+        color: var(--text-mid);
+        line-height: 1.55;
+        padding: 0 22px 18px;
+      }
+      .confirm-message strong {
+        color: var(--text);
+      }
+      .confirm-buttons {
+        border-top: 0.5px solid var(--border);
+        display: flex;
+      }
+      .confirm-btn {
+        flex: 1;
+        padding: 13px 0;
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--primary);
+      }
+      .confirm-btn + .confirm-btn {
+        border-left: 0.5px solid var(--border);
+      }
+      .confirm-btn.danger {
+        color: var(--danger);
+        font-weight: 700;
+      }
+
+      /* ============ REGISTRATION PAGE ============ */
+      .reg-search {
+        padding: 12px 16px;
+        background: #fff;
+        border-bottom: 1px solid var(--border-soft);
+      }
+      .reg-search-input {
+        background: var(--bg-soft);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-size: 14px;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .reg-search-input .ico {
+        color: var(--text-mute);
+      }
+      .reg-search-input .search-btn {
+        margin-left: auto;
+        background: var(--primary);
+        color: #fff;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .reg-section-title {
+        padding: 14px 16px 8px;
+        font-size: 12px;
+        color: var(--text-mute);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 700;
+      }
+      .reg-result {
+        background: #fff;
+        border: 1px solid var(--border-soft);
+        border-radius: 10px;
+        padding: 12px 14px;
+        margin: 0 16px 8px;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .reg-result.selected {
+        border: 2px solid var(--primary);
+        background: var(--primary-light);
+      }
+      .reg-result .check {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        border: 1.5px solid var(--border);
+        background: #fff;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        color: transparent;
+      }
+      .reg-result.selected .check {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+      }
+      .reg-result .info {
+        flex: 1;
+        min-width: 0;
+      }
+      .reg-result .info .nm {
+        font-weight: 700;
+        font-size: 14px;
+        color: var(--text);
+        margin-bottom: 2px;
+      }
+      .reg-result .info .addr {
+        font-size: 12px;
+        color: var(--text-mute);
+        line-height: 1.4;
+      }
+
+      /* Segmented toggle (점심/저녁) */
+      .seg {
+        display: flex;
+        background: var(--bg-soft);
+        border-radius: 8px;
+        padding: 3px;
+        gap: 2px;
+      }
+      .seg .seg-item {
+        flex: 1;
+        text-align: center;
+        padding: 8px 0;
+        font-size: 13px;
+        color: var(--text-mid);
+        border-radius: 6px;
+        font-weight: 600;
+      }
+      .seg .seg-item.active {
+        background: #fff;
+        color: var(--primary);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      }
+
+      .warn-inline {
+        margin: 0 0 16px;
+        padding: 10px 12px;
+        background: var(--warn-soft);
+        border-radius: 8px;
+        font-size: 12px;
+        color: #5c3a00;
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        line-height: 1.5;
+      }
+
+      /* Notes column (right side of each row) */
+      .notes-col {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 24px 28px;
+        color: #c7cad1;
+        font-size: 13px;
+        line-height: 1.7;
+        position: sticky;
+        top: 32px;
+      }
+      .notes-col h3 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #fff;
+        margin: 0 0 6px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .notes-col h3 .pill {
+        display: inline-block;
+        background: rgba(46, 117, 182, 0.3);
+        color: #8ab4f8;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 10px;
+        letter-spacing: 0.5px;
+      }
+      .notes-col h3 .route {
+        font-family: 'Menlo', 'Consolas', monospace;
+        font-size: 12px;
+        color: #8ab4f8;
+        background: rgba(138, 180, 248, 0.12);
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-weight: 500;
+      }
+      .notes-col .sub-h {
+        display: block;
+        font-size: 11px;
+        color: #8d929b;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0 0 14px;
+      }
+      .notes-col ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+      .notes-col li {
+        margin-bottom: 8px;
+      }
+      .notes-col code {
+        background: rgba(255, 255, 255, 0.08);
+        padding: 1px 6px;
+        border-radius: 3px;
+        font-size: 11px;
+        color: #e8eaed;
+      }
+
+      /* ============ ROULETTE PAGE ============ */
+      .roulette-hero {
+        padding: 20px 16px 12px;
+        text-align: center;
+      }
+      .roulette-hero .title-emoji {
+        font-size: 42px;
+        line-height: 1;
+        margin-bottom: 6px;
+      }
+      .roulette-hero .title-text {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--text);
+        letter-spacing: -0.5px;
+      }
+      .roulette-hero .title-sub {
+        font-size: 12px;
+        color: var(--text-mute);
+        margin-top: 4px;
+      }
+
+      .roulette-section {
+        padding: 0 16px;
+        margin-bottom: 20px;
+      }
+      .roulette-section-label {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text);
+        margin: 0 0 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .roulette-section-label .hint {
+        font-size: 11px;
+        color: var(--text-mute);
+        font-weight: 500;
+      }
+
+      .cat-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .cat-grid .cat-cell.span-2 {
+        grid-column: span 2;
+      }
+      .cat-cell {
+        background: #fff;
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        padding: 12px 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+        color: var(--text);
+        font-weight: 600;
+      }
+      .cat-cell.checked {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+        color: var(--accent-dark);
+      }
+      .cat-cell .ico-bx {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        border: 2px solid var(--border);
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: transparent;
+        font-size: 13px;
+        flex-shrink: 0;
+      }
+      .cat-cell.checked .ico-bx {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      .cat-cell .emoji {
+        margin-left: auto;
+        font-size: 18px;
+      }
+
+      /* Slot spinning state — vertical motion blur on stacked names */
+      .slot-reel.spinning {
+        height: 180px;
+        border-color: #ffb890;
+        background: linear-gradient(
+          180deg,
+          #fffbf7 0%,
+          #ffffff 50%,
+          #fffbf7 100%
+        );
+      }
+      .slot-spin-line {
+        color: var(--accent);
+        font-weight: 700;
+        line-height: 24px;
+        text-shadow:
+          0 -4px 6px rgba(255, 107, 53, 0.45),
+          0 4px 6px rgba(255, 107, 53, 0.45);
+        letter-spacing: -0.5px;
+        transform: scaleY(1.05);
+      }
+      .slot-spin-line.s1 {
+        font-size: 14px;
+        opacity: 0.25;
+      }
+      .slot-spin-line.s2 {
+        font-size: 16px;
+        opacity: 0.55;
+      }
+      .slot-spin-line.s3 {
+        font-size: 19px;
+        opacity: 0.95;
+        position: relative;
+        padding: 2px 0;
+      }
+      .slot-spin-line.s3::before,
+      .slot-spin-line.s3::after {
+        content: '';
+        position: absolute;
+        left: 8%;
+        right: 8%;
+        height: 1px;
+        background: rgba(255, 107, 53, 0.25);
+      }
+      .slot-spin-line.s3::before {
+        top: 0;
+      }
+      .slot-spin-line.s3::after {
+        bottom: 0;
+      }
+      .slot-spin-line.s4 {
+        font-size: 16px;
+        opacity: 0.55;
+      }
+      .slot-spin-line.s5 {
+        font-size: 14px;
+        opacity: 0.25;
+      }
+
+      .slot-streak-side {
+        position: absolute;
+        top: 12px;
+        bottom: 12px;
+        width: 12px;
+        background: repeating-linear-gradient(
+          0deg,
+          rgba(255, 107, 53, 0.18) 0px,
+          rgba(255, 107, 53, 0.18) 4px,
+          transparent 4px,
+          transparent 9px
+        );
+        pointer-events: none;
+      }
+      .slot-streak-side.l {
+        left: 6px;
+      }
+      .slot-streak-side.r {
+        right: 6px;
+      }
+
+      .spin-status {
+        text-align: center;
+        margin-top: 18px;
+        font-size: 13px;
+        color: var(--accent-dark);
+        font-weight: 700;
+        letter-spacing: 1px;
+      }
+      .spin-progress {
+        margin: 10px 16px 0;
+        height: 4px;
+        background: var(--bg-soft);
+        border-radius: 2px;
+        overflow: hidden;
+        position: relative;
+      }
+      .spin-progress-fill {
+        width: 65%;
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent) 0%, #ff8956 100%);
+        border-radius: 2px;
+      }
+
+      .spin-cta {
+        margin: 8px 16px 16px;
+      }
+      .spin-cta-btn {
+        width: 100%;
+        height: 60px;
+        background: linear-gradient(135deg, var(--accent) 0%, #ff8956 100%);
+        color: #fff;
+        border-radius: 14px;
+        font-size: 18px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-shadow: 0 6px 16px rgba(255, 107, 53, 0.35);
+        letter-spacing: -0.3px;
+      }
+      .spin-cta-hint {
+        text-align: center;
+        font-size: 11px;
+        color: var(--text-mute);
+        margin-top: 4px;
+      }
+
+      /* Result state */
+      .result-summary {
+        padding: 12px 16px;
+        background: var(--primary-light);
+        border-bottom: 1px solid var(--border-soft);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px;
+        color: var(--primary-dark);
+      }
+      .result-summary .crumb strong {
+        font-weight: 700;
+      }
+      .result-summary .edit-link {
+        background: #fff;
+        color: var(--primary);
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 11px;
+      }
+
+      .slot-wrap {
+        padding: 28px 16px 8px;
+        text-align: center;
+        position: relative;
+      }
+      .slot-celebrate {
+        font-size: 14px;
+        color: var(--accent);
+        font-weight: 800;
+        margin-bottom: 12px;
+        letter-spacing: 1px;
+      }
+      .slot-reel {
+        background: #fff;
+        border: 3px solid var(--accent);
+        border-radius: 14px;
+        overflow: hidden;
+        position: relative;
+        height: 130px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        box-shadow: 0 8px 24px rgba(255, 107, 53, 0.15);
+      }
+      .slot-reel::before,
+      .slot-reel::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 30px;
+        z-index: 2;
+        pointer-events: none;
+      }
+      .slot-reel::before {
+        top: 0;
+        background: linear-gradient(to bottom, #fff, rgba(255, 255, 255, 0));
+      }
+      .slot-reel::after {
+        bottom: 0;
+        background: linear-gradient(to top, #fff, rgba(255, 255, 255, 0));
+      }
+      .slot-fade {
+        font-size: 13px;
+        color: #d0d0d0;
+        height: 22px;
+        line-height: 22px;
+        font-weight: 700;
+      }
+      .slot-main {
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--accent);
+        padding: 8px 0;
+        letter-spacing: -0.5px;
+      }
+      .slot-side-emoji {
+        position: absolute;
+        top: -8px;
+        font-size: 22px;
+        z-index: 3;
+      }
+      .slot-side-emoji.l {
+        left: 8px;
+        transform: rotate(-15deg);
+      }
+      .slot-side-emoji.r {
+        right: 8px;
+        transform: rotate(15deg);
+      }
+
+      .result-card-big {
+        margin: 16px;
+        background: #fff;
+        border-radius: 14px;
+        padding: 16px;
+        border: 1px solid var(--border-soft);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      }
+      .result-card-big .r-name {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--text);
+        margin-bottom: 6px;
+      }
+      .result-card-big .r-rating {
+        color: var(--accent);
+        font-weight: 800;
+        font-size: 14px;
+        margin-bottom: 8px;
+      }
+      .result-card-big .r-rating .count {
+        color: var(--text-mute);
+        font-weight: 500;
+        margin-left: 4px;
+        font-size: 12px;
+      }
+      .result-card-big .r-menu {
+        font-size: 13px;
+        color: var(--text-mid);
+        margin-top: 8px;
+        line-height: 1.5;
+      }
+
+      .roulette-ctas {
+        padding: 8px 16px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .roulette-ctas .cta-btn {
+        height: 52px;
+      }
+
+      /* Confetti dots */
+      .confetti {
+        position: absolute;
+        pointer-events: none;
+        inset: 0;
+      }
+      .confetti i {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        opacity: 0.7;
+      }
+
+      @media (max-width: 1100px) {
+        body {
+          padding: 32px 16px 64px;
+        }
+        .screen-row {
+          grid-template-columns: 1fr;
+          gap: 20px;
+        }
+        .screen-wrap {
+          margin: 0 auto;
+        }
+        .notes-col {
+          position: static;
+        }
+      }
+
+      /* ============ Icon system (Lucide-style SVG sprite) ============ */
+      .icon {
+        width: 1em;
+        height: 1em;
+        display: inline-block;
+        flex-shrink: 0;
+        vertical-align: -0.15em;
+        line-height: 1;
+      }
+      /* When icon sits inside a flex container we don't want baseline alignment */
+      .app-header .icon-btn .icon,
+      .app-header .back .icon,
+      .tab-bar .tab .ico .icon,
+      .map-pin .icon,
+      .confirm-icon .icon,
+      .ptr-indicator .icon {
+        vertical-align: middle;
+      }
+
+      /* ============ Skeleton (loading shimmer) ============ */
+      @keyframes sk-shimmer {
+        0% {
+          background-position: -260px 0;
+        }
+        100% {
+          background-position: 260px 0;
+        }
+      }
+      .sk {
+        background-color: #eceef1;
+        background-image: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0) 0%,
+          rgba(255, 255, 255, 0.75) 50%,
+          rgba(255, 255, 255, 0) 100%
+        );
+        background-size: 260px 100%;
+        background-repeat: no-repeat;
+        border-radius: 6px;
+        animation: sk-shimmer 1.4s linear infinite;
+      }
+      .sk-line {
+        height: 12px;
+      }
+      .sk-line.lg {
+        height: 16px;
+      }
+      .sk-line.sm {
+        height: 10px;
+      }
+      .sk-circle {
+        border-radius: 50%;
+      }
+
+      /* ============ Empty state ============ */
+      .empty-state {
+        padding: 48px 28px 32px;
+        text-align: center;
+      }
+      .empty-illust {
+        width: 96px;
+        height: 96px;
+        margin: 0 auto 18px;
+      }
+      .empty-illust svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .empty-title {
+        font-size: 16px;
+        font-weight: 800;
+        color: var(--text);
+        margin-bottom: 8px;
+        letter-spacing: -0.2px;
+      }
+      .empty-sub {
+        font-size: 13px;
+        color: var(--text-mid);
+        line-height: 1.6;
+        margin-bottom: 22px;
+      }
+      .empty-sub strong {
+        color: var(--text);
+        font-weight: 700;
+      }
+      .empty-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-width: 240px;
+        margin: 0 auto 24px;
+      }
+      .empty-btn {
+        height: 44px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+      .empty-btn.primary {
+        background: var(--primary);
+        color: #fff;
+      }
+      .empty-btn.outline {
+        background: #fff;
+        color: var(--primary);
+        border: 1px solid var(--primary);
+      }
+      .empty-suggest {
+        padding-top: 18px;
+        border-top: 1px dashed var(--border);
+        margin: 0 16px;
+      }
+      .empty-suggest-label {
+        font-size: 12px;
+        color: var(--text-mute);
+        margin-bottom: 10px;
+        font-weight: 600;
+      }
+      .suggest-chips {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .suggest-chips .chip {
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+
+      /* ============ Pull-to-refresh indicator ============ */
+      .ptr-indicator {
+        height: 56px;
+        background: var(--bg-app);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--text-mid);
+        font-weight: 600;
+        border-bottom: 1px solid var(--border-soft);
+      }
+      .ptr-indicator.primary {
+        color: var(--primary);
+      }
+      .ptr-spinner {
+        width: 20px;
+        height: 20px;
+        color: var(--primary);
+        animation: ptr-rotate 0.9s linear infinite;
+        flex-shrink: 0;
+      }
+      @keyframes ptr-rotate {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ============ SVG Icon Sprite (Lucide-style) ============ -->
+    <svg
+      width="0"
+      height="0"
+      style="position: absolute; width: 0; height: 0; overflow: hidden"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <defs>
+        <symbol id="i-search" viewBox="0 0 24 24">
+          <g
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </g>
+        </symbol>
+        <symbol id="i-plus" viewBox="0 0 24 24">
+          <path
+            d="M5 12h14M12 5v14"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.4"
+            stroke-linecap="round"
+          />
+        </symbol>
+        <symbol id="i-more-h" viewBox="0 0 24 24">
+          <g fill="currentColor">
+            <circle cx="5" cy="12" r="1.6" />
+            <circle cx="12" cy="12" r="1.6" />
+            <circle cx="19" cy="12" r="1.6" />
+          </g>
+        </symbol>
+        <symbol id="i-chevron-down" viewBox="0 0 24 24">
+          <path
+            d="m6 9 6 6 6-6"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </symbol>
+        <symbol id="i-chevron-left" viewBox="0 0 24 24">
+          <path
+            d="m15 18-6-6 6-6"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </symbol>
+        <symbol id="i-home" viewBox="0 0 24 24">
+          <g
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
+          </g>
+        </symbol>
+        <symbol id="i-dice" viewBox="0 0 24 24">
+          <rect
+            x="3"
+            y="3"
+            width="18"
+            height="18"
+            rx="3"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          />
+          <g fill="currentColor">
+            <circle cx="8" cy="8" r="1.3" />
+            <circle cx="16" cy="8" r="1.3" />
+            <circle cx="12" cy="12" r="1.3" />
+            <circle cx="8" cy="16" r="1.3" />
+            <circle cx="16" cy="16" r="1.3" />
+          </g>
+        </symbol>
+        <symbol id="i-map-pin" viewBox="0 0 24 24">
+          <path
+            fill="currentColor"
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+            d="M12 2C7.58 2 4 5.58 4 10c0 6.5 8 12 8 12s8-5.5 8-12c0-4.42-3.58-8-8-8zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"
+          />
+        </symbol>
+        <symbol id="i-pause" viewBox="0 0 24 24">
+          <g fill="currentColor">
+            <rect x="6" y="5" width="3.5" height="14" rx="1" />
+            <rect x="14.5" y="5" width="3.5" height="14" rx="1" />
+          </g>
+        </symbol>
+        <symbol id="i-trash" viewBox="0 0 24 24">
+          <g
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 6h18" />
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            <line x1="10" x2="10" y1="11" y2="17" />
+            <line x1="14" x2="14" y1="11" y2="17" />
+          </g>
+        </symbol>
+        <symbol id="i-star" viewBox="0 0 24 24">
+          <path
+            fill="currentColor"
+            d="M12 2.5 14.9 8.4l6.5.95-4.7 4.6 1.1 6.45L12 17.3l-5.8 3.1 1.1-6.45L2.6 9.35l6.5-.95z"
+          />
+        </symbol>
+        <symbol id="i-lightbulb" viewBox="0 0 24 24">
+          <g
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5a6 6 0 1 0-12 0c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"
+            />
+            <path d="M9 18h6" />
+            <path d="M10 22h4" />
+          </g>
+        </symbol>
+        <symbol id="i-alert" viewBox="0 0 24 24">
+          <g
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3z"
+            />
+            <path d="M12 9v4" />
+            <path d="M12 17h.01" />
+          </g>
+        </symbol>
+        <symbol id="i-info" viewBox="0 0 24 24">
+          <g
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 16v-4" />
+            <path d="M12 8h.01" />
+          </g>
+        </symbol>
+        <symbol id="i-user" viewBox="0 0 24 24">
+          <g
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </g>
+        </symbol>
+        <symbol id="i-pencil" viewBox="0 0 24 24">
+          <g
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" />
+            <path d="m15 5 4 4" />
+          </g>
+        </symbol>
+        <symbol id="i-map" viewBox="0 0 24 24">
+          <g
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 6v15l6-3 6 3 6-3V3l-6 3-6-3z" />
+            <path d="M9 3v15" />
+            <path d="M15 6v15" />
+          </g>
+        </symbol>
+        <symbol id="i-refresh" viewBox="0 0 24 24">
+          <g
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12a9 9 0 1 1-3-6.7" />
+            <path d="M21 4v5h-5" />
+          </g>
+        </symbol>
+        <symbol id="i-utensils" viewBox="0 0 24 24">
+          <g
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 2v7a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V2" />
+            <path d="M5 11v11" />
+            <path d="M21 15V2a5 5 0 0 0-5 5v6a2 2 0 0 0 2 2z" />
+            <path d="M18 15v7" />
+          </g>
+        </symbol>
+        <symbol id="i-check" viewBox="0 0 24 24">
+          <path
+            d="m5 12 5 5L20 7"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.4"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </symbol>
+      </defs>
+    </svg>
+
+    <div class="board-header">
+      <h1>양재어디가 · 모바일 UI 목업</h1>
+      <div class="sub">
+        핵심 11화면 고충실도 디자인 · iPhone 13 Mini (375 × 812) · 좌측 화면 /
+        우측 설명
+      </div>
+      <div class="meta">
+        UI MOCK-UP v1.5 · 2026.05 · Lucide SVG 아이콘 통일 + 빈
+        상태·스켈레톤·PTR 추가
+      </div>
+    </div>
+
+    <!-- Design Tokens -->
+    <div class="tokens">
+      <div>
+        <div class="group-label">Color</div>
+        <div class="swatch-row">
+          <div class="swatch" style="background: #2e75b6"></div>
+          Primary <code>#2E75B6</code>
+        </div>
+        <div class="swatch-row">
+          <div class="swatch" style="background: #1f3864"></div>
+          Primary Dark <code>#1F3864</code>
+        </div>
+        <div class="swatch-row">
+          <div class="swatch" style="background: #ff6b35"></div>
+          Accent (식욕) <code>#FF6B35</code>
+        </div>
+        <div class="swatch-row">
+          <div class="swatch" style="background: #1d9e75"></div>
+          Success <code>#1D9E75</code>
+        </div>
+        <div class="swatch-row">
+          <div class="swatch" style="background: #f4a700"></div>
+          Warn <code>#F4A700</code>
+        </div>
+      </div>
+      <div>
+        <div class="group-label">Typography</div>
+        <div>Pretendard · Heading 700 · Body 400</div>
+        <div style="margin-top: 6px">
+          <code>H1 22px / H2 18px / H3 15px</code>
+        </div>
+        <div><code>Body 14px / Caption 12px</code></div>
+        <div style="margin-top: 6px; color: #9aa0a6">
+          한글 가독성 우선, 자간 -0.3px (heading)
+        </div>
+      </div>
+      <div>
+        <div class="group-label">Spacing & Radius</div>
+        <div>4px grid · 모바일 padding <code>16px</code></div>
+        <div>카드 gap <code>10px</code></div>
+        <div style="margin-top: 6px">
+          Radius — 버튼 <code>12px</code>, 카드 <code>12px</code>, 입력
+          <code>8px</code>, 칩 <code>16px</code>
+        </div>
+      </div>
+      <div>
+        <div class="group-label">Component</div>
+        <div>Header 56px · TabBar 64px</div>
+        <div>StatusBar 44px · HomeIndicator 34px</div>
+        <div>CTA 50px height · Card padding 14×16</div>
+      </div>
+    </div>
+
+    <!-- ============ SCREENS ============ -->
+    <div class="screens-stack">
+      <!-- ===== Screen 1: Home ===== -->
+      <section class="screen-row">
+        <div class="screen-wrap">
+          <div class="screen-label">01 · 메인 허브</div>
+          <div class="screen-name">홈 · 맛집 목록</div>
+          <div class="screen-route">/</div>
+
+          <div class="phone">
+            <div class="statusbar">
+              <span class="time">11:50</span>
+              <span class="right"
+                ><span>●●●</span><span>📶</span><span>🔋</span></span
+              >
+            </div>
+
+            <div class="app-header">
+              <div
+                class="title"
+                style="flex: 1; display: flex; align-items: center"
+              >
+                <svg
+                  viewBox="0 0 480 200"
+                  height="30"
+                  xmlns="http://www.w3.org/2000/svg"
+                  style="display: block"
+                >
+                  <path
+                    d="M 30 160 Q 240 175 440 150"
+                    stroke="#FFD4B8"
+                    stroke-width="12"
+                    fill="none"
+                    stroke-linecap="round"
+                  />
+                  <g transform="translate(30 86)">
+                    <path
+                      d="M 0 0 C -14 -32 14 -36 14 -16 C 14 -4 7 4 0 18 C -7 4 -14 -4 -14 -16 C -14 -36 14 -32 0 0 Z"
+                      fill="#FF6B35"
+                    />
+                    <circle cx="0" cy="-18" r="6" fill="#FFFFFF" />
+                  </g>
+                  <g
+                    style="
+                      font-family:
+                        'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic',
+                        sans-serif;
+                      font-weight: 900;
+                      letter-spacing: -1px;
+                    "
+                  >
+                    <text
+                      x="92"
+                      y="115"
+                      font-size="76"
+                      fill="#2E2A26"
+                      transform="rotate(-3 92 115)"
+                    >
+                      양
+                    </text>
+                    <text
+                      x="148"
+                      y="121"
+                      font-size="76"
+                      fill="#2E2A26"
+                      transform="rotate(2 148 121)"
+                    >
+                      재
+                    </text>
+                    <text
+                      x="216"
+                      y="111"
+                      font-size="76"
+                      fill="#FF6B35"
+                      transform="rotate(-2 216 111)"
+                    >
+                      어
+                    </text>
+                    <text
+                      x="272"
+                      y="117"
+                      font-size="76"
+                      fill="#FF6B35"
+                      transform="rotate(3 272 117)"
+                    >
+                      디
+                    </text>
+                    <text
+                      x="328"
+                      y="113"
+                      font-size="76"
+                      fill="#FF6B35"
+                      transform="rotate(-2 328 113)"
+                    >
+                      가
+                    </text>
+                    <text
+                      x="402"
+                      y="124"
+                      font-size="92"
+                      fill="#D54E18"
+                      transform="rotate(14 402 124)"
+                    >
+                      ?
+                    </text>
+                  </g>
+                </svg>
+              </div>
+              <div class="icon-btn">
+                <svg class="icon"><use href="#i-search" /></svg>
+              </div>
+              <div class="icon-btn add-btn">
+                <svg class="icon"><use href="#i-plus" /></svg>
+              </div>
+            </div>
+
+            <div class="scroll">
+              <div class="search-strip">
+                <div class="search-input">
+                  <span class="ico"
+                    ><svg class="icon"><use href="#i-search" /></svg
+                  ></span>
+                  <span>식당·메뉴 검색</span>
+                </div>
+              </div>
+
+              <div class="filter-row">
+                <div class="chip active">전체</div>
+                <div class="chip">한식</div>
+                <div class="chip">일식</div>
+                <div class="chip">중식</div>
+                <div class="chip">분식</div>
+                <div class="chip">카페</div>
+              </div>
+
+              <div class="sort-bar">
+                <span><span class="count">82</span>개 식당</span>
+                <span class="sort-pill"
+                  >평점 높은 순
+                  <svg class="icon" style="font-size: 12px">
+                    <use href="#i-chevron-down" /></svg
+                ></span>
+              </div>
+
+              <div
+                style="
+                  padding: 0 16px 10px;
+                  display: flex;
+                  justify-content: flex-end;
+                "
+              >
+                <div class="toggle-pill on">
+                  <div class="switch"></div>
+                  <span>휴업·폐업 포함</span>
+                </div>
+              </div>
+
+              <div class="rest-card">
+                <div class="row1">
+                  <span class="name">미진면옥 양재본점</span>
+                  <span class="rating"
+                    >★ 4.6 <span class="count">12명</span></span
+                  >
+                </div>
+                <div class="badges">
+                  <span class="badge">한식</span>
+                  <span class="badge green">점심</span>
+                  <span class="badge gray">북서 · 도보 4분</span>
+                </div>
+                <div class="note">
+                  평양냉면 진국, 만두도 평이 좋음. 12시 전에 가야 줄 안 섬
+                </div>
+              </div>
+
+              <div class="rest-card">
+                <div class="row1">
+                  <span class="name">스시히로바</span>
+                  <span class="rating"
+                    >★ 4.5 <span class="count">9명</span></span
+                  >
+                </div>
+                <div class="badges">
+                  <span class="badge">일식</span>
+                  <span class="badge orange">저녁</span>
+                  <span class="badge gray">남동 · 도보 7분</span>
+                </div>
+                <div class="note">오마카세 가성비 좋음. 사케 페어링도 추천</div>
+              </div>
+
+              <div class="rest-card">
+                <div class="row1">
+                  <span class="name">손수동</span>
+                  <span class="rating"
+                    >★ 4.4 <span class="count">15명</span></span
+                  >
+                </div>
+                <div class="badges">
+                  <span class="badge">한식</span>
+                  <span class="badge green">점심</span>
+                  <span class="badge gray">중앙 · 도보 2분</span>
+                </div>
+                <div class="note">
+                  백반 정식, 반찬 인심 좋음. 회식 단체석 가능
+                </div>
+              </div>
+
+              <div class="rest-card">
+                <div class="row1">
+                  <span class="name">양재반점</span>
+                  <span class="rating"
+                    >★ 4.2 <span class="count">8명</span></span
+                  >
+                </div>
+                <div class="badges">
+                  <span class="badge">중식</span>
+                  <span class="badge green">점심</span>
+                  <span class="badge gray">북동 · 도보 6분</span>
+                </div>
+                <div class="note">짬뽕 매콤, 탕수육은 평범. 배달도 가능</div>
+              </div>
+
+              <div class="rest-card dimmed">
+                <div class="row1">
+                  <span class="name">우래옥 양재점</span>
+                  <span class="rating"
+                    >★ 4.3 <span class="count">11명</span></span
+                  >
+                </div>
+                <div class="badges">
+                  <span class="badge warn-pill"
+                    ><svg
+                      class="icon"
+                      style="font-size: 11px; margin-right: 2px"
+                    >
+                      <use href="#i-pause" /></svg
+                    >휴업</span
+                  >
+                  <span class="badge">한식</span>
+                  <span class="badge gray">남동 · 도보 8분</span>
+                </div>
+                <div class="note">
+                  내부 공사로 5월까지 임시 휴업. 재오픈 예정
+                </div>
+              </div>
+
+              <div class="rest-card dimmed">
+                <div class="row1">
+                  <span class="name">청담동 함흥냉면</span>
+                  <span class="rating"
+                    >★ 4.0 <span class="count">6명</span></span
+                  >
+                </div>
+                <div class="badges">
+                  <span class="badge gray"
+                    ><svg
+                      class="icon"
+                      style="font-size: 11px; margin-right: 2px"
+                    >
+                      <use href="#i-trash" /></svg
+                    >폐업</span
+                  >
+                  <span class="badge gray">남서 · 도보 9분</span>
+                </div>
+                <div class="note">함흥식 비빔냉면, 양 많고 매콤한 편</div>
+              </div>
+
+              <div class="tab-bar">
+                <div class="tab active">
+                  <span class="ico"
+                    ><svg class="icon"><use href="#i-home" /></svg
+                  ></span>
+                  <span>홈</span>
+                </div>
+                <div class="tab">
+                  <span class="ico"
+                    ><svg class="icon"><use href="#i-dice" /></svg
+                  ></span>
+                  <span>오늘 뭐먹지</span>
+                </div>
+              </div>
+
+              <div class="home-indicator"></div>
+            </div>
+          </div>
+        </div>
+        <aside class="notes-col">
+          <h3>
+            <span class="pill">01</span>홈 · 맛집 목록
+            <span class="route">/</span>
+          </h3>
+          <span class="sub-h">메인 허브 페이지</span>
+          <ul>
+            <li>
+              <strong>탭바 2개</strong>로 단순화 — 홈/룰렛 두 메인 진입점만.
+              등록·상세·평가는 플로우로 진입.
+            </li>
+            <li>
+              상단 <code>＋</code> 버튼은 Primary 컬러로 강조해 등록 진입점을
+              명확히.
+            </li>
+            <li>필터 칩은 가로 스크롤 — 카테고리 7개를 한 줄에 노출.</li>
+            <li>
+              카드 우상단 <strong>평점 강조(Accent)</strong> — 정렬 기본값이
+              평점순이므로 시선 동선 확보.
+            </li>
+            <li>
+              <strong>"휴업·폐업 포함" 토글</strong> — 기본 OFF, ON 시 회색
+              배지(휴업=warn / 폐업=gray)로 디그레이드 표시.
+            </li>
+            <li>
+              "방향 · 도보 X분" 한 줄로 위치 직관성 확보 (기획서 direction 필드
+              활용).
+            </li>
+          </ul>
+        </aside>
+      </section>
+
+      <!-- ===== Screen 2: Detail ===== -->
+      <section class="screen-row">
+        <div class="screen-wrap">
+          <div class="screen-label">02 · 의사결정</div>
+          <div class="screen-name">맛집 상세</div>
+          <div class="screen-route">/restaurant/:id</div>
+
+          <div class="phone">
+            <div class="statusbar">
+              <span class="time">11:53</span>
+              <span class="right"
+                ><span>●●●</span><span>📶</span><span>🔋</span></span
+              >
+            </div>
+
+            <div class="app-header">
+              <div class="back">
+                <svg class="icon"><use href="#i-chevron-left" /></svg>
+              </div>
+              <div class="title center">미진면옥 양재본점</div>
+              <div class="icon-btn">
+                <svg class="icon"><use href="#i-more-h" /></svg>
+              </div>
+            </div>
+
+            <div class="scroll">
+              <div class="map-block">
+                <div class="map-pin">
+                  <svg class="icon"><use href="#i-map-pin" /></svg>
+                </div>
+                <div class="map-tag">카카오맵</div>
+              </div>
+
+              <div class="detail-head">
+                <div class="h-name">미진면옥 양재본점</div>
+                <div
+                  class="badges"
+                  style="display: flex; gap: 4px; flex-wrap: wrap"
+                >
+                  <span class="badge">한식</span>
+                  <span class="badge green">점심</span>
+                  <span class="badge gray">북서 · 도보 4분</span>
+                </div>
+                <div class="menu">
+                  평양냉면 · 만두국 · 어복쟁반 · 수육 · 만두
+                </div>
+              </div>
+
+              <div class="rating-block">
+                <div class="rating-big">
+                  <div class="num">4.6</div>
+                  <div class="stars">★★★★★</div>
+                  <div class="total">12명 평가</div>
+                </div>
+                <div class="rating-dist">
+                  <div class="dist-row">
+                    <span class="lbl">5점</span>
+                    <div class="bar">
+                      <div class="bar-fill" style="width: 75%"></div>
+                    </div>
+                    <span class="cnt">9</span>
+                  </div>
+                  <div class="dist-row">
+                    <span class="lbl">4점</span>
+                    <div class="bar">
+                      <div class="bar-fill" style="width: 17%"></div>
+                    </div>
+                    <span class="cnt">2</span>
+                  </div>
+                  <div class="dist-row">
+                    <span class="lbl">3점</span>
+                    <div class="bar">
+                      <div class="bar-fill" style="width: 8%"></div>
+                    </div>
+                    <span class="cnt">1</span>
+                  </div>
+                  <div class="dist-row">
+                    <span class="lbl">2점</span>
+                    <div class="bar"></div>
+                    <span class="cnt">0</span>
+                  </div>
+                  <div class="dist-row">
+                    <span class="lbl">1점</span>
+                    <div class="bar"></div>
+                    <span class="cnt">0</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="note-box">
+                <svg
+                  class="icon"
+                  style="
+                    font-size: 14px;
+                    color: var(--warn);
+                    margin-right: 4px;
+                    vertical-align: -3px;
+                  "
+                >
+                  <use href="#i-lightbulb" /></svg
+                ><strong>비고</strong> · 12시 전에 가면 줄 안 섬. 만두는 점심에
+                매진되는 경우 많음
+              </div>
+
+              <div class="review-section">
+                <h3>한줄평 12</h3>
+
+                <div class="review-item">
+                  <div class="review-head">
+                    <span
+                      ><span class="review-score">★ 5.0</span
+                      ><span class="reviewer-name">케빈</span></span
+                    >
+                    <span class="review-date">2일 전</span>
+                  </div>
+                  <div class="review-comment">
+                    평양냉면 진국이에요. 메밀향 살아있고 육수도 깔끔합니다.
+                  </div>
+                </div>
+
+                <div class="review-item">
+                  <div class="review-head">
+                    <span
+                      ><span class="review-score">★ 4.5</span
+                      ><span class="reviewer-name">엠팍</span></span
+                    >
+                    <span class="review-date">5일 전</span>
+                  </div>
+                  <div class="review-comment">
+                    만두국이 의외로 별미. 만두 크기가 큼직하고 국물도
+                    시원합니다.
+                  </div>
+                </div>
+
+                <div class="review-item">
+                  <div class="review-head">
+                    <span
+                      ><span class="review-score">★ 5.0</span
+                      ><span class="reviewer-name">시니</span></span
+                    >
+                    <span class="review-date">1주 전</span>
+                  </div>
+                  <div class="review-comment">
+                    어복쟁반은 회식 때 추천. 가격은 좀 있지만 인원 많을 때
+                    좋아요.
+                  </div>
+                </div>
+
+                <div class="review-item">
+                  <div class="review-head">
+                    <span
+                      ><span class="review-score">★ 4.0</span
+                      ><span class="reviewer-name">젱젱</span></span
+                    >
+                    <span class="review-date">2주 전</span>
+                  </div>
+                  <div class="review-comment">
+                    맛은 있는데 12시 넘으면 자리 잡기 힘들어요. 11:30 도착 추천.
+                  </div>
+                </div>
+              </div>
+
+              <div class="floating-cta">
+                <div class="cta-btn">
+                  <svg class="icon" style="font-size: 18px">
+                    <use href="#i-star" />
+                  </svg>
+                  평가하기
+                </div>
+              </div>
+
+              <!-- Action sheet overlay (휴업/폐업 메뉴 펼침 상태) -->
+              <div class="action-overlay">
+                <div class="action-sheet">
+                  <div class="sheet-group">
+                    <div class="sheet-item">
+                      <span class="ico"
+                        ><svg class="icon"><use href="#i-pencil" /></svg></span
+                      ><span>정보 수정</span>
+                    </div>
+                    <div class="sheet-item">
+                      <span class="ico"
+                        ><svg class="icon"><use href="#i-pause" /></svg></span
+                      ><span>휴업으로 표시</span>
+                    </div>
+                    <div class="sheet-item danger">
+                      <span class="ico"
+                        ><svg class="icon"><use href="#i-trash" /></svg></span
+                      ><span>폐업으로 표시</span>
+                    </div>
+                    <div class="sheet-item">
+                      <span class="ico"
+                        ><svg class="icon"><use href="#i-map" /></svg></span
+                      ><span>네이버지도 원본 보기</span>
+                    </div>
+                  </div>
+                  <div class="sheet-group">
+                    <div class="sheet-item cancel">취소</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="home-indicator"></div>
+            </div>
+          </div>
+        </div>
+        <aside class="notes-col">
+          <h3>
+            <span class="pill">02</span>맛집 상세
+            <span class="route">/restaurant/:id</span>
+          </h3>
+          <span class="sub-h">의사결정 페이지</span>
+          <ul>
+            <li>
+              <strong>지도 200px</strong>로 상단 hero — 카카오맵 SDK 로딩 전
+              회색 그리드 fallback.
+            </li>
+            <li>
+              평균 평점 + <strong>분포 미니 그래프</strong>로 평가의 신뢰도
+              시각화 (단순 평균만으로는 판단 부족).
+            </li>
+            <li>
+              비고는 <strong>warn 컬러 highlight box</strong> — "팁" 성격이라
+              눈에 띄어야 함.
+            </li>
+            <li>
+              <strong>헤더 ⋯ 메뉴 → iOS 액션 시트</strong>로 정보 수정·휴업·폐업
+              처리. 폐업은 danger red 강조 (위험한 액션 명시).
+            </li>
+            <li>
+              실제 DELETE는 안 됨 — <code>status</code> 필드 전이만 일어남 (soft
+              delete, 평가 데이터 보존).
+            </li>
+            <li>
+              <strong>Floating CTA "평가하기"</strong>는 backdrop-blur 처리 —
+              스크롤해도 항상 노출.
+            </li>
+          </ul>
+        </aside>
+      </section>
+
+      <!-- ===== Screen 3: Rate ===== -->
+      <section class="screen-row">
+        <div class="screen-wrap">
+          <div class="screen-label">03 · 기여</div>
+          <div class="screen-name">평가 입력</div>
+          <div class="screen-route">/rate/:id</div>
+
+          <div class="phone">
+            <div class="statusbar">
+              <span class="time">12:42</span>
+              <span class="right"
+                ><span>●●●</span><span>📶</span><span>🔋</span></span
+              >
+            </div>
+
+            <div class="app-header">
+              <div class="back">
+                <svg class="icon"><use href="#i-chevron-left" /></svg>
+              </div>
+              <div class="title center">평가하기</div>
+              <div style="width: 32px"></div>
+            </div>
+
+            <div class="scroll" style="background: var(--bg-soft)">
+              <div class="rest-mini">
+                <div>
+                  <div class="name">미진면옥 양재본점</div>
+                  <div class="cat">한식 · 북서 도보 4분</div>
+                </div>
+                <span class="badge green">점심</span>
+              </div>
+
+              <div class="form-section">
+                <div class="form-group">
+                  <div class="form-label">
+                    <span>닉네임<span class="required">*</span></span>
+                    <span class="hint">기존 닉네임 선택 또는 새로 추가</span>
+                  </div>
+                  <div class="select-box">
+                    <span>케빈</span>
+                    <span class="chev"
+                      ><svg class="icon"><use href="#i-chevron-down" /></svg
+                    ></span>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <div class="form-label">
+                    <span>별점<span class="required">*</span></span>
+                    <span class="hint">0.5점 단위</span>
+                  </div>
+                  <div class="star-picker">
+                    <div class="stars-big">
+                      ★★★★<span style="color: var(--accent)">★</span>
+                    </div>
+                    <div class="score-text"><strong>4.5</strong> / 5.0</div>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <div class="form-label">
+                    <span>한줄평</span>
+                    <span class="hint">선택사항 · 최대 200자</span>
+                  </div>
+                  <div class="textarea-box">
+                    <div>
+                      평양냉면 육수가 진하고 메밀향이 살아있어요. 만두도 같이
+                      먹으면 든든.
+                    </div>
+                    <div class="counter">38 / 200</div>
+                  </div>
+                </div>
+
+                <div class="hint-box">
+                  <span
+                    style="
+                      font-size: 15px;
+                      color: var(--primary);
+                      line-height: 1;
+                    "
+                    ><svg class="icon"><use href="#i-info" /></svg
+                  ></span>
+                  <span
+                    >1인 1평가입니다. 이미 평가를 남긴 식당이면 기존 평가를
+                    수정하게 돼요.</span
+                  >
+                </div>
+              </div>
+
+              <div class="floating-cta">
+                <div class="cta-btn">제출하기</div>
+              </div>
+
+              <div class="home-indicator"></div>
+            </div>
+          </div>
+        </div>
+        <aside class="notes-col">
+          <h3>
+            <span class="pill">03</span>평가 입력
+            <span class="route">/rate/:id</span>
+          </h3>
+          <span class="sub-h">기여 페이지</span>
+          <ul>
+            <li>
+              배경을 <strong>soft gray</strong>로 깔아 폼임을 시각적으로 구분.
+            </li>
+            <li>
+              대상 식당 <strong>mini card 고정 표시</strong> — 어떤 식당에
+              평가하는지 항상 확인.
+            </li>
+            <li>
+              별점은 <strong>전용 picker 박스</strong>로 분리 — 0.5점 단위 터치
+              영역 확보.
+            </li>
+            <li>
+              한줄평은 <strong>선택사항 명시</strong>, 200자 카운터 우하단 (UX
+              표준 11.1).
+            </li>
+            <li>
+              중복 평가 안내 <strong>hint-box (primary-light)</strong>로 사전
+              고지 — UNIQUE 충돌 후 당황 방지.
+            </li>
+            <li>제출 CTA Accent 오렌지 — 식욕/긍정의 색.</li>
+          </ul>
+        </aside>
+      </section>
+
+      <!-- ===== Screen 4: Register ===== -->
+      <section class="screen-row">
+        <div class="screen-wrap">
+          <div class="screen-label">04 · 컨텐츠 추가</div>
+          <div class="screen-name">맛집 등록</div>
+          <div class="screen-route">/add</div>
+
+          <div class="phone">
+            <div class="statusbar">
+              <span class="time">14:08</span>
+              <span class="right"
+                ><span>●●●</span><span>📶</span><span>🔋</span></span
+              >
+            </div>
+
+            <div class="app-header">
+              <div class="back">
+                <svg class="icon"><use href="#i-chevron-left" /></svg>
+              </div>
+              <div class="title center">맛집 등록</div>
+              <div style="width: 32px"></div>
+            </div>
+
+            <div class="scroll" style="background: var(--bg-soft)">
+              <div
+                style="
+                  padding: 12px 16px;
+                  background: var(--primary-light);
+                  border-bottom: 1px solid var(--border-soft);
+                  display: flex;
+                  align-items: center;
+                  gap: 10px;
+                "
+              >
+                <span
+                  style="
+                    font-size: 18px;
+                    color: var(--primary-dark);
+                    line-height: 1;
+                  "
+                  ><svg class="icon"><use href="#i-user" /></svg
+                ></span>
+                <span
+                  style="
+                    font-size: 12px;
+                    color: var(--primary-dark);
+                    font-weight: 700;
+                  "
+                  >등록자</span
+                >
+                <div
+                  style="
+                    flex: 1;
+                    background: #fff;
+                    border: 1px solid var(--border);
+                    border-radius: 6px;
+                    padding: 7px 10px;
+                    font-size: 13px;
+                    color: var(--text);
+                    font-weight: 600;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                  "
+                >
+                  <span>케빈</span>
+                  <span
+                    style="
+                      color: var(--text-mute);
+                      font-size: 11px;
+                      line-height: 1;
+                    "
+                    ><svg class="icon"><use href="#i-chevron-down" /></svg
+                  ></span>
+                </div>
+              </div>
+
+              <div class="reg-search">
+                <div class="reg-search-input">
+                  <span class="ico"
+                    ><svg class="icon"><use href="#i-search" /></svg
+                  ></span>
+                  <span>손수동</span>
+                  <span class="search-btn">검색</span>
+                </div>
+              </div>
+
+              <div class="reg-section-title">카카오 검색 결과 3개</div>
+
+              <div class="reg-result selected">
+                <div class="check">✓</div>
+                <div class="info">
+                  <div class="nm">손수동 양재본점</div>
+                  <div class="addr">
+                    서울 서초구 양재대로 11길 22 · 한식 · 도보 2분
+                  </div>
+                </div>
+              </div>
+
+              <div class="reg-result">
+                <div class="check"></div>
+                <div class="info">
+                  <div class="nm">손수동 강남역점</div>
+                  <div class="addr">
+                    서울 강남구 강남대로 396 · 한식 · 1.2km
+                  </div>
+                </div>
+              </div>
+
+              <div class="reg-result">
+                <div class="check"></div>
+                <div class="info">
+                  <div class="nm">손수동 분당정자점</div>
+                  <div class="addr">
+                    경기 성남시 분당구 정자일로 95 · 한식 · 18km
+                  </div>
+                </div>
+              </div>
+
+              <div class="reg-section-title">상세 정보</div>
+
+              <div class="form-section" style="padding-bottom: 0">
+                <div class="warn-inline">
+                  <span
+                    style="font-size: 15px; color: var(--warn); line-height: 1"
+                    ><svg class="icon"><use href="#i-alert" /></svg
+                  ></span>
+                  <span
+                    >비슷한 이름의 식당 <strong>"손수동"</strong>이 이미
+                    등록되어 있어요. <u>확인하기</u></span
+                  >
+                </div>
+
+                <div class="form-group">
+                  <div class="form-label">
+                    <span>카테고리<span class="required">*</span></span>
+                  </div>
+                  <div class="select-box">
+                    <span>한식</span>
+                    <span class="chev"
+                      ><svg class="icon"><use href="#i-chevron-down" /></svg
+                    ></span>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <div class="form-label">
+                    <span>끼니<span class="required">*</span></span>
+                    <span class="hint">복수 선택 가능</span>
+                  </div>
+                  <div class="seg">
+                    <div class="seg-item active">점심</div>
+                    <div class="seg-item">저녁</div>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <div class="form-label">
+                    <span>방향<span class="required">*</span></span>
+                    <span class="hint">양재역 기준</span>
+                  </div>
+                  <div class="select-box">
+                    <span>중앙</span>
+                    <span class="chev"
+                      ><svg class="icon"><use href="#i-chevron-down" /></svg
+                    ></span>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <div class="form-label">
+                    <span>대표 메뉴</span>
+                  </div>
+                  <div class="textarea-box" style="min-height: 60px">
+                    <div>백반정식, 김치찌개, 된장찌개, 제육볶음</div>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <div class="form-label">
+                    <span>비고</span>
+                    <span class="hint">팁, 영업시간 등</span>
+                  </div>
+                  <div class="textarea-box" style="min-height: 60px">
+                    <div>반찬 인심 좋고 회식 단체석 가능. 일요일 휴무</div>
+                  </div>
+                </div>
+
+                <div style="height: 90px"></div>
+              </div>
+
+              <div class="floating-cta">
+                <div class="cta-btn">등록하기</div>
+              </div>
+
+              <div class="home-indicator"></div>
+            </div>
+          </div>
+        </div>
+        <aside class="notes-col">
+          <h3>
+            <span class="pill">04</span>맛집 등록
+            <span class="route">/add</span>
+          </h3>
+          <span class="sub-h">컨텐츠 추가 페이지</span>
+          <ul>
+            <li>
+              <strong>구글시트 컨셉</strong> — 로그인 없이 등록자 닉네임 선택만
+              (상단 primary-light 바).
+              <code>restaurants.registered_by</code> FK에 저장.
+            </li>
+            <li>
+              <strong>검색 우선</strong> UX — 카카오 키워드 검색 결과 카드에서
+              선택, 이름·주소·좌표·<code>kakao_place_id</code> 자동 채움 (기획서
+              8.4).
+            </li>
+            <li>
+              선택된 결과는 <strong>Primary 보더 + 체크 아이콘</strong>으로
+              명확히 표시.
+            </li>
+            <li>
+              끼니 점심/저녁은 <strong>Segmented toggle</strong> — 드롭다운보다
+              1탭으로 선택 가능.
+            </li>
+            <li>
+              <strong>중복 경고 inline banner</strong> — 같은
+              <code>kakao_place_id</code> 또는 이름 매칭 시 노출, 기존 식당으로
+              이동 링크 제공.
+            </li>
+            <li>메뉴·비고는 선택 필드로, 빈 값 허용 (등록 마찰 최소화).</li>
+          </ul>
+        </aside>
+      </section>
+
+      <!-- ===== Screen 5: Roulette - Selection ===== -->
+      <section class="screen-row">
+        <div class="screen-wrap">
+          <div class="screen-label">05 · 랜덤 추천 (A 상태)</div>
+          <div class="screen-name">오늘 뭐먹지 · 선택</div>
+          <div class="screen-route">/roulette · 스핀 전</div>
+
+          <div class="phone">
+            <div class="statusbar">
+              <span class="time">11:48</span>
+              <span class="right"
+                ><span>●●●</span><span>📶</span><span>🔋</span></span
+              >
+            </div>
+
+            <div class="app-header">
+              <div class="title center">오늘 뭐먹지?</div>
+            </div>
+
+            <div class="scroll">
+              <div class="roulette-hero">
+                <div class="title-emoji">🎲</div>
+                <div class="title-text">오늘 뭐먹지?</div>
+                <div class="title-sub">카테고리를 1개 이상 골라주세요</div>
+              </div>
+
+              <div class="roulette-section">
+                <div class="roulette-section-label">
+                  <span>카테고리</span>
+                  <span class="hint">2개 선택됨</span>
+                </div>
+                <div class="cat-grid">
+                  <div class="cat-cell checked">
+                    <span class="ico-bx">✓</span><span>한식</span
+                    ><span class="emoji">🍚</span>
+                  </div>
+                  <div class="cat-cell checked">
+                    <span class="ico-bx">✓</span><span>일식</span
+                    ><span class="emoji">🍣</span>
+                  </div>
+                  <div class="cat-cell">
+                    <span class="ico-bx"></span><span>중식</span
+                    ><span class="emoji">🥡</span>
+                  </div>
+                  <div class="cat-cell">
+                    <span class="ico-bx"></span><span>분식</span
+                    ><span class="emoji">🍱</span>
+                  </div>
+                  <div class="cat-cell">
+                    <span class="ico-bx"></span><span>패스트푸드</span
+                    ><span class="emoji">🍔</span>
+                  </div>
+                  <div class="cat-cell">
+                    <span class="ico-bx"></span><span>카페</span
+                    ><span class="emoji">☕</span>
+                  </div>
+                  <div class="cat-cell span-2">
+                    <span class="ico-bx"></span><span>기타</span
+                    ><span class="emoji">🍽️</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="roulette-section">
+                <div class="roulette-section-label"><span>끼니</span></div>
+                <div class="seg">
+                  <div class="seg-item active">점심</div>
+                  <div class="seg-item">저녁</div>
+                </div>
+              </div>
+
+              <div class="spin-cta">
+                <div class="spin-cta-btn">
+                  <svg class="icon" style="font-size: 22px">
+                    <use href="#i-dice" />
+                  </svg>
+                  굴려라!
+                </div>
+                <div class="spin-cta-hint">
+                  조건에 맞는 식당
+                  <strong style="color: var(--accent)">35곳</strong> 중에서
+                  뽑아요
+                </div>
+              </div>
+
+              <div style="height: 80px"></div>
+
+              <div class="tab-bar">
+                <div class="tab">
+                  <span class="ico"
+                    ><svg class="icon"><use href="#i-home" /></svg></span
+                  ><span>홈</span>
+                </div>
+                <div class="tab active">
+                  <span class="ico"
+                    ><svg class="icon"><use href="#i-dice" /></svg></span
+                  ><span>오늘 뭐먹지</span>
+                </div>
+              </div>
+
+              <div class="home-indicator"></div>
+            </div>
+          </div>
+        </div>
+        <aside class="notes-col">
+          <h3>
+            <span class="pill">05</span>오늘 뭐먹지 · 선택
+            <span class="route">/roulette</span>
+          </h3>
+          <span class="sub-h">랜덤 추천 — A 상태 (스핀 전)</span>
+          <ul>
+            <li>
+              <strong>큰 카테고리만 선택</strong> (기획서 8.5) — 7개 카테고리
+              2열 그리드, 이모지로 카테고리 직관 강화.
+            </li>
+            <li>다중 선택 가능. 우상단 "N개 선택됨" 카운터로 즉시 피드백.</li>
+            <li>
+              끼니는 segmented toggle (점심/저녁) — 등록 페이지와 동일 컴포넌트
+              재사용으로 일관성 확보.
+            </li>
+            <li>
+              <strong>휴업·폐업은 풀 산정에서 자동 제외</strong> (기획서 8.5).
+              별도 UI 없음 — 룰렛에서 절대 노출 안 함.
+            </li>
+            <li>
+              "굴려라!" CTA는 <strong>그라데이션 + 60px</strong>로 시각 무게
+              키워 메인 액션 명확화.
+            </li>
+            <li>
+              버튼 위 <strong>후보 식당 수 힌트</strong> — 풀 사이즈 미리 알림.
+              0개면 진입 차단, 빈 풀 안내.
+            </li>
+          </ul>
+        </aside>
+      </section>
+
+      <!-- ===== Screen 6: Roulette - Spinning ===== -->
+      <section class="screen-row">
+        <div class="screen-wrap">
+          <div class="screen-label">06 · 랜덤 추천 (B 상태)</div>
+          <div class="screen-name">오늘 뭐먹지 · 스핀 중</div>
+          <div class="screen-route">/roulette · 1.5s 애니메이션</div>
+
+          <div class="phone">
+            <div class="statusbar">
+              <span class="time">11:49</span>
+              <span class="right"
+                ><span>●●●</span><span>📶</span><span>🔋</span></span
+              >
+            </div>
+
+            <div class="app-header">
+              <div class="back" style="opacity: 0.35">
+                <svg class="icon"><use href="#i-chevron-left" /></svg>
+              </div>
+              <div class="title center">오늘 뭐먹지?</div>
+              <div style="width: 32px"></div>
+            </div>
+
+            <div class="scroll">
+              <div class="result-summary">
+                <div class="crumb"><strong>한식 · 일식</strong> · 점심</div>
+                <div class="edit-link" style="opacity: 0.45">조건 변경</div>
+              </div>
+
+              <div class="slot-wrap">
+                <div class="slot-celebrate" style="color: var(--accent-dark)">
+                  🎰 굴리는 중...
+                </div>
+
+                <div class="slot-reel spinning">
+                  <div class="slot-streak-side l"></div>
+                  <div class="slot-streak-side r"></div>
+                  <div style="text-align: center; padding: 6px 0">
+                    <div class="slot-spin-line s1">백채 양재본점</div>
+                    <div class="slot-spin-line s2">양재반점</div>
+                    <div class="slot-spin-line s3">미진면옥 양재본점</div>
+                    <div class="slot-spin-line s4">스시히로바</div>
+                    <div class="slot-spin-line s5">손수동</div>
+                  </div>
+                </div>
+
+                <div class="spin-progress">
+                  <div class="spin-progress-fill"></div>
+                </div>
+
+                <div class="spin-status">두근두근... ⏳</div>
+              </div>
+
+              <div
+                style="
+                  padding: 36px 16px 12px;
+                  text-align: center;
+                  color: var(--text-mute);
+                  font-size: 13px;
+                "
+              >
+                <div style="font-size: 32px; margin-bottom: 8px; opacity: 0.5">
+                  🍽
+                </div>
+                잠시만요, 가장 맛있는 곳을 고르고 있어요
+              </div>
+
+              <div style="height: 90px"></div>
+
+              <div class="tab-bar">
+                <div class="tab">
+                  <span class="ico"
+                    ><svg class="icon"><use href="#i-home" /></svg></span
+                  ><span>홈</span>
+                </div>
+                <div class="tab active">
+                  <span class="ico"
+                    ><svg class="icon"><use href="#i-dice" /></svg></span
+                  ><span>오늘 뭐먹지</span>
+                </div>
+              </div>
+
+              <div class="home-indicator"></div>
+            </div>
+          </div>
+        </div>
+        <aside class="notes-col">
+          <h3>
+            <span class="pill">06</span>오늘 뭐먹지 · 스핀 중
+            <span class="route">/roulette</span>
+          </h3>
+          <span class="sub-h"
+            >랜덤 추천 — B 상태 (1.5초 애니메이션 모션 프레임)</span
+          >
+          <ul>
+            <li>
+              <strong>슬롯 모션 표현</strong> — 5개 후보 이름을 세로로 스택,
+              중심부 큰 글자 + 위·아래 페이드 (opacity 0.25 → 0.55 → 0.95)로
+              회전 잔상 시뮬레이션.
+            </li>
+            <li>
+              <strong>수직 text-shadow</strong> + <code>scaleY(1.05)</code>로
+              모션 블러 — CSS <code>filter:blur</code>보다 가독성 유지하면서
+              움직임 표현.
+            </li>
+            <li>
+              좌·우 <strong>스트라이프 스트릭</strong> (4px on / 5px off 반복
+              그라데이션)으로 회전 속도 시각화.
+            </li>
+            <li>
+              <strong>중심 가이드라인</strong> (s3 라인 위·아래 1px 보더)으로
+              "여기서 멈출 거예요" 암시.
+            </li>
+            <li>
+              하단 <strong>프로그레스 바 (65%)</strong>로 1.5초 진행 상태 표현 —
+              인내심 관리.
+            </li>
+            <li>
+              헤더 ← 뒤로가기와 "조건 변경" 링크는
+              <strong>opacity 0.35-0.45로 비활성화</strong> — 스핀 중 조작 차단.
+            </li>
+            <li>
+              "두근두근 ⏳" + 🍽 보조 문구로
+              <strong>기다림에 정서적 보상</strong>.
+            </li>
+          </ul>
+        </aside>
+      </section>
+
+      <!-- ===== Screen 7: Roulette - Result ===== -->
+      <section class="screen-row">
+        <div class="screen-wrap">
+          <div class="screen-label">07 · 랜덤 추천 (C 상태)</div>
+          <div class="screen-name">오늘 뭐먹지 · 결과</div>
+          <div class="screen-route">/roulette · 스핀 후</div>
+
+          <div class="phone">
+            <div class="statusbar">
+              <span class="time">11:50</span>
+              <span class="right"
+                ><span>●●●</span><span>📶</span><span>🔋</span></span
+              >
+            </div>
+
+            <div class="app-header">
+              <div class="back">
+                <svg class="icon"><use href="#i-chevron-left" /></svg>
+              </div>
+              <div class="title center">오늘 뭐먹지?</div>
+              <div style="width: 32px"></div>
+            </div>
+
+            <div class="scroll">
+              <div class="result-summary">
+                <div class="crumb"><strong>한식 · 일식</strong> · 점심</div>
+                <div class="edit-link">조건 변경</div>
+              </div>
+
+              <div class="slot-wrap">
+                <div class="confetti">
+                  <i style="top: 6px; left: 24px; background: #ff6b35"></i>
+                  <i style="top: 18px; left: 280px; background: #1d9e75"></i>
+                  <i style="top: 38px; left: 60px; background: #f4a700"></i>
+                  <i style="top: 50px; left: 240px; background: #2e75b6"></i>
+                  <i
+                    style="
+                      top: 8px;
+                      left: 160px;
+                      background: #ff6b35;
+                      width: 5px;
+                      height: 5px;
+                    "
+                  ></i>
+                  <i style="bottom: 14px; left: 30px; background: #1d9e75"></i>
+                  <i style="bottom: 24px; right: 34px; background: #f4a700"></i>
+                  <i
+                    style="
+                      bottom: 4px;
+                      left: 170px;
+                      background: #2e75b6;
+                      width: 5px;
+                      height: 5px;
+                    "
+                  ></i>
+                </div>
+
+                <div class="slot-celebrate">🎉 당첨!</div>
+
+                <div class="slot-reel">
+                  <span class="slot-side-emoji l">⭐</span>
+                  <span class="slot-side-emoji r">🎯</span>
+                  <div class="slot-fade">스시히로바</div>
+                  <div class="slot-main">미진면옥 양재본점</div>
+                  <div class="slot-fade">백채 양재본점</div>
+                </div>
+              </div>
+
+              <div class="result-card-big">
+                <div class="r-name">미진면옥 양재본점</div>
+                <div class="r-rating">
+                  ★ 4.6 <span class="count">12명 평가</span>
+                </div>
+                <div
+                  class="badges"
+                  style="
+                    display: flex;
+                    gap: 4px;
+                    flex-wrap: wrap;
+                    margin-top: 4px;
+                  "
+                >
+                  <span class="badge">한식</span>
+                  <span class="badge green">점심</span>
+                  <span class="badge gray">북서 · 도보 4분</span>
+                </div>
+                <div class="r-menu">평양냉면 · 만두국 · 어복쟁반 · 수육</div>
+              </div>
+
+              <div class="roulette-ctas">
+                <div class="cta-btn">
+                  <svg class="icon" style="font-size: 18px">
+                    <use href="#i-utensils" />
+                  </svg>
+                  이 식당 갈래!
+                </div>
+                <div class="cta-btn outline">
+                  <svg class="icon" style="font-size: 18px">
+                    <use href="#i-refresh" />
+                  </svg>
+                  다시 굴리기
+                </div>
+              </div>
+
+              <div style="height: 80px"></div>
+
+              <div class="tab-bar">
+                <div class="tab">
+                  <span class="ico"
+                    ><svg class="icon"><use href="#i-home" /></svg></span
+                  ><span>홈</span>
+                </div>
+                <div class="tab active">
+                  <span class="ico"
+                    ><svg class="icon"><use href="#i-dice" /></svg></span
+                  ><span>오늘 뭐먹지</span>
+                </div>
+              </div>
+
+              <div class="home-indicator"></div>
+            </div>
+          </div>
+        </div>
+        <aside class="notes-col">
+          <h3>
+            <span class="pill">07</span>오늘 뭐먹지 · 결과
+            <span class="route">/roulette</span>
+          </h3>
+          <span class="sub-h">랜덤 추천 — C 상태 (스핀 종료)</span>
+          <ul>
+            <li>
+              상단 <strong>선택 조건 breadcrumb</strong> — 어떤 필터로 굴렸는지
+              항상 보이게, 우측 "조건 변경" 링크로 빠른 재선택.
+            </li>
+            <li>
+              <strong>슬롯 릴 UI</strong> — 위·아래 페이드된 후보 이름이 살짝
+              보여 룰렛의 동적 감각 유지 (1.5초 애니메이션 종료 상태).
+            </li>
+            <li>
+              릴 위에 <strong>색종이(confetti) 도트 + ⭐🎯 이모지</strong>로
+              "당첨" 정서 강조.
+            </li>
+            <li>
+              결과 카드는 <strong>홈 카드의 확장판</strong> —
+              이름·평점·뱃지·메뉴 한 줄까지 의사결정 정보 충분.
+            </li>
+            <li>
+              CTA 2단 — primary는 <strong>"이 식당 갈래!"</strong> (상세
+              페이지로 이동), outline은 <strong>"다시 굴리기"</strong>.
+            </li>
+            <li>
+              최근 뽑힌 식당은 다음 굴리기에서 일시 제외 (기획서 8.5 v2 옵션,
+              클라이언트 상태 유지).
+            </li>
+          </ul>
+        </aside>
+      </section>
+
+      <!-- ===== Screen 8: 폐업 확인 다이얼로그 ===== -->
+      <section class="screen-row">
+        <div class="screen-wrap">
+          <div class="screen-label">08 · 휴업/폐업 흐름</div>
+          <div class="screen-name">폐업 확인 다이얼로그</div>
+          <div class="screen-route">
+            /restaurant/:id · 액션시트 → 다이얼로그
+          </div>
+
+          <div class="phone">
+            <div class="statusbar">
+              <span class="time">11:54</span>
+              <span class="right"
+                ><span>●●●</span><span>📶</span><span>🔋</span></span
+              >
+            </div>
+
+            <div class="app-header">
+              <div class="back">
+                <svg class="icon"><use href="#i-chevron-left" /></svg>
+              </div>
+              <div class="title center">미진면옥 양재본점</div>
+              <div class="icon-btn">
+                <svg class="icon"><use href="#i-more-h" /></svg>
+              </div>
+            </div>
+
+            <div class="scroll">
+              <div class="map-block">
+                <div class="map-pin">
+                  <svg class="icon"><use href="#i-map-pin" /></svg>
+                </div>
+                <div class="map-tag">카카오맵</div>
+              </div>
+
+              <div class="detail-head">
+                <div class="h-name">미진면옥 양재본점</div>
+                <div
+                  class="badges"
+                  style="display: flex; gap: 4px; flex-wrap: wrap"
+                >
+                  <span class="badge">한식</span>
+                  <span class="badge green">점심</span>
+                  <span class="badge gray">북서 · 도보 4분</span>
+                </div>
+                <div class="menu">
+                  평양냉면 · 만두국 · 어복쟁반 · 수육 · 만두
+                </div>
+              </div>
+
+              <div class="rating-block">
+                <div class="rating-big">
+                  <div class="num">4.6</div>
+                  <div class="stars">★★★★★</div>
+                  <div class="total">12명 평가</div>
+                </div>
+                <div class="rating-dist">
+                  <div class="dist-row">
+                    <span class="lbl">5점</span>
+                    <div class="bar">
+                      <div class="bar-fill" style="width: 75%"></div>
+                    </div>
+                    <span class="cnt">9</span>
+                  </div>
+                  <div class="dist-row">
+                    <span class="lbl">4점</span>
+                    <div class="bar">
+                      <div class="bar-fill" style="width: 17%"></div>
+                    </div>
+                    <span class="cnt">2</span>
+                  </div>
+                  <div class="dist-row">
+                    <span class="lbl">3점</span>
+                    <div class="bar">
+                      <div class="bar-fill" style="width: 8%"></div>
+                    </div>
+                    <span class="cnt">1</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Confirm modal overlay -->
+              <div class="confirm-overlay">
+                <div class="confirm-dialog">
+                  <div class="confirm-icon" style="color: var(--danger)">
+                    <svg class="icon"><use href="#i-trash" /></svg>
+                  </div>
+                  <div class="confirm-title">폐업 처리할까요?</div>
+                  <div class="confirm-message">
+                    <strong>미진면옥 양재본점</strong>을 폐업 처리합니다.<br />
+                    목록에서 숨겨지지만 과거 평가 <strong>12건</strong>은
+                    보존돼요.
+                  </div>
+                  <div class="confirm-buttons">
+                    <div class="confirm-btn">취소</div>
+                    <div class="confirm-btn danger">폐업 처리</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="home-indicator"></div>
+            </div>
+          </div>
+        </div>
+        <aside class="notes-col">
+          <h3>
+            <span class="pill">08</span>폐업 확인 다이얼로그
+            <span class="route">/restaurant/:id</span>
+          </h3>
+          <span class="sub-h">2단계 확인 흐름 — 액션시트 → 모달</span>
+          <ul>
+            <li>
+              <strong>2단계 UX</strong> — 액션 시트(02 참고)에서 "폐업으로 표시"
+              탭 → 이 다이얼로그가 뜸. 되돌리기 부담스러운 상태 전환이라
+              <strong>명시적 확인 필수</strong>.
+            </li>
+            <li>
+              <strong>iOS native alert 패턴</strong> — 중앙 정렬 280px 카드,
+              <code>backdrop-filter: blur(16px)</code>, 어두운 scrim(0.5)으로
+              배경 디그레이드.
+            </li>
+            <li>
+              <strong>버튼 배치 컨벤션</strong> — 안전한 "취소" 좌측 (primary
+              약체), 위험한 "폐업 처리" 우측 (danger red, bold) — iOS HIG
+              그대로.
+            </li>
+            <li>
+              <strong>메시지에 영향 범위 명시</strong> — "12건 평가는
+              보존됩니다"로 데이터 손실 없음을 안심시킴, 실수 부담 ↓.
+            </li>
+            <li>
+              <strong>휴업 처리는 다이얼로그 생략</strong> — 가벼운
+              액션(되돌리기 쉬움)이라 토스트만으로 피드백. 폐업만 이 흐름.
+            </li>
+            <li>
+              "운영중으로 복구"도 다이얼로그 없음 — 액션 시트에서 즉시 적용 +
+              토스트.
+            </li>
+          </ul>
+        </aside>
+      </section>
+
+      <!-- ===== Screen 9: Empty state (search no result) ===== -->
+      <section class="screen-row">
+        <div class="screen-wrap">
+          <div class="screen-label">09 · 빈 상태</div>
+          <div class="screen-name">검색 결과 없음</div>
+          <div class="screen-route">/?q=양꼬치</div>
+
+          <div class="phone">
+            <div class="statusbar">
+              <span class="time">12:14</span>
+              <span class="right"
+                ><span>●●●</span><span>📶</span><span>🔋</span></span
+              >
+            </div>
+
+            <div class="app-header">
+              <div class="back">
+                <svg class="icon"><use href="#i-chevron-left" /></svg>
+              </div>
+              <div class="title center">검색</div>
+              <div style="width: 32px"></div>
+            </div>
+
+            <div class="scroll">
+              <div class="search-strip">
+                <div
+                  class="search-input"
+                  style="
+                    background: #fff;
+                    border: 1px solid var(--primary);
+                    color: var(--text);
+                  "
+                >
+                  <span class="ico" style="color: var(--primary)"
+                    ><svg class="icon"><use href="#i-search" /></svg
+                  ></span>
+                  <span>양꼬치</span>
+                  <span
+                    style="
+                      margin-left: auto;
+                      color: var(--text-mute);
+                      font-size: 18px;
+                      line-height: 1;
+                    "
+                    >×</span
+                  >
+                </div>
+              </div>
+
+              <div class="empty-state">
+                <div class="empty-illust">
+                  <svg viewBox="0 0 96 96" fill="none" aria-hidden="true">
+                    <circle cx="48" cy="48" r="44" fill="#F5F7FA" />
+                    <circle
+                      cx="40"
+                      cy="40"
+                      r="17"
+                      fill="#fff"
+                      stroke="#9aa0a6"
+                      stroke-width="3"
+                    />
+                    <path
+                      d="m53 53 14 14"
+                      stroke="#9aa0a6"
+                      stroke-width="3.5"
+                      stroke-linecap="round"
+                    />
+                    <g stroke="#FF6B35" stroke-width="3" stroke-linecap="round">
+                      <path d="m32 32 16 16" />
+                      <path d="m48 32-16 16" />
+                    </g>
+                  </svg>
+                </div>
+                <div class="empty-title">검색 결과가 없어요</div>
+                <div class="empty-sub">
+                  "<strong>양꼬치</strong>"와 일치하는 식당이 없습니다.<br />다른
+                  키워드로 찾거나 새 식당을 등록해보세요.
+                </div>
+                <div class="empty-actions">
+                  <div class="empty-btn primary">
+                    <svg class="icon" style="font-size: 16px">
+                      <use href="#i-plus" />
+                    </svg>
+                    <span>"양꼬치" 등록하기</span>
+                  </div>
+                  <div class="empty-btn outline">검색어 지우기</div>
+                </div>
+                <div class="empty-suggest">
+                  <div class="empty-suggest-label">이런 카테고리는 어때요?</div>
+                  <div class="suggest-chips">
+                    <div class="chip">중식</div>
+                    <div class="chip">한식</div>
+                    <div class="chip">일식</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="tab-bar">
+                <div class="tab active">
+                  <span class="ico"
+                    ><svg class="icon"><use href="#i-home" /></svg></span
+                  ><span>홈</span>
+                </div>
+                <div class="tab">
+                  <span class="ico"
+                    ><svg class="icon"><use href="#i-dice" /></svg></span
+                  ><span>오늘 뭐먹지</span>
+                </div>
+              </div>
+              <div class="home-indicator"></div>
+            </div>
+          </div>
+        </div>
+        <aside class="notes-col">
+          <h3>
+            <span class="pill">09</span>빈 상태 — 검색 결과 없음
+            <span class="route">/?q=:keyword</span>
+          </h3>
+          <span class="sub-h"
+            >Empty state — 막다른 길에서 다음 행동으로 잇기</span
+          >
+          <ul>
+            <li>
+              <strong>일러스트 + 명확한 사유 + 다음 행동</strong> 3단 구조. 회색
+              돋보기 + 주황 X 마크로 "검색했지만 못 찾음"을 비언어적으로 전달.
+            </li>
+            <li>
+              <strong>1차 액션 "양꼬치 등록하기"</strong> — 빈 결과를 컨텐츠
+              추가 동기로 전환 (구글시트 컨셉과 일치).
+            </li>
+            <li>2차 액션 "검색어 지우기" — 빠른 복귀 경로.</li>
+            <li>
+              하단 <strong>카테고리 칩 제안</strong> — 검색 의도를 카테고리
+              탐색으로 우회.
+            </li>
+            <li>
+              <strong>변형 케이스 (이 패턴 재사용):</strong>
+              <ul>
+                <li>
+                  <strong>첫 방문 (식당 0개)</strong> — "아직 등록된 식당이
+                  없어요" + 큰 ＋ 버튼만, 칩 섹션 생략
+                </li>
+                <li>
+                  <strong>평가 0개 (상세)</strong> — 한줄평 섹션 자리에 "첫
+                  평가를 남겨보세요" + 별 픽커 inline
+                </li>
+                <li>
+                  <strong>룰렛 풀 0개</strong> — "조건에 맞는 식당이 없어요.
+                  필터를 줄여주세요" + "조건 변경" CTA
+                </li>
+                <li>
+                  <strong>네트워크 오류</strong> — "연결 실패" + "다시 시도"
+                  outline 버튼
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </aside>
+      </section>
+
+      <!-- ===== Screen 10: Skeleton loader ===== -->
+      <section class="screen-row">
+        <div class="screen-wrap">
+          <div class="screen-label">10 · 로딩 상태</div>
+          <div class="screen-name">스켈레톤 로더</div>
+          <div class="screen-route">초기 진입 · 평균 0.3–1.0s</div>
+
+          <div class="phone">
+            <div class="statusbar">
+              <span class="time">11:50</span>
+              <span class="right"
+                ><span>●●●</span><span>📶</span><span>🔋</span></span
+              >
+            </div>
+
+            <div class="app-header">
+              <div
+                class="title"
+                style="
+                  flex: 1;
+                  color: var(--primary-dark);
+                  font-weight: 800;
+                  font-size: 18px;
+                "
+              >
+                양재어디가?
+              </div>
+              <div class="icon-btn">
+                <svg class="icon"><use href="#i-search" /></svg>
+              </div>
+              <div class="icon-btn add-btn">
+                <svg class="icon"><use href="#i-plus" /></svg>
+              </div>
+            </div>
+
+            <div class="scroll">
+              <div class="search-strip">
+                <div class="sk" style="height: 38px; border-radius: 10px"></div>
+              </div>
+
+              <div class="filter-row">
+                <div
+                  class="sk"
+                  style="
+                    width: 48px;
+                    height: 30px;
+                    border-radius: 16px;
+                    flex-shrink: 0;
+                  "
+                ></div>
+                <div
+                  class="sk"
+                  style="
+                    width: 54px;
+                    height: 30px;
+                    border-radius: 16px;
+                    flex-shrink: 0;
+                  "
+                ></div>
+                <div
+                  class="sk"
+                  style="
+                    width: 54px;
+                    height: 30px;
+                    border-radius: 16px;
+                    flex-shrink: 0;
+                  "
+                ></div>
+                <div
+                  class="sk"
+                  style="
+                    width: 54px;
+                    height: 30px;
+                    border-radius: 16px;
+                    flex-shrink: 0;
+                  "
+                ></div>
+                <div
+                  class="sk"
+                  style="
+                    width: 54px;
+                    height: 30px;
+                    border-radius: 16px;
+                    flex-shrink: 0;
+                  "
+                ></div>
+              </div>
+
+              <div class="sort-bar">
+                <div class="sk sk-line sm" style="width: 64px"></div>
+                <div class="sk sk-line sm" style="width: 96px"></div>
+              </div>
+
+              <div class="rest-card">
+                <div class="row1">
+                  <div class="sk sk-line lg" style="width: 60%"></div>
+                  <div class="sk sk-line" style="width: 48px"></div>
+                </div>
+                <div style="display: flex; gap: 6px; margin: 10px 0 8px">
+                  <div
+                    class="sk"
+                    style="width: 38px; height: 18px; border-radius: 9px"
+                  ></div>
+                  <div
+                    class="sk"
+                    style="width: 38px; height: 18px; border-radius: 9px"
+                  ></div>
+                  <div
+                    class="sk"
+                    style="width: 90px; height: 18px; border-radius: 9px"
+                  ></div>
+                </div>
+                <div
+                  class="sk sk-line sm"
+                  style="width: 82%; margin-bottom: 5px"
+                ></div>
+                <div class="sk sk-line sm" style="width: 55%"></div>
+              </div>
+
+              <div class="rest-card">
+                <div class="row1">
+                  <div class="sk sk-line lg" style="width: 48%"></div>
+                  <div class="sk sk-line" style="width: 48px"></div>
+                </div>
+                <div style="display: flex; gap: 6px; margin: 10px 0 8px">
+                  <div
+                    class="sk"
+                    style="width: 38px; height: 18px; border-radius: 9px"
+                  ></div>
+                  <div
+                    class="sk"
+                    style="width: 90px; height: 18px; border-radius: 9px"
+                  ></div>
+                </div>
+                <div class="sk sk-line sm" style="width: 74%"></div>
+              </div>
+
+              <div class="rest-card">
+                <div class="row1">
+                  <div class="sk sk-line lg" style="width: 55%"></div>
+                  <div class="sk sk-line" style="width: 48px"></div>
+                </div>
+                <div style="display: flex; gap: 6px; margin: 10px 0 8px">
+                  <div
+                    class="sk"
+                    style="width: 38px; height: 18px; border-radius: 9px"
+                  ></div>
+                  <div
+                    class="sk"
+                    style="width: 38px; height: 18px; border-radius: 9px"
+                  ></div>
+                  <div
+                    class="sk"
+                    style="width: 90px; height: 18px; border-radius: 9px"
+                  ></div>
+                </div>
+                <div
+                  class="sk sk-line sm"
+                  style="width: 88%; margin-bottom: 5px"
+                ></div>
+                <div class="sk sk-line sm" style="width: 42%"></div>
+              </div>
+
+              <div class="rest-card">
+                <div class="row1">
+                  <div class="sk sk-line lg" style="width: 50%"></div>
+                  <div class="sk sk-line" style="width: 48px"></div>
+                </div>
+                <div style="display: flex; gap: 6px; margin: 10px 0 8px">
+                  <div
+                    class="sk"
+                    style="width: 38px; height: 18px; border-radius: 9px"
+                  ></div>
+                  <div
+                    class="sk"
+                    style="width: 90px; height: 18px; border-radius: 9px"
+                  ></div>
+                </div>
+                <div class="sk sk-line sm" style="width: 70%"></div>
+              </div>
+
+              <div class="tab-bar">
+                <div class="tab active">
+                  <span class="ico"
+                    ><svg class="icon"><use href="#i-home" /></svg></span
+                  ><span>홈</span>
+                </div>
+                <div class="tab">
+                  <span class="ico"
+                    ><svg class="icon"><use href="#i-dice" /></svg></span
+                  ><span>오늘 뭐먹지</span>
+                </div>
+              </div>
+              <div class="home-indicator"></div>
+            </div>
+          </div>
+        </div>
+        <aside class="notes-col">
+          <h3>
+            <span class="pill">10</span>스켈레톤 로더
+            <span class="route">(초기 로딩)</span>
+          </h3>
+          <span class="sub-h">데이터 fetching 0.3–1.0s 구간 UX</span>
+          <ul>
+            <li>
+              <strong>실제 카드 레이아웃 미러링</strong> — 카드 형태·뱃지
+              개수·텍스트 줄 수까지 동일하게 placeholder. Content-aware
+              skeleton.
+            </li>
+            <li>
+              왼→오 <strong>shimmer 1.4s 루프</strong> — opacity 펄스보다 활동성
+              높고 피로감 적음. 색상은 <code>#ECEEF1</code> 베이스에 white 50%
+              그라데이션.
+            </li>
+            <li>
+              헤더·탭바·검색 입력 같은
+              <strong>네비 영역은 즉시 실 콘텐츠</strong> — 인지 부담 줄이고 앱
+              정체성 유지.
+            </li>
+            <li>3–4장 정도만 표시. 무한 placeholder는 오히려 답답함 유발.</li>
+            <li>
+              스켈레톤 → 실 카드 전환은 <strong>200ms fade-in</strong> 권장
+              (정적 목업에선 표현 생략).
+            </li>
+            <li>
+              로딩이 <strong>1초 초과 시</strong> "잠시만요 ☕" 토스트 보조 노출
+              추천.
+            </li>
+            <li>
+              적용 화면: 홈 진입, 상세 진입(지도 + 카드 영역), 룰렛 후보 풀 계산
+              등.
+            </li>
+          </ul>
+        </aside>
+      </section>
+
+      <!-- ===== Screen 11: Pull-to-refresh ===== -->
+      <section class="screen-row">
+        <div class="screen-wrap">
+          <div class="screen-label">11 · 새로고침</div>
+          <div class="screen-name">Pull-to-refresh</div>
+          <div class="screen-route">홈 · 끌어 새로고침 중</div>
+
+          <div class="phone">
+            <div class="statusbar">
+              <span class="time">11:51</span>
+              <span class="right"
+                ><span>●●●</span><span>📶</span><span>🔋</span></span
+              >
+            </div>
+
+            <div class="app-header">
+              <div
+                class="title"
+                style="
+                  flex: 1;
+                  color: var(--primary-dark);
+                  font-weight: 800;
+                  font-size: 18px;
+                "
+              >
+                양재어디가?
+              </div>
+              <div class="icon-btn">
+                <svg class="icon"><use href="#i-search" /></svg>
+              </div>
+              <div class="icon-btn add-btn">
+                <svg class="icon"><use href="#i-plus" /></svg>
+              </div>
+            </div>
+
+            <div class="scroll">
+              <div class="ptr-indicator primary">
+                <svg
+                  class="ptr-spinner"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M21 12a9 9 0 1 1-3-6.7"
+                    stroke="currentColor"
+                    stroke-width="2.4"
+                    stroke-linecap="round"
+                  />
+                  <path
+                    d="M21 4v5h-5"
+                    stroke="currentColor"
+                    stroke-width="2.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <span>새로 불러오는 중…</span>
+              </div>
+
+              <div class="search-strip">
+                <div class="search-input">
+                  <span class="ico"
+                    ><svg class="icon"><use href="#i-search" /></svg
+                  ></span>
+                  <span>식당·메뉴 검색</span>
+                </div>
+              </div>
+
+              <div class="filter-row">
+                <div class="chip active">전체</div>
+                <div class="chip">한식</div>
+                <div class="chip">일식</div>
+                <div class="chip">중식</div>
+                <div class="chip">분식</div>
+              </div>
+
+              <div class="sort-bar">
+                <span><span class="count">82</span>개 식당</span>
+                <span class="sort-pill"
+                  >평점 높은 순
+                  <svg class="icon" style="font-size: 12px">
+                    <use href="#i-chevron-down" /></svg
+                ></span>
+              </div>
+
+              <div class="rest-card" style="opacity: 0.75">
+                <div class="row1">
+                  <span class="name">미진면옥 양재본점</span>
+                  <span class="rating"
+                    >★ 4.6 <span class="count">12명</span></span
+                  >
+                </div>
+                <div class="badges">
+                  <span class="badge">한식</span>
+                  <span class="badge green">점심</span>
+                  <span class="badge gray">북서 · 도보 4분</span>
+                </div>
+                <div class="note">평양냉면 진국, 만두도 평이 좋음.</div>
+              </div>
+
+              <div class="rest-card" style="opacity: 0.55">
+                <div class="row1">
+                  <span class="name">스시히로바</span>
+                  <span class="rating"
+                    >★ 4.5 <span class="count">9명</span></span
+                  >
+                </div>
+                <div class="badges">
+                  <span class="badge">일식</span>
+                  <span class="badge orange">저녁</span>
+                  <span class="badge gray">남동 · 도보 7분</span>
+                </div>
+              </div>
+
+              <div class="rest-card" style="opacity: 0.35">
+                <div class="row1">
+                  <span class="name">손수동</span>
+                  <span class="rating">★ 4.4</span>
+                </div>
+                <div class="badges">
+                  <span class="badge">한식</span>
+                  <span class="badge green">점심</span>
+                </div>
+              </div>
+
+              <div class="tab-bar">
+                <div class="tab active">
+                  <span class="ico"
+                    ><svg class="icon"><use href="#i-home" /></svg></span
+                  ><span>홈</span>
+                </div>
+                <div class="tab">
+                  <span class="ico"
+                    ><svg class="icon"><use href="#i-dice" /></svg></span
+                  ><span>오늘 뭐먹지</span>
+                </div>
+              </div>
+              <div class="home-indicator"></div>
+            </div>
+          </div>
+        </div>
+        <aside class="notes-col">
+          <h3>
+            <span class="pill">11</span>Pull-to-refresh
+            <span class="route">/</span>
+          </h3>
+          <span class="sub-h">상단에서 끌어 새로고침 — 활성 상태</span>
+          <ul>
+            <li>
+              상단 <strong>56px 인디케이터</strong> 노출, 회전 스피너(0.9s loop)
+              + Primary 컬러 텍스트.
+            </li>
+            <li>
+              <strong>3단계 상태</strong> —
+              <ul>
+                <li>
+                  (1) 드래그 중 (60px 미만): "당겨서 새로고침" + 정지된 화살표
+                </li>
+                <li>
+                  (2) 임계점 초과 (60px+): "놓아서 새로고침" + 화살표 180° 회전
+                </li>
+                <li>
+                  (3) 새로고침 중 (이 목업): 스피너 회전 + "새로 불러오는 중…"
+                </li>
+              </ul>
+            </li>
+            <li>
+              하단 카드 <strong>opacity 0.75 → 0.35 그라데이션</strong> — 새
+              데이터 도착 전임을 시각적으로 암시. 실 구현에선 그대로 두는 게
+              일반적이지만 목업 전달용으로 표현.
+            </li>
+            <li>
+              임계점 보통 <strong>60–80px 드래그</strong> — 너무 짧으면 오발,
+              너무 길면 피로.
+            </li>
+            <li>
+              iOS·Android 네이티브 PTR과 동등한
+              <strong>햅틱 피드백</strong> 권장 (web vibration API 활용).
+            </li>
+            <li>
+              <strong>실패 시</strong> "새로고침 실패. 네트워크 확인" 토스트 +
+              인디케이터 사라짐 + 기존 데이터 유지.
+            </li>
+            <li>
+              적용 화면: 홈 리스트, 상세 평가 섹션, 룰렛 결과 (다시 굴리기와
+              별개로).
+            </li>
+          </ul>
+        </aside>
+      </section>
+    </div>
+  </body>
+</html>

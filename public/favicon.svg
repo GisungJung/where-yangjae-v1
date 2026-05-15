@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="양재어디가">
+  <title>양재어디가</title>
+
+  <defs>
+    <style>
+      .fav-text {
+        font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+        font-weight: 900;
+      }
+    </style>
+  </defs>
+
+  <!-- Pin background -->
+  <path d="M 32 60 C 10 36 8 28 8 22 C 8 11 18 4 32 4 C 46 4 56 11 56 22 C 56 28 54 36 32 60 Z" fill="#FF6B35"/>
+
+  <!-- Inner white circle for ? -->
+  <circle cx="32" cy="22" r="13" fill="#FFFFFF"/>
+
+  <!-- "?" mark in accent-dark -->
+  <text class="fav-text" x="32" y="30" font-size="22" text-anchor="middle" fill="#D54E18">?</text>
+</svg>

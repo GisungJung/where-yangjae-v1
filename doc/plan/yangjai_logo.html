@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>양재어디가 · 로고 시안</title>
+<style>
+  :root {
+    --primary: #2E75B6;
+    --primary-dark: #1F3864;
+    --accent: #FF6B35;
+    --accent-dark: #D54E18;
+    --cream: #FFF6E8;
+    --paper: #FFFBF3;
+    --ink: #2E2A26;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #F4F1EC;
+    font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+    padding: 48px 24px 80px;
+    color: #2A2D34;
+  }
+
+  .page-head { max-width: 1200px; margin: 0 auto 32px; text-align: center; }
+  .page-head h1 { margin: 0 0 6px; font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+  .page-head p { margin: 0; color: #777; font-size: 14px; }
+  .ref-note {
+    max-width: 720px;
+    margin: 16px auto 0;
+    padding: 14px 18px;
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #E7E2D8;
+    font-size: 13px;
+    color: #555;
+    line-height: 1.6;
+    text-align: left;
+  }
+  .ref-note strong { color: var(--accent-dark); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 24px;
+    max-width: 1200px;
+    margin: 32px auto 0;
+  }
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    border: 1px solid #ECE7DC;
+  }
+  .logo-area {
+    height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    overflow: hidden;
+  }
+  .meta {
+    padding: 16px 20px;
+    border-top: 1px solid #F0EBE0;
+    background: #FAFAFA;
+  }
+  .meta .tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    background: var(--accent);
+    color: white;
+    border-radius: 10px;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  .meta .tag.blue { background: var(--primary); }
+  .meta .tag.dark { background: var(--ink); }
+  .meta .tag.outline { background: white; color: var(--accent); border: 1px solid var(--accent); }
+  .meta h3 { margin: 0 0 6px; font-size: 15px; font-weight: 700; color: #1a1a1a; }
+  .meta p { margin: 0; font-size: 12px; color: #777; line-height: 1.55; }
+
+  .size-row {
+    max-width: 1200px;
+    margin: 48px auto 0;
+    padding: 24px 28px;
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #ECE7DC;
+  }
+  .size-row h2 { margin: 0 0 8px; font-size: 16px; }
+  .size-row .desc { color: #777; font-size: 13px; margin-bottom: 20px; }
+  .size-line {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    flex-wrap: wrap;
+    padding: 16px 0;
+    border-top: 1px dashed #ECE7DC;
+  }
+  .size-label { width: 100px; color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; }
+
+  /* SVG common */
+  .logo-text {
+    font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    font-weight: 900;
+    letter-spacing: -1px;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <h1>양재어디가 · 로고 시안 v1</h1>
+  <p>"아빠 어디가" 톤 — 손글씨 느낌 한글 · 큰 물음표 · 보조 아이콘 · 따뜻한 색</p>
+  <div class="ref-note">
+    <strong>레퍼런스 톤:</strong> 어린아이 손글씨 같은 둥글둥글한 한글, 글자마다 살짝 기울인 각도, 큰 물음표("?")가 시각 무게중심, 발자국·점프 같은 보조 일러스트가 곁들여짐. 메인 컬러는 따뜻한 주황·빨강 계열.
+  </div>
+</div>
+
+<div class="grid">
+
+  <!-- ============ Variant A: 클래식 아빠어디가 ============ -->
+  <div class="card">
+    <div class="logo-area" style="background: var(--paper);">
+      <svg viewBox="0 0 360 260" width="320" height="232" xmlns="http://www.w3.org/2000/svg">
+        <!-- soft brush stroke behind -->
+        <path d="M 30 230 Q 180 250 330 220" stroke="#FFE3D2" stroke-width="14" fill="none" stroke-linecap="round"/>
+
+        <!-- 양재 (top, smaller, tilted) -->
+        <g class="logo-text" fill="var(--accent)">
+          <text x="138" y="78" font-size="56" text-anchor="middle" transform="rotate(-4 138 78)">양</text>
+          <text x="208" y="78" font-size="56" text-anchor="middle" transform="rotate(3 208 78)">재</text>
+        </g>
+
+        <!-- 어디가 (bottom, large) -->
+        <g class="logo-text" fill="var(--accent)">
+          <text x="80"  y="180" font-size="82" text-anchor="middle" transform="rotate(-3 80 180)">어</text>
+          <text x="160" y="186" font-size="82" text-anchor="middle" transform="rotate(2 160 186)">디</text>
+          <text x="238" y="178" font-size="82" text-anchor="middle" transform="rotate(-2 238 178)">가</text>
+        </g>
+
+        <!-- big "?" mark -->
+        <g class="logo-text" fill="var(--accent-dark)">
+          <text x="306" y="188" font-size="96" text-anchor="middle" transform="rotate(10 306 188)">?</text>
+        </g>
+
+        <!-- footprints decoration -->
+        <g fill="#F4A700" opacity="0.85">
+          <!-- left footprint -->
+          <g transform="translate(46 40) rotate(-20)">
+            <ellipse cx="0" cy="0" rx="7" ry="10"/>
+            <circle cx="2" cy="-12" r="3"/>
+            <circle cx="-5" cy="-10" r="2.4"/>
+            <circle cx="-9" cy="-5" r="1.8"/>
+          </g>
+          <!-- right footprint -->
+          <g transform="translate(316 50) rotate(15)">
+            <ellipse cx="0" cy="0" rx="7" ry="10"/>
+            <circle cx="-2" cy="-12" r="3"/>
+            <circle cx="5" cy="-10" r="2.4"/>
+            <circle cx="9" cy="-5" r="1.8"/>
+          </g>
+        </g>
+
+        <!-- small star -->
+        <g fill="#F4A700">
+          <path d="M 322 110 L 326 118 L 334 119 L 328 124 L 330 132 L 322 128 L 314 132 L 316 124 L 310 119 L 318 118 Z"/>
+        </g>
+      </svg>
+    </div>
+    <div class="meta">
+      <span class="tag">A · 클래식</span>
+      <h3>아빠어디가 정공법</h3>
+      <p>원본 톤 가장 가까움. 발자국 + 별 + 큰 물음표. 따뜻한 주황 단색, 손글씨 기울임. 가장 친근한 인상.</p>
+    </div>
+  </div>
+
+  <!-- ============ Variant B: 푸디 트위스트 ============ -->
+  <div class="card">
+    <div class="logo-area" style="background: linear-gradient(135deg, #FFFBF3 0%, #FFE9DC 100%);">
+      <svg viewBox="0 0 360 260" width="320" height="232" xmlns="http://www.w3.org/2000/svg">
+        <!-- 양재 (top, primary blue) -->
+        <g class="logo-text" fill="var(--primary)">
+          <text x="138" y="76" font-size="52" text-anchor="middle" transform="rotate(-3 138 76)">양</text>
+          <text x="200" y="76" font-size="52" text-anchor="middle" transform="rotate(2 200 76)">재</text>
+        </g>
+
+        <!-- 어디가 (bottom, accent orange) -->
+        <g class="logo-text" fill="var(--accent)">
+          <text x="80"  y="180" font-size="84" text-anchor="middle" transform="rotate(-4 80 180)">어</text>
+          <text x="160" y="186" font-size="84" text-anchor="middle" transform="rotate(2 160 186)">디</text>
+          <text x="240" y="178" font-size="84" text-anchor="middle" transform="rotate(-2 240 178)">가</text>
+        </g>
+
+        <!-- big "?" mark -->
+        <g class="logo-text" fill="var(--accent-dark)">
+          <text x="310" y="192" font-size="100" text-anchor="middle" transform="rotate(12 310 192)">?</text>
+        </g>
+
+        <!-- chopsticks crossing top-left -->
+        <g stroke="var(--primary-dark)" stroke-width="4" stroke-linecap="round">
+          <line x1="22" y1="30" x2="62" y2="78" transform="rotate(8 42 54)"/>
+          <line x1="30" y1="28" x2="70" y2="76" transform="rotate(-3 50 52)"/>
+        </g>
+
+        <!-- bowl steam top-right -->
+        <g fill="none" stroke="#F4A700" stroke-width="3" stroke-linecap="round">
+          <path d="M 256 36 Q 252 44 256 52 Q 260 60 256 68"/>
+          <path d="M 268 28 Q 264 38 268 48 Q 272 58 268 68"/>
+        </g>
+        <!-- bowl -->
+        <g transform="translate(254 80)">
+          <path d="M -16 -8 Q -18 12 0 14 Q 18 12 16 -8 Z" fill="var(--primary)"/>
+          <ellipse cx="0" cy="-8" rx="16" ry="3" fill="var(--primary-dark)"/>
+        </g>
+
+        <!-- brush underline -->
+        <path d="M 50 222 Q 180 234 290 218" stroke="var(--accent)" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.55"/>
+      </svg>
+    </div>
+    <div class="meta">
+      <span class="tag blue">B · 푸디</span>
+      <h3>식당 정보 서비스 정체성 강조</h3>
+      <p>"양재"는 Primary 블루, "어디가?"는 Accent 오렌지. 젓가락 + 김 모락모락 밥그릇 곁들임. 식당 앱 정체성 가장 분명.</p>
+    </div>
+  </div>
+
+  <!-- ============ Variant C: 단일 라인 컴팩트 ============ -->
+  <div class="card">
+    <div class="logo-area" style="background: var(--cream);">
+      <svg viewBox="0 0 480 200" width="380" height="158" xmlns="http://www.w3.org/2000/svg">
+        <!-- soft brush stroke under -->
+        <path d="M 30 160 Q 240 175 440 150" stroke="#FFD4B8" stroke-width="12" fill="none" stroke-linecap="round"/>
+
+        <!-- pin icon left -->
+        <g transform="translate(30 90)">
+          <path d="M 0 0 C -14 -32 14 -36 14 -16 C 14 -4 7 4 0 18 C -7 4 -14 -4 -14 -16 C -14 -36 14 -32 0 0 Z" fill="var(--accent)" transform="translate(0 -4)"/>
+          <circle cx="0" cy="-22" r="6" fill="white"/>
+        </g>
+
+        <!-- 양재 어디 가? in one line, slight tilts -->
+        <g class="logo-text">
+          <text x="92"  y="115" font-size="76" fill="var(--ink)"        transform="rotate(-3 92 115)">양</text>
+          <text x="148" y="121" font-size="76" fill="var(--ink)"        transform="rotate(2 148 121)">재</text>
+          <text x="216" y="111" font-size="76" fill="var(--accent)"     transform="rotate(-2 216 111)">어</text>
+          <text x="272" y="117" font-size="76" fill="var(--accent)"     transform="rotate(3 272 117)">디</text>
+          <text x="328" y="113" font-size="76" fill="var(--accent)"     transform="rotate(-2 328 113)">가</text>
+          <text x="402" y="124" font-size="92" fill="var(--accent-dark)" transform="rotate(14 402 124)">?</text>
+        </g>
+      </svg>
+    </div>
+    <div class="meta">
+      <span class="tag outline">C · 컴팩트</span>
+      <h3>한 줄 가로형 (헤더용)</h3>
+      <p>모바일 헤더, 파비콘 옆 텍스트 로고, OG 이미지에 적합. 위치 핀 + 검정·주황 투톤. 좁은 공간에서도 잘 읽힘.</p>
+    </div>
+  </div>
+
+  <!-- ============ Variant D: 다크 배경 화이트 ============ -->
+  <div class="card">
+    <div class="logo-area" style="background: var(--primary-dark);">
+      <svg viewBox="0 0 360 260" width="320" height="232" xmlns="http://www.w3.org/2000/svg">
+        <!-- 양재 -->
+        <g class="logo-text" fill="white">
+          <text x="138" y="78" font-size="56" text-anchor="middle" transform="rotate(-4 138 78)">양</text>
+          <text x="208" y="78" font-size="56" text-anchor="middle" transform="rotate(3 208 78)">재</text>
+        </g>
+
+        <!-- 어디가 -->
+        <g class="logo-text" fill="white">
+          <text x="80"  y="180" font-size="82" text-anchor="middle" transform="rotate(-3 80 180)">어</text>
+          <text x="160" y="186" font-size="82" text-anchor="middle" transform="rotate(2 160 186)">디</text>
+          <text x="238" y="178" font-size="82" text-anchor="middle" transform="rotate(-2 238 178)">가</text>
+        </g>
+
+        <!-- big "?" mark in accent -->
+        <g class="logo-text" fill="var(--accent)">
+          <text x="306" y="188" font-size="96" text-anchor="middle" transform="rotate(10 306 188)">?</text>
+        </g>
+
+        <!-- pin top-left -->
+        <g transform="translate(50 50)">
+          <path d="M 0 0 C -10 -22 10 -26 10 -10 C 10 -2 5 4 0 14 C -5 4 -10 -2 -10 -10 C -10 -26 10 -22 0 0 Z" fill="var(--accent)"/>
+          <circle cx="0" cy="-14" r="4" fill="white"/>
+        </g>
+
+        <!-- sparkle right -->
+        <g fill="var(--accent)" opacity="0.9">
+          <path d="M 320 60 L 324 68 L 332 70 L 324 72 L 320 80 L 316 72 L 308 70 L 316 68 Z"/>
+        </g>
+
+        <!-- brush underline accent -->
+        <path d="M 50 230 Q 180 244 290 226" stroke="var(--accent)" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.6"/>
+      </svg>
+    </div>
+    <div class="meta">
+      <span class="tag dark">D · 다크</span>
+      <h3>다크 배경 화이트 글자 + 주황 포인트</h3>
+      <p>스플래시 스크린, PWA 아이콘, 명함·스티커용. 다크모드 헤더에도 자연스럽게 들어감. 글자 화이트, 물음표만 Accent로 포인트.</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ SIZE PREVIEW ============ -->
+<div class="size-row">
+  <h2>크기 검증 — 시안 A 기준</h2>
+  <div class="desc">파비콘(16px) → PWA 아이콘(192px) → 헤더 로고까지 시각적 무너짐 확인</div>
+
+  <div class="size-line">
+    <div class="size-label">파비콘 32</div>
+    <svg viewBox="0 0 360 260" width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+      <g class="logo-text" fill="var(--accent)">
+        <text x="138" y="78" font-size="56" text-anchor="middle" transform="rotate(-4 138 78)">양</text>
+        <text x="208" y="78" font-size="56" text-anchor="middle" transform="rotate(3 208 78)">재</text>
+        <text x="80"  y="180" font-size="82" text-anchor="middle" transform="rotate(-3 80 180)">어</text>
+        <text x="160" y="186" font-size="82" text-anchor="middle" transform="rotate(2 160 186)">디</text>
+        <text x="238" y="178" font-size="82" text-anchor="middle" transform="rotate(-2 238 178)">가</text>
+      </g>
+      <g class="logo-text" fill="var(--accent-dark)">
+        <text x="306" y="188" font-size="96" text-anchor="middle" transform="rotate(10 306 188)">?</text>
+      </g>
+    </svg>
+
+    <div class="size-label">아이콘 48</div>
+    <svg viewBox="0 0 360 260" width="48" height="48" xmlns="http://www.w3.org/2000/svg">
+      <g class="logo-text" fill="var(--accent)">
+        <text x="138" y="78" font-size="56" text-anchor="middle" transform="rotate(-4 138 78)">양</text>
+        <text x="208" y="78" font-size="56" text-anchor="middle" transform="rotate(3 208 78)">재</text>
+        <text x="80"  y="180" font-size="82" text-anchor="middle" transform="rotate(-3 80 180)">어</text>
+        <text x="160" y="186" font-size="82" text-anchor="middle" transform="rotate(2 160 186)">디</text>
+        <text x="238" y="178" font-size="82" text-anchor="middle" transform="rotate(-2 238 178)">가</text>
+      </g>
+      <g class="logo-text" fill="var(--accent-dark)">
+        <text x="306" y="188" font-size="96" text-anchor="middle" transform="rotate(10 306 188)">?</text>
+      </g>
+    </svg>
+
+    <div class="size-label">헤더 96</div>
+    <svg viewBox="0 0 360 260" width="96" height="96" xmlns="http://www.w3.org/2000/svg">
+      <g class="logo-text" fill="var(--accent)">
+        <text x="138" y="78" font-size="56" text-anchor="middle" transform="rotate(-4 138 78)">양</text>
+        <text x="208" y="78" font-size="56" text-anchor="middle" transform="rotate(3 208 78)">재</text>
+        <text x="80"  y="180" font-size="82" text-anchor="middle" transform="rotate(-3 80 180)">어</text>
+        <text x="160" y="186" font-size="82" text-anchor="middle" transform="rotate(2 160 186)">디</text>
+        <text x="238" y="178" font-size="82" text-anchor="middle" transform="rotate(-2 238 178)">가</text>
+      </g>
+      <g class="logo-text" fill="var(--accent-dark)">
+        <text x="306" y="188" font-size="96" text-anchor="middle" transform="rotate(10 306 188)">?</text>
+      </g>
+    </svg>
+
+    <div class="size-label">PWA 192</div>
+    <svg viewBox="0 0 360 260" width="192" height="192" xmlns="http://www.w3.org/2000/svg">
+      <g class="logo-text" fill="var(--accent)">
+        <text x="138" y="78" font-size="56" text-anchor="middle" transform="rotate(-4 138 78)">양</text>
+        <text x="208" y="78" font-size="56" text-anchor="middle" transform="rotate(3 208 78)">재</text>
+        <text x="80"  y="180" font-size="82" text-anchor="middle" transform="rotate(-3 80 180)">어</text>
+        <text x="160" y="186" font-size="82" text-anchor="middle" transform="rotate(2 160 186)">디</text>
+        <text x="238" y="178" font-size="82" text-anchor="middle" transform="rotate(-2 238 178)">가</text>
+      </g>
+      <g class="logo-text" fill="var(--accent-dark)">
+        <text x="306" y="188" font-size="96" text-anchor="middle" transform="rotate(10 306 188)">?</text>
+      </g>
+    </svg>
+  </div>
+</div>
+
+<!-- ============ NEXT ============ -->
+<div style="max-width:1200px; margin:32px auto 0; padding:20px 24px; background:rgba(46,117,182,0.08); border:1px solid rgba(46,117,182,0.2); border-radius:12px; font-size:13px; color:#555; line-height:1.7;">
+  <strong style="color:var(--primary-dark);">다음 단계</strong> — 선호 시안 알려주시면 (1) 한글 손글씨 폰트 자산 확정(나눔손글씨 / Gowun Dodum 등 free font 후보), (2) 단일 SVG 파일로 분리해 <code>public/logo.svg</code>·<code>favicon.svg</code>·PWA 아이콘 generator 준비, (3) 헤더 컴포넌트에 적용까지 이어가겠습니다. 현재는 시스템 한글 굵은 글씨 + 회전 기법으로 손글씨 느낌을 흉내낸 상태입니다.
+</div>
+
+</body>
+</html>
