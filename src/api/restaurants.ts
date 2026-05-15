@@ -144,10 +144,13 @@ export interface PickRandomRestaurantInput {
 export async function pickRandomRestaurant(
   input: PickRandomRestaurantInput,
 ): Promise<Restaurant | null> {
+  // RPC Args가 optional·non-null로 정의되어 있어 null 대신 undefined를 넘긴다.
   const { data, error } = await supabase.rpc('pick_random_restaurant', {
-    p_sheet_type: input.sheetType,
+    p_sheet_type: input.sheetType ?? undefined,
     p_categories:
-      input.categories && input.categories.length > 0 ? input.categories : null,
+      input.categories && input.categories.length > 0
+        ? input.categories
+        : undefined,
     p_include_closed: input.includeClosed,
   })
 
