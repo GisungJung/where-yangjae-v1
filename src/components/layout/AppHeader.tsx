@@ -36,7 +36,7 @@ export function AppHeader({
   // title이 주어지면 무조건 목업 §02 (중앙 정렬) 레이아웃.
   if (title) {
     return (
-      <header className="fixed inset-x-0 top-0 z-30 border-b border-surface-border bg-white shadow-sm">
+      <header className="fixed inset-x-0 top-0 z-30 border-b border-surface-border bg-white shadow-sm lg:left-16">
         <div className="mx-auto flex h-14 max-w-screen-md items-center gap-2 px-4">
           <Link
             to={backTo}
@@ -60,7 +60,7 @@ export function AppHeader({
   }
 
   return (
-    <header className="fixed inset-x-0 top-0 z-30 border-b border-surface-border bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+    <header className="fixed inset-x-0 top-0 z-30 border-b border-surface-border bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 lg:left-16">
       <div className="mx-auto flex h-14 max-w-screen-md items-center justify-between gap-2 px-4">
         {!isHome ? (
           <Link
