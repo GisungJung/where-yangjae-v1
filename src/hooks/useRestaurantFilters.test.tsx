@@ -25,6 +25,7 @@ function mk(over: Partial<RestaurantWithStats>): RestaurantWithStats {
     category: '한식',
     menu: null,
     sheet_type: 'lunch',
+    region: '양재',
     naver_url: null,
     note: null,
     status: '운영중',
@@ -102,6 +103,22 @@ describe('useRestaurantFilters', () => {
 
     act(() => result.current.setSortKey('name'))
     expect(result.current.sorted.map((r) => r.name)).toEqual(['가', '나', '다'])
+  })
+
+  it('지역(region) 필터를 지원하고 clearFilters로 초기화된다', () => {
+    const list = [
+      mk({ name: '양재집', region: '양재' }),
+      mk({ name: '남부집', region: '남부터미널' }),
+    ]
+    const { result } = renderHook(() => useRestaurantFilters(list))
+    expect(result.current.sorted).toHaveLength(2)
+
+    act(() => result.current.setRegion('남부터미널'))
+    expect(result.current.sorted.map((r) => r.name)).toEqual(['남부집'])
+
+    act(() => result.current.clearFilters())
+    expect(result.current.region).toBe('all')
+    expect(result.current.sorted).toHaveLength(2)
   })
 
   it('loadMore로 페이지가 늘고 필터가 바뀌면 PAGE_SIZE로 리셋된다', () => {

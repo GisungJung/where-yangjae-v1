@@ -9,8 +9,10 @@ import { insertRestaurant } from '../api/restaurants'
 import {
   CATEGORIES,
   NewRestaurantInputSchema,
+  REGIONS,
   type Category,
   type NewRestaurantInput,
+  type Region,
   type RestaurantWithStats,
   type SheetType,
 } from '../types/domain'
@@ -27,6 +29,7 @@ export default function AddRestaurantPage() {
   const [name, setName] = useState('')
   const [category, setCategory] = useState<Category>('한식')
   const [sheetType, setSheetType] = useState<SheetType>('lunch')
+  const [region, setRegion] = useState<Region>('양재')
   const [menu, setMenu] = useState('')
   const [note, setNote] = useState('')
   const [naverUrl, setNaverUrl] = useState('')
@@ -104,6 +107,7 @@ export default function AddRestaurantPage() {
       name: name.trim(),
       category,
       sheet_type: sheetType,
+      region,
       menu: menu.trim() || undefined,
       note: note.trim() || undefined,
       naver_url: naverUrl.trim() || undefined,
@@ -300,6 +304,42 @@ export default function AddRestaurantPage() {
                   )
                 })}
               </div>
+            </div>
+          </div>
+
+          {/* 지역 — 2026-08-12 지역 확대 (양재/남부터미널) */}
+          <div>
+            <span
+              id="add-region-label"
+              className="block text-sm font-medium text-ink-700"
+            >
+              지역 <span className="text-brand-accent">*</span>
+            </span>
+            <div
+              role="radiogroup"
+              aria-labelledby="add-region-label"
+              className="mt-1 flex gap-0.5 rounded-lg bg-surface-muted p-1"
+            >
+              {REGIONS.map((r) => {
+                const active = region === r
+                return (
+                  <button
+                    key={r}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => setRegion(r)}
+                    className={[
+                      'flex-1 rounded-md py-2 text-sm font-semibold transition-colors',
+                      active
+                        ? 'bg-white text-brand-primary shadow-sm'
+                        : 'text-ink-700',
+                    ].join(' ')}
+                  >
+                    {r}
+                  </button>
+                )
+              })}
             </div>
           </div>
 

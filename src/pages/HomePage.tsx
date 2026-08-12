@@ -19,6 +19,7 @@ import { AppShell } from '../components/layout/AppShell'
 import { PullToRefresh } from '../components/layout/PullToRefresh'
 import { CategoryChip } from '../components/restaurant/CategoryChip'
 import { RestaurantCard } from '../components/restaurant/RestaurantCard'
+import { RegionToggle } from '../components/restaurant/RegionToggle'
 import { SheetTypeToggle } from '../components/restaurant/SheetTypeToggle'
 import { SortPill } from '../components/ui/SortPill'
 import { Icon } from '../components/ui/Icon'
@@ -46,6 +47,8 @@ export default function HomePage() {
   const {
     keyword,
     setKeyword,
+    region,
+    setRegion,
     sheetType,
     setSheetType,
     selectedCategories,
@@ -130,6 +133,11 @@ export default function HomePage() {
             </div>
           </label>
 
+          {/* 지역 토글 — 별도 행 (375px에서 지역+끼니 한 행은 overflow) */}
+          <div>
+            <RegionToggle value={region} onChange={setRegion} />
+          </div>
+
           <div className="flex flex-wrap items-center gap-2">
             <SheetTypeToggle value={sheetType} onChange={setSheetType} />
             <label className="ml-auto inline-flex items-center gap-1.5 text-xs text-ink-700">
@@ -202,7 +210,9 @@ export default function HomePage() {
               missingTable={missingTable}
               keyword={keyword}
               hasFilters={
-                selectedCategories.length > 0 || sheetType !== 'all'
+                selectedCategories.length > 0 ||
+                sheetType !== 'all' ||
+                region !== 'all'
               }
               onClearKeyword={() => setKeyword('')}
               onClearFilters={clearFilters}

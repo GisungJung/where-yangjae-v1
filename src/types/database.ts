@@ -88,6 +88,7 @@ export type Database = {
           name: string
           naver_url: string | null
           note: string | null
+          region: string
           registered_by: string | null
           sheet_type: string
           status: string
@@ -105,6 +106,7 @@ export type Database = {
           name: string
           naver_url?: string | null
           note?: string | null
+          region?: string
           registered_by?: string | null
           sheet_type: string
           status?: string
@@ -122,6 +124,7 @@ export type Database = {
           name?: string
           naver_url?: string | null
           note?: string | null
+          region?: string
           registered_by?: string | null
           sheet_type?: string
           status?: string
@@ -222,6 +225,7 @@ export type Database = {
         Args: {
           p_categories?: string[]
           p_include_closed?: boolean
+          p_region?: string
           p_sheet_type?: string
         }
         Returns: {
@@ -236,6 +240,7 @@ export type Database = {
           name: string
           naver_url: string | null
           note: string | null
+          region: string
           registered_by: string | null
           sheet_type: string
           status: string

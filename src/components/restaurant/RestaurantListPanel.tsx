@@ -9,6 +9,7 @@
 
 import { useEffect, useRef } from 'react'
 import { CategoryChip } from './CategoryChip'
+import { RegionToggle } from './RegionToggle'
 import { RestaurantCard } from './RestaurantCard'
 import { SheetTypeToggle } from './SheetTypeToggle'
 import { ErrorBox, HomeEmptyState, SkeletonList } from './homeListStates'
@@ -43,6 +44,8 @@ export function RestaurantListPanel({
   const {
     keyword,
     setKeyword,
+    region,
+    setRegion,
     sheetType,
     setSheetType,
     selectedCategories,
@@ -114,6 +117,10 @@ export function RestaurantListPanel({
           </div>
         </label>
 
+        <div>
+          <RegionToggle value={region} onChange={setRegion} />
+        </div>
+
         <div className="flex flex-wrap items-center gap-2">
           <SheetTypeToggle value={sheetType} onChange={setSheetType} />
           <label className="ml-auto inline-flex items-center gap-1.5 text-xs text-ink-700">
@@ -179,7 +186,11 @@ export function RestaurantListPanel({
             configured={isSupabaseConfigured}
             missingTable={missingTable}
             keyword={keyword}
-            hasFilters={selectedCategories.length > 0 || sheetType !== 'all'}
+            hasFilters={
+              selectedCategories.length > 0 ||
+              sheetType !== 'all' ||
+              region !== 'all'
+            }
             onClearKeyword={() => setKeyword('')}
             onClearFilters={clearFilters}
             onSuggestCategory={(c) => {

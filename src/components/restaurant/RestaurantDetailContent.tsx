@@ -148,6 +148,10 @@ export function RestaurantDetailContent({
               <StatusBadge status={restaurant.status} />
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-muted px-3 py-1 text-[13px] font-semibold text-ink-700">
+                <Icon name="map-pin" size={13} />
+                {restaurant.region}
+              </span>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-primary-soft px-3 py-1 text-[13px] font-semibold text-brand-primary-dark">
                 <Icon name="utensils" size={13} />
                 {restaurant.category}
