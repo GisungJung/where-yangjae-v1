@@ -46,5 +46,7 @@ coverage
 *.sln
 *.sw?
 
-# Supabase
+# Supabase — 마이그레이션(DB SSOT)과 config는 추적, 나머지(.temp, mig 원본 엑셀 등)는 제외
 supabase/*
+!supabase/migrations
+!supabase/config.toml
