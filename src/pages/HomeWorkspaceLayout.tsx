@@ -40,19 +40,26 @@ function DesktopWorkspace() {
     useRestaurants()
   const filters = useRestaurantFilters(data?.data)
 
-  // 지도 마커: 페이지네이션(visible)과 무관하게 "필터·정렬된 전체"를 표시.
-  const mapMarkers = useMemo(
-    () =>
-      filters.sorted
-        .filter((r) => r.lat !== null && r.lng !== null)
-        .map((r) => ({
-          id: r.id,
-          lat: r.lat as number,
-          lng: r.lng as number,
-          title: r.name,
-        })),
-    [filters.sorted],
-  )
+  // 지도 마커:
+  // - 선택 없음(`/`): 페이지네이션(visible)과 무관하게 "필터·정렬된 전체"를 표시.
+  // - 식당 선택(`/restaurants/:id`): 해당 식당 핀 1개만 표시.
+  //   필터에 걸러진 식당으로 직접 진입해도 핀이 보이도록 전체 목록(data)에서 찾는다.
+  const mapMarkers = useMemo(() => {
+    if (selectedId) {
+      const r = (data?.data ?? []).find((x) => x.id === selectedId)
+      return r && r.lat !== null && r.lng !== null
+        ? [{ id: r.id, lat: r.lat, lng: r.lng, title: r.name }]
+        : []
+    }
+    return filters.sorted
+      .filter((r) => r.lat !== null && r.lng !== null)
+      .map((r) => ({
+        id: r.id,
+        lat: r.lat as number,
+        lng: r.lng as number,
+        title: r.name,
+      }))
+  }, [selectedId, data?.data, filters.sorted])
 
   return (
     <div className="flex h-dvh overflow-hidden bg-white pl-16">
