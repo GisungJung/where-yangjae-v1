@@ -14,9 +14,12 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { AppShell } from '../components/layout/AppShell'
 import { PullToRefresh } from '../components/layout/PullToRefresh'
+import { KakaoMapView } from '../components/map/KakaoMapView'
+import { useMediaQuery } from '../hooks/useMediaQuery'
 import { CategoryChip } from '../components/restaurant/CategoryChip'
 import { RestaurantCard } from '../components/restaurant/RestaurantCard'
 import {
@@ -43,6 +46,9 @@ const PAGE_SIZE = 10
 
 export default function HomePage() {
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  // lg(1024px) 이상에서만 우측 지도를 마운트 (모바일에서 카카오 SDK 불필요 로드 방지).
+  const isWide = useMediaQuery('(min-width: 1024px)')
   const { data, isLoading, isError, error, refetch, isFetching } =
     useRestaurants()
 
@@ -108,6 +114,21 @@ export default function HomePage() {
     return arr
   }, [filtered, sortKey])
 
+  // 우측 지도 마커: 페이지네이션(visible)과 무관하게 "필터·정렬된 전체"를 표시.
+  // 좌표 없는 항목은 제외. lg 이상에서만 지도가 마운트되므로 모바일에선 사용되지 않는다.
+  const mapMarkers = useMemo(
+    () =>
+      sorted
+        .filter((r) => r.lat !== null && r.lng !== null)
+        .map((r) => ({
+          id: r.id,
+          lat: r.lat as number,
+          lng: r.lng as number,
+          title: r.name,
+        })),
+    [sorted],
+  )
+
   // 검색/필터/정렬 변경 시 페이지를 첫 페이지로 리셋.
   // React 권장 패턴: effect 대신 "이전 값과 비교 후 렌더 중 setState"로 cascading render 방지.
   const filterKey = `${keyword}|${sheetType}|${selectedCategories.join(',')}|${showInactive}|${sortKey}`
@@ -154,15 +175,21 @@ export default function HomePage() {
   }, [])
 
   return (
-    <AppShell>
+    <AppShell wide>
       <PullToRefresh
         onRefresh={async () => {
           await queryClient.invalidateQueries({ queryKey: restaurantsKeys.all })
         }}
       >
-        {/* 검색~카테고리 chip까지 sticky 고정 (대메뉴까지 틀고정). 아래 리스트만 스크롤.
-           헤더-검색창 간격을 좁히기 위해 main의 pt-4를 -mt-3으로 상쇄. */}
-        <section className="sticky top-14 z-20 -mx-4 -mt-3 space-y-2 bg-white px-4 pb-2 pt-2">
+        {/* 반응형 2단: lg(1024px) 이상에서 좌측(검색+리스트) / 우측(지도) 분할.
+           그 미만에서는 단일 컬럼(모바일 우선)으로 기존 레이아웃 유지. */}
+        <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start lg:gap-6">
+          {/* 좌측 컬럼: 검색 + 리스트 (min-w-0으로 grid 내부 overflow 방지) */}
+          <div className="min-w-0">
+            {/* 검색~카테고리 chip까지 sticky 고정 (대메뉴까지 틀고정). 아래 리스트만 스크롤.
+               헤더-검색창 간격을 좁히기 위해 main의 pt-4를 -mt-3으로 상쇄.
+               모바일은 -mx-4/px-4로 풀블리드, lg에선 컬럼 안쪽이라 풀블리드 해제. */}
+            <section className="sticky top-14 z-20 -mx-4 -mt-3 space-y-2 bg-white px-4 pb-2 pt-2 lg:mx-0 lg:px-0">
           <label className="block">
             <span className="sr-only">식당 검색</span>
             <div className="relative">
@@ -306,7 +333,23 @@ export default function HomePage() {
               )}
             </>
           )}
-        </section>
+            </section>
+          </div>
+
+          {/* 우측 컬럼: 카카오 지도 (lg 이상에서만 마운트). 화면에 sticky 고정되어
+             좌측 리스트가 스크롤되는 동안 항상 보인다. 마커 클릭 시 상세로 이동. */}
+          {isWide && (
+            <aside className="sticky top-[4.5rem] self-start">
+              <div className="h-[calc(100vh-6rem)] overflow-hidden rounded-card border border-surface-border bg-surface-muted">
+                <KakaoMapView
+                  markers={mapMarkers}
+                  onMarkerClick={(id) => navigate(`/restaurants/${id}`)}
+                  className="h-full"
+                />
+              </div>
+            </aside>
+          )}
+        </div>
       </PullToRefresh>
 
       {/* 우하단 floating "맨위로" 버튼 — 일정 이상 스크롤하면 노출. BottomNav(z-30) 위로 가지 않도록 z-20. */}

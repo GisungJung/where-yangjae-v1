@@ -15,14 +15,24 @@ interface Props {
   children: ReactNode
   /** 커스텀 헤더 노드 (예: <AppHeader title="..." rightAction={...} />). 미지정 시 기본 헤더. */
   header?: ReactNode
+  /**
+   * 넓은 화면(lg≥1024px)에서 본문 폭을 확장한다.
+   * 기본은 모바일 우선 max-w-screen-md(768px). `wide`면 lg부터 max-w-screen-xl(1280px)로
+   * 넓혀 홈의 2단 레이아웃(리스트 + 지도)을 담을 공간을 확보한다.
+   */
+  wide?: boolean
 }
 
-export function AppShell({ children, header }: Props) {
+export function AppShell({ children, header, wide = false }: Props) {
   return (
     <>
       {header ?? <AppHeader />}
       {/* 헤더가 fixed라 흐름에서 빠지므로 h-14(56px) + 기존 pt-4(16px) = pt-[4.5rem] */}
-      <main className="mx-auto w-full max-w-screen-md flex-1 px-4 pb-24 pt-[4.5rem]">
+      <main
+        className={`mx-auto w-full flex-1 px-4 pb-24 pt-[4.5rem] ${
+          wide ? 'max-w-screen-md lg:max-w-screen-xl' : 'max-w-screen-md'
+        }`}
+      >
         {children}
       </main>
       <BottomNav />
