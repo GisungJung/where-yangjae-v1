@@ -11,6 +11,13 @@ type KakaoMaps = {
   load: (callback: () => void) => void
   Map: new (container: HTMLElement, options: KakaoMapOptions) => KakaoMap
   Marker: new (options: KakaoMarkerOptions) => KakaoMarker
+  MarkerImage: new (
+    src: string,
+    size: KakaoSize,
+    options?: { offset?: KakaoPoint },
+  ) => KakaoMarkerImage
+  Size: new (width: number, height: number) => KakaoSize
+  Point: new (x: number, y: number) => KakaoPoint
   LatLng: new (lat: number, lng: number) => KakaoLatLng
   services?: {
     Places: new () => KakaoPlaces
@@ -29,8 +36,16 @@ export type KakaoMarker = {
   setMap(map: KakaoMap | null): void
   setPosition(latlng: KakaoLatLng): void
 }
+export type KakaoSize = { readonly __brand?: 'KakaoSize' }
+export type KakaoPoint = { readonly __brand?: 'KakaoPoint' }
+export type KakaoMarkerImage = { readonly __brand?: 'KakaoMarkerImage' }
 export type KakaoMapOptions = { center: KakaoLatLng; level?: number }
-export type KakaoMarkerOptions = { position: KakaoLatLng; map?: KakaoMap }
+export type KakaoMarkerOptions = {
+  position: KakaoLatLng
+  map?: KakaoMap
+  image?: KakaoMarkerImage
+  zIndex?: number
+}
 
 export type KakaoPlaceSearchResult = {
   id: string

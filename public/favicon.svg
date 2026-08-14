@@ -1,21 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="양재어디가">
-  <title>양재어디가</title>
-
-  <defs>
-    <style>
-      .fav-text {
-        font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-        font-weight: 900;
-      }
-    </style>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="비즈밥">
+  <title>비즈밥</title>
 
   <!-- Pin background -->
-  <path d="M 32 60 C 10 36 8 28 8 22 C 8 11 18 4 32 4 C 46 4 56 11 56 22 C 56 28 54 36 32 60 Z" fill="#FF6B35"/>
+  <path d="M32 60C10 36 8 28 8 22 8 11 18 4 32 4c14 0 24 7 24 18 0 6-2 14-24 38Z" fill="#FF6B35"/>
 
-  <!-- Inner white circle for ? -->
-  <circle cx="32" cy="22" r="13" fill="#FFFFFF"/>
+  <!-- Inner white circle -->
+  <circle cx="32" cy="23" r="14" fill="#FFFFFF"/>
 
-  <!-- "?" mark in accent-dark -->
-  <text class="fav-text" x="32" y="30" font-size="22" text-anchor="middle" fill="#D54E18">?</text>
+  <!-- Rice bowl + steam (시안 A) -->
+  <path d="M22.5 24a9.5 9.5 0 0 0 19 0Z" fill="#D54E18"/>
+  <path d="M28 20c0-2.5 1.6-2.5 1.6-5M35 20c0-2.5 1.6-2.5 1.6-5" stroke="#D54E18" stroke-width="2.2" stroke-linecap="round" fill="none"/>
 </svg>
