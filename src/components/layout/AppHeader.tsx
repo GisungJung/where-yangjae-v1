@@ -73,12 +73,8 @@ export function AppHeader({
           </Link>
         ) : (
           <div className="flex items-center gap-2">
-            <span
-              className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-brand-accent text-white"
-              aria-hidden
-            >
-              <span className="text-base">B</span>
-            </span>
+            {/* 브랜드 심볼 — 밥그릇 핀 (시안 A, favicon과 동일) */}
+            <img src="/favicon.svg" alt="" aria-hidden className="h-7 w-7" />
             <Link to="/" className="text-base font-bold text-ink-900">
               비즈밥
             </Link>

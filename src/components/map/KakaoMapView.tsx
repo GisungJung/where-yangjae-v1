@@ -106,11 +106,26 @@ export function KakaoMapView({
         for (const m of markerRefs.current) m.setMap(null)
         markerRefs.current = []
 
-        // 마커 추가
+        // 브랜드 커스텀 핀 (시안 A — 밥그릇 핀). anchor는 핀 끝점(하단 중앙).
+        const defaultImage = new maps.MarkerImage(
+          '/pin.svg',
+          new maps.Size(30, 40),
+          { offset: new maps.Point(15, 38) },
+        )
+        const selectedImage = new maps.MarkerImage(
+          '/pin-selected.svg',
+          new maps.Size(44, 58),
+          { offset: new maps.Point(22, 56) },
+        )
+
+        // 마커 추가 — 선택 식당은 진한색+확대 핀, zIndex 상향.
         for (const data of validMarkers) {
+          const isSelected = data.id === selectedIdRef.current
           const marker = new maps.Marker({
             position: new maps.LatLng(data.lat, data.lng),
             map: mapRef.current,
+            image: isSelected ? selectedImage : defaultImage,
+            zIndex: isSelected ? 10 : 1,
           })
           markerRefs.current.push(marker)
 
