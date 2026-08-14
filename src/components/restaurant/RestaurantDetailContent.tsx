@@ -22,6 +22,7 @@ import { ActionSheet, type ActionSheetItem } from '../ui/ActionSheet'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { EmptyState } from '../empty/EmptyState'
 import { useRestaurant, restaurantsKeys } from '../../hooks/useRestaurants'
+import { useReviewer } from '../../hooks/useReviewers'
 import { useRatings } from '../../hooks/useRatings'
 import { updateRestaurantStatus } from '../../api/restaurants'
 import type { RestaurantStatus } from '../../types/domain'
@@ -45,6 +46,8 @@ export function RestaurantDetailContent({
   const queryClient = useQueryClient()
   const { data: restaurant, isLoading, isError, error } = useRestaurant(id)
   const { data: ratings, isLoading: ratingsLoading } = useRatings(id)
+  // 등록자 닉네임 — registered_by가 없거나 reviewer가 삭제된 경우 조용히 생략.
+  const { data: registrant } = useReviewer(restaurant?.registered_by)
 
   const [confirmCloseOpen, setConfirmCloseOpen] = useState(false)
   const [statusError, setStatusError] = useState<string | null>(null)
@@ -167,6 +170,12 @@ export function RestaurantDetailContent({
             {restaurant.menu && (
               <p className="whitespace-pre-line pt-1 text-sm leading-relaxed text-ink-700">
                 {restaurant.menu}
+              </p>
+            )}
+            {registrant && (
+              <p className="flex items-center gap-1 text-xs text-ink-500">
+                <Icon name="user" size={12} />
+                등록자 · {registrant.nickname}
               </p>
             )}
           </header>
