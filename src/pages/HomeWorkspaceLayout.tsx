@@ -40,6 +40,16 @@ function DesktopWorkspace() {
     useRestaurants()
   const filters = useRestaurantFilters(data?.data)
 
+  // 상세 패널이 열린 상태에서 지역 토글을 누르면 패널을 닫고
+  // 해당 지역 지도(역 센터 + 지역 핀 전체)로 전환한다.
+  const panelFilters: typeof filters = {
+    ...filters,
+    setRegion: (next) => {
+      filters.setRegion(next)
+      if (selectedId) navigate('/')
+    },
+  }
+
   // 지도 마커:
   // - 선택 없음(`/`): 페이지네이션(visible)과 무관하게 "필터·정렬된 전체"를 표시.
   // - 식당 선택(`/restaurants/:id`): 해당 식당 핀 1개만 표시.
@@ -66,7 +76,7 @@ function DesktopWorkspace() {
       <SideRail />
 
       <RestaurantListPanel
-        filters={filters}
+        filters={panelFilters}
         isLoading={isLoading}
         isError={isError}
         errorMessage={error instanceof Error ? error.message : '알 수 없는 오류'}
