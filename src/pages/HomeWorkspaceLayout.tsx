@@ -20,7 +20,7 @@ import { RestaurantListPanel } from '../components/restaurant/RestaurantListPane
 import { useMediaQuery } from '../hooks/useMediaQuery'
 import { useRestaurants } from '../hooks/useRestaurants'
 import { useRestaurantFilters } from '../hooks/useRestaurantFilters'
-import { YANGJAE_STATION } from '../lib/kakao'
+import { NAMBU_TERMINAL_STATION, YANGJAE_STATION } from '../lib/kakao'
 
 export default function HomeWorkspaceLayout() {
   // lg 미만에서는 카카오 SDK·워크스페이스가 아예 마운트되지 않아야 한다
@@ -88,11 +88,17 @@ function DesktopWorkspace() {
         <Outlet />
       </Suspense>
 
-      {/* 지도 — 남는 영역 전체. center 고정으로 좌표 0건이어도 지도는 항상 렌더. */}
+      {/* 지도 — 남는 영역 전체. center를 항상 넘겨 좌표 0건이어도 지도는 렌더.
+         지역 토글 선택 시 해당 역(양재역/남부터미널역)으로 센터 이동 —
+         '전체'는 양재역 기준 유지. 식당 선택 중에는 selectedId 센터링이 우선. */}
       <main className="relative min-w-0 flex-1 bg-surface-muted">
         <KakaoMapView
           markers={mapMarkers}
-          center={YANGJAE_STATION}
+          center={
+            filters.region === '남부터미널'
+              ? NAMBU_TERMINAL_STATION
+              : YANGJAE_STATION
+          }
           selectedId={selectedId}
           onMarkerClick={(id) => navigate(`/restaurants/${id}`)}
           className="h-full w-full"
