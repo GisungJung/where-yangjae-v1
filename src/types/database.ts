@@ -1,5 +1,5 @@
 /**
- * 양재어디가 — Supabase DB 타입.
+ * 비즈밥 — Supabase DB 타입.
  *
  * 본 파일은 원격 스키마를 기준으로 `supabase gen types typescript`(또는 MCP)
  * 결과를 그대로 채택한다. 2026-08-12 이력 정리로 로컬 마이그레이션 전체

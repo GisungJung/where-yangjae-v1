@@ -21,10 +21,10 @@ export function SideRail() {
     >
       <Link
         to="/"
-        aria-label="양재어디가 홈"
+        aria-label="비즈밥 홈"
         className="mt-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-brand-accent text-white"
       >
-        <span className="text-lg font-bold">y</span>
+        <span className="text-lg font-bold">B</span>
       </Link>
 
       <ul className="mt-4 flex w-full flex-col items-stretch gap-1 px-1.5">

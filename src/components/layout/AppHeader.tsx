@@ -77,15 +77,15 @@ export function AppHeader({
               className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-brand-accent text-white"
               aria-hidden
             >
-              <span className="text-base">y</span>
+              <span className="text-base">B</span>
             </span>
             <Link to="/" className="text-base font-bold text-ink-900">
-              양재어디가
+              비즈밥
             </Link>
           </div>
         )}
 
-        <div className="text-xs text-ink-500">양재역 · 사내</div>
+        <div className="text-xs text-ink-500">양재 · 남부터미널</div>
       </div>
     </header>
   )
