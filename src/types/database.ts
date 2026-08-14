@@ -2,11 +2,8 @@
  * 양재어디가 — Supabase DB 타입.
  *
  * 본 파일은 원격 스키마를 기준으로 `supabase gen types typescript`(또는 MCP)
- * 결과를 그대로 채택한다. 단, 아래 마이그레이션이 아직 원격에 적용되지 않은
- * 상태이므로 수동으로 보강된 항목이 있다:
- *   - 20260515000002_rating_photos_and_storage.sql → `rating_photos` 테이블 수동 추가
- *
- * 원격 재생성 시점에 보강분이 자동 생성 결과에 흡수되면 수동 블록을 제거하면 된다.
+ * 결과를 그대로 채택한다. 2026-08-12 이력 정리로 로컬 마이그레이션 전체
+ * (rating_photos·direction 제거·region 포함)가 원격에 적용된 상태와 일치한다.
  */
 
 export type Json =
@@ -79,7 +76,6 @@ export type Database = {
         Row: {
           category: string
           created_at: string
-          direction: string | null
           id: string
           kakao_place_id: string | null
           lat: number | null
@@ -88,6 +84,7 @@ export type Database = {
           name: string
           naver_url: string | null
           note: string | null
+          region: string
           registered_by: string | null
           sheet_type: string
           status: string
@@ -96,7 +93,6 @@ export type Database = {
         Insert: {
           category: string
           created_at?: string
-          direction?: string | null
           id?: string
           kakao_place_id?: string | null
           lat?: number | null
@@ -105,6 +101,7 @@ export type Database = {
           name: string
           naver_url?: string | null
           note?: string | null
+          region?: string
           registered_by?: string | null
           sheet_type: string
           status?: string
@@ -113,7 +110,6 @@ export type Database = {
         Update: {
           category?: string
           created_at?: string
-          direction?: string | null
           id?: string
           kakao_place_id?: string | null
           lat?: number | null
@@ -122,6 +118,7 @@ export type Database = {
           name?: string
           naver_url?: string | null
           note?: string | null
+          region?: string
           registered_by?: string | null
           sheet_type?: string
           status?: string
@@ -155,8 +152,7 @@ export type Database = {
         }
         Relationships: []
       }
-      // ── 수동 보강: 20260515000002_rating_photos_and_storage.sql ─────────────
-      // 원격 적용 전이라 generate 결과에 빠져 있음. 마이그레이션 SQL과 1:1 매칭.
+      // 20260515000002_rating_photos_and_storage.sql — 마이그레이션 SQL과 1:1 매칭.
       rating_photos: {
         Row: {
           byte_size: number | null
@@ -222,12 +218,12 @@ export type Database = {
         Args: {
           p_categories?: string[]
           p_include_closed?: boolean
+          p_region?: string
           p_sheet_type?: string
         }
         Returns: {
           category: string
           created_at: string
-          direction: string | null
           id: string
           kakao_place_id: string | null
           lat: number | null
@@ -236,6 +232,7 @@ export type Database = {
           name: string
           naver_url: string | null
           note: string | null
+          region: string
           registered_by: string | null
           sheet_type: string
           status: string

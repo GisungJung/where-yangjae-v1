@@ -66,6 +66,16 @@ const KAKAO_SDK_URL = 'https://dapi.kakao.com/v2/maps/sdk.js'
  */
 export const YANGJAE_STATION = { lat: 37.4837, lng: 127.0359 } as const
 
+/**
+ * 남부터미널역(3호선) 좌표 — 지역(양재/남부터미널) 구분용.
+ * 사용처: 데스크톱 워크스페이스에서 지역 '남부터미널' 선택 시 지도 중심.
+ * (마이그레이션 20260812000002 재분류 기준 좌표와 동일 — 사용자 제공 좌표)
+ */
+export const NAMBU_TERMINAL_STATION = {
+  lat: 37.485013,
+  lng: 127.016189,
+} as const
+
 let loaderPromise: Promise<KakaoMaps> | null = null
 
 /** Kakao Maps SDK를 1회만 로드하고 `kakao.maps` 네임스페이스를 반환. */

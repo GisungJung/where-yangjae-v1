@@ -26,7 +26,9 @@ import { YANGJAE_STATION } from '../lib/kakao'
 import { updateRestaurant, type UpdateRestaurantInput } from '../api/restaurants'
 import {
   CATEGORIES,
+  REGIONS,
   type Category,
+  type Region,
   type Restaurant,
   type SheetType,
 } from '../types/domain'
@@ -76,6 +78,8 @@ function EditForm({ restaurant }: EditFormProps) {
   const [name, setName] = useState(restaurant.name)
   const [category, setCategory] = useState<Category>(restaurant.category)
   const [sheetType, setSheetType] = useState<SheetType>(restaurant.sheet_type)
+  // 좌표 백필 오분류의 교정 경로 — 지역 확대 설계 §4
+  const [region, setRegion] = useState<Region>(restaurant.region)
   const [menu, setMenu] = useState(restaurant.menu ?? '')
   const [note, setNote] = useState(restaurant.note ?? '')
   const [naverUrl, setNaverUrl] = useState(restaurant.naver_url ?? '')
@@ -143,6 +147,7 @@ function EditForm({ restaurant }: EditFormProps) {
       name: trimmed,
       category,
       sheet_type: sheetType,
+      region,
       menu: menu.trim() || undefined,
       note: note.trim() || undefined,
       naver_url: naverUrl.trim() || undefined,
@@ -321,6 +326,42 @@ function EditForm({ restaurant }: EditFormProps) {
                   )
                 })}
               </div>
+            </div>
+          </div>
+
+          {/* 지역 — 좌표 백필 오분류는 여기서 교정 */}
+          <div>
+            <span
+              id="edit-region-label"
+              className="block text-sm font-medium text-ink-700"
+            >
+              지역 <span className="text-brand-accent">*</span>
+            </span>
+            <div
+              role="radiogroup"
+              aria-labelledby="edit-region-label"
+              className="mt-1 flex gap-0.5 rounded-lg bg-surface-muted p-1"
+            >
+              {REGIONS.map((r) => {
+                const active = region === r
+                return (
+                  <button
+                    key={r}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => setRegion(r)}
+                    className={[
+                      'flex-1 rounded-md py-2 text-sm font-semibold transition-colors',
+                      active
+                        ? 'bg-white text-brand-primary shadow-sm'
+                        : 'text-ink-700',
+                    ].join(' ')}
+                  >
+                    {r}
+                  </button>
+                )
+              })}
             </div>
           </div>
 

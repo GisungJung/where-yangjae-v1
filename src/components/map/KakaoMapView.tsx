@@ -31,7 +31,12 @@ interface Props {
   className?: string
   /** 마커 클릭 시 식당 id 반환 (홈 지도에서 사용) */
   onMarkerClick?: (id: string) => void
+  /** 선택된 식당 id — 지정 시 해당 마커로 센터 이동 (데스크톱 상세 패널 연동) */
+  selectedId?: string | null
 }
+
+/** 선택 마커 센터링 시 확대 레벨 (상세 페이지 단일 핀과 동일 체감) */
+const SELECTED_LEVEL = 3
 
 export function KakaoMapView({
   markers,
@@ -39,6 +44,7 @@ export function KakaoMapView({
   level = 4,
   className,
   onMarkerClick,
+  selectedId = null,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<KakaoMap | null>(null)
@@ -50,6 +56,13 @@ export function KakaoMapView({
   useEffect(() => {
     onMarkerClickRef.current = onMarkerClick
   }, [onMarkerClick])
+
+  // selectedId도 ref로 보관 — 지도 초기화(비동기) 완료 시점에 최신 선택값을 반영하고,
+  // 값 변경만으로 마커 전체가 재생성되는 것을 막는다.
+  const selectedIdRef = useRef<string | null>(selectedId)
+  useEffect(() => {
+    selectedIdRef.current = selectedId
+  }, [selectedId])
 
   const validMarkers = useMemo(
     () =>
@@ -121,6 +134,14 @@ export function KakaoMapView({
         }
 
         mapRef.current.relayout()
+
+        // 초기화 완료 시점에 선택 식당이 이미 있으면(직접 URL 진입 등) 센터링.
+        const sel = selectedIdRef.current
+        const target = sel ? validMarkers.find((m) => m.id === sel) : null
+        if (target) {
+          mapRef.current.setCenter(new maps.LatLng(target.lat, target.lng))
+          mapRef.current.setLevel(SELECTED_LEVEL)
+        }
       })
       .catch((err: Error) => {
         if (!cancelled) setError(err.message)
@@ -130,6 +151,34 @@ export function KakaoMapView({
       cancelled = true
     }
   }, [markersKey, fallbackCenter.lat, fallbackCenter.lng, level, validMarkers])
+
+  // 선택 변경 시 해당 마커로 센터 이동 (마커 재생성 없이 지도만 이동).
+  useEffect(() => {
+    if (!selectedId) return
+    const map = mapRef.current
+    const maps = window.kakao?.maps
+    if (!map || !maps) return
+    const target = validMarkers.find((m) => m.id === selectedId)
+    if (!target) return
+    map.setCenter(new maps.LatLng(target.lat, target.lng))
+    map.setLevel(SELECTED_LEVEL)
+    // validMarkers는 markersKey로 갈음 (좌표 동일하면 재실행 불필요).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedId, markersKey])
+
+  // 컨테이너 크기 변화(상세 패널 열림/닫힘 등) 시 카카오맵 relayout.
+  // 지도 div는 error·좌표없음 폴백이 아닐 때만 렌더되므로 그 조건을 의존성으로 부착.
+  const showMap = !error && (validMarkers.length > 0 || Boolean(center))
+  useEffect(() => {
+    if (!showMap) return
+    const el = containerRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(() => {
+      mapRef.current?.relayout()
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [showMap])
 
   if (error) {
     return (

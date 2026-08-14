@@ -24,7 +24,6 @@ const key =
 
 if (!url || !key) {
   // 개발 중 누락을 명확히 알리는 용도. 빌드는 막지 않는다.
-  // eslint-disable-next-line no-console
   console.warn(
     '[supabase] VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY(또는 PUBLISHABLE_KEY)가 비어있습니다. .env 확인 필요.',
   )

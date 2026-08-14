@@ -3,6 +3,26 @@ import { getCurrentReviewerId } from '../store/nicknameStore'
 import { ReviewerSchema, type Reviewer } from '../types/domain'
 
 /**
+ * reviewer 단건 조회 — 상세 화면 등록자 표시용.
+ * 삭제·부재 시 null (등록자 표기를 조용히 생략).
+ */
+export async function fetchReviewerById(id: string): Promise<Reviewer | null> {
+  const { data, error } = await supabase
+    .from('reviewers')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (error) {
+    console.warn('[reviewers] 단건 조회 실패 — 등록자 표기 생략.', error.message)
+    return null
+  }
+  if (!data) return null
+  const parsed = ReviewerSchema.safeParse(data)
+  return parsed.success ? parsed.data : null
+}
+
+/**
  * 본인 식별(reviewer_id) 확보.
  *
  * 동작:

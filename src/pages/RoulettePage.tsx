@@ -21,6 +21,7 @@ import { KakaoMapView } from '../components/map/KakaoMapView'
 import { Icon } from '../components/ui/Icon'
 import { EmptyState } from '../components/empty/EmptyState'
 import { pickRandomRestaurant } from '../api/restaurants'
+import type { RegionFilter } from '../components/restaurant/RegionToggle'
 import { restaurantsKeys, useRestaurants } from '../hooks/useRestaurants'
 import {
   CATEGORIES,
@@ -69,6 +70,7 @@ export default function RoulettePage() {
   const { data: restaurantsResult } = useRestaurants()
 
   const [sheetType, setSheetType] = useState<SheetType>('lunch')
+  const [region, setRegion] = useState<RegionFilter>('all')
   const [selectedCategories, setSelectedCategories] = useState<Category[]>([])
   const [result, setResult] = useState<Restaurant | null | undefined>(undefined)
 
@@ -84,6 +86,7 @@ export default function RoulettePage() {
     return list.filter((r) => {
       if (r.status !== '운영중') return false
       if (r.sheet_type !== sheetType) return false
+      if (region !== 'all' && r.region !== region) return false
       if (
         selectedCategories.length > 0 &&
         !selectedCategories.includes(r.category)
@@ -92,7 +95,7 @@ export default function RoulettePage() {
       }
       return true
     }).length
-  }, [restaurantsResult?.data, sheetType, selectedCategories])
+  }, [restaurantsResult?.data, sheetType, region, selectedCategories])
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -103,6 +106,7 @@ export default function RoulettePage() {
         categories:
           selectedCategories.length > 0 ? [...selectedCategories] : null,
         includeClosed: false,
+        region: region === 'all' ? null : region,
       })
       const elapsed = Date.now() - started
       if (elapsed < MIN_SPIN_MS) {
@@ -116,6 +120,7 @@ export default function RoulettePage() {
   const reset = () => {
     setSelectedCategories([])
     setSheetType('lunch')
+    setRegion('all')
     setResult(undefined)
     mutation.reset()
   }
@@ -129,6 +134,7 @@ export default function RoulettePage() {
       .filter((r) => {
         if (r.status !== '운영중') return false
         if (r.sheet_type !== sheetType) return false
+        if (region !== 'all' && r.region !== region) return false
         if (
           selectedCategories.length > 0 &&
           !selectedCategories.includes(r.category)
@@ -144,7 +150,7 @@ export default function RoulettePage() {
     const filled: string[] = []
     while (filled.length < 5) filled.push(...pool)
     return filled.slice(0, 8)
-  }, [restaurantsResult?.data, sheetType, selectedCategories])
+  }, [restaurantsResult?.data, sheetType, region, selectedCategories])
 
   return (
     <AppShell>
@@ -178,6 +184,8 @@ export default function RoulettePage() {
           <SelectionStage
             sheetType={sheetType}
             onSheetType={setSheetType}
+            region={region}
+            onRegion={setRegion}
             selectedCategories={selectedCategories}
             onToggleCategory={toggleCategory}
             poolSize={poolSize}
@@ -202,6 +210,8 @@ export default function RoulettePage() {
 function SelectionStage({
   sheetType,
   onSheetType,
+  region,
+  onRegion,
   selectedCategories,
   onToggleCategory,
   poolSize,
@@ -210,6 +220,8 @@ function SelectionStage({
 }: {
   sheetType: SheetType
   onSheetType: (s: SheetType) => void
+  region: RegionFilter
+  onRegion: (r: RegionFilter) => void
   selectedCategories: Category[]
   onToggleCategory: (c: Category) => void
   poolSize: number
@@ -280,6 +292,19 @@ function SelectionStage({
             )
           })}
         </div>
+      </section>
+
+      <section>
+        <h2 className="mb-2 text-sm font-bold text-ink-900">지역</h2>
+        <SegmentedToggle
+          value={region}
+          onChange={onRegion}
+          options={[
+            { value: 'all', label: '전체' },
+            { value: '양재', label: '양재' },
+            { value: '남부터미널', label: '남부터미널' },
+          ]}
+        />
       </section>
 
       <section>

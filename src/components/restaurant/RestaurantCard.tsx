@@ -75,6 +75,11 @@ export function RestaurantCard({ restaurant }: Props) {
             폐업
           </span>
         )}
+        {/* 지역 배지 — '전체' 필터 모드에서 구분 가능해야 하므로 항상 표시 */}
+        <span className="inline-flex items-center gap-0.5 rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-semibold text-ink-700">
+          <Icon name="map-pin" size={11} />
+          {restaurant.region}
+        </span>
         <CategoryChip label={restaurant.category} />
         <CategoryChip
           label={restaurant.sheet_type === 'lunch' ? '점심' : '저녁회식'}

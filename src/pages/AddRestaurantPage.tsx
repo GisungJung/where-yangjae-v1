@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
 import { AppShell } from '../components/layout/AppShell'
@@ -9,8 +9,10 @@ import { insertRestaurant } from '../api/restaurants'
 import {
   CATEGORIES,
   NewRestaurantInputSchema,
+  REGIONS,
   type Category,
   type NewRestaurantInput,
+  type Region,
   type RestaurantWithStats,
   type SheetType,
 } from '../types/domain'
@@ -27,6 +29,7 @@ export default function AddRestaurantPage() {
   const [name, setName] = useState('')
   const [category, setCategory] = useState<Category>('한식')
   const [sheetType, setSheetType] = useState<SheetType>('lunch')
+  const [region, setRegion] = useState<Region>('양재')
   const [menu, setMenu] = useState('')
   const [note, setNote] = useState('')
   const [naverUrl, setNaverUrl] = useState('')
@@ -36,13 +39,15 @@ export default function AddRestaurantPage() {
   /** 사용자가 중복 경고를 무시하고 진행하기로 명시한 경우 true. */
   const [overrideDuplicate, setOverrideDuplicate] = useState(false)
 
-  // 저장된 닉네임이 변경되면 input 동기화 (최초 진입 시점만)
-  useEffect(() => {
+  // 저장된 닉네임이 (persist 하이드레이션 등으로) 뒤늦게 들어오면 input 동기화.
+  // effect 대신 "이전 값과 비교 후 렌더 중 setState" 패턴 — cascading render 방지.
+  const [prevStoredNickname, setPrevStoredNickname] = useState(storedNickname)
+  if (storedNickname !== prevStoredNickname) {
+    setPrevStoredNickname(storedNickname)
     if (storedNickname && !nickname) {
       setNickname(storedNickname)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storedNickname])
+  }
 
   /**
    * 중복 검사 — 카카오 장소가 선택되어 있으면 kakao_place_id 우선, 아니면 이름 정확 일치.
@@ -69,9 +74,13 @@ export default function AddRestaurantPage() {
   const hasDuplicate = duplicates.length > 0
 
   // 폼 핵심 필드가 바뀌면 override 해제 → 사용자가 다시 명시적으로 동의해야 함.
-  useEffect(() => {
+  // (렌더 중 비교 패턴 — 위 닉네임 동기화와 동일한 이유)
+  const dupResetKey = `${name}|${picked?.kakaoPlaceId ?? ''}`
+  const [prevDupResetKey, setPrevDupResetKey] = useState(dupResetKey)
+  if (dupResetKey !== prevDupResetKey) {
+    setPrevDupResetKey(dupResetKey)
     setOverrideDuplicate(false)
-  }, [name, picked?.kakaoPlaceId])
+  }
 
   const mutation = useMutation({
     mutationFn: (input: NewRestaurantInput) => insertRestaurant(input),
@@ -98,6 +107,7 @@ export default function AddRestaurantPage() {
       name: name.trim(),
       category,
       sheet_type: sheetType,
+      region,
       menu: menu.trim() || undefined,
       note: note.trim() || undefined,
       naver_url: naverUrl.trim() || undefined,
@@ -294,6 +304,42 @@ export default function AddRestaurantPage() {
                   )
                 })}
               </div>
+            </div>
+          </div>
+
+          {/* 지역 — 2026-08-12 지역 확대 (양재/남부터미널) */}
+          <div>
+            <span
+              id="add-region-label"
+              className="block text-sm font-medium text-ink-700"
+            >
+              지역 <span className="text-brand-accent">*</span>
+            </span>
+            <div
+              role="radiogroup"
+              aria-labelledby="add-region-label"
+              className="mt-1 flex gap-0.5 rounded-lg bg-surface-muted p-1"
+            >
+              {REGIONS.map((r) => {
+                const active = region === r
+                return (
+                  <button
+                    key={r}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => setRegion(r)}
+                    className={[
+                      'flex-1 rounded-md py-2 text-sm font-semibold transition-colors',
+                      active
+                        ? 'bg-white text-brand-primary shadow-sm'
+                        : 'text-ink-700',
+                    ].join(' ')}
+                  >
+                    {r}
+                  </button>
+                )
+              })}
             </div>
           </div>
 

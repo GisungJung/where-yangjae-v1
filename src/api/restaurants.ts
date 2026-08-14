@@ -129,6 +129,8 @@ export interface PickRandomRestaurantInput {
   sheetType: 'lunch' | 'dinner' | null
   categories: string[] | null
   includeClosed: boolean
+  /** '양재' | '남부터미널' | null(전체) — 룰렛 지역 필터 */
+  region: string | null
 }
 
 /**
@@ -152,6 +154,7 @@ export async function pickRandomRestaurant(
         ? input.categories
         : undefined,
     p_include_closed: input.includeClosed,
+    p_region: input.region ?? undefined,
   })
 
   if (error) {
@@ -180,6 +183,7 @@ async function pickRandomClientFallback(
   const pool = data.filter((r) => {
     if (!input.includeClosed && r.status !== '운영중') return false
     if (input.sheetType && r.sheet_type !== input.sheetType) return false
+    if (input.region && r.region !== input.region) return false
     if (
       input.categories &&
       input.categories.length > 0 &&
@@ -218,6 +222,7 @@ export async function insertRestaurant(
     name: input.name.trim(),
     category: input.category,
     sheet_type: input.sheet_type,
+    region: input.region,
     menu: input.menu?.trim() ? input.menu.trim() : null,
     note: input.note?.trim() ? input.note.trim() : null,
     naver_url: input.naver_url?.trim() ? input.naver_url.trim() : null,
@@ -256,6 +261,7 @@ export type UpdateRestaurantInput = Pick<
   | 'name'
   | 'category'
   | 'sheet_type'
+  | 'region'
   | 'menu'
   | 'note'
   | 'naver_url'
@@ -275,6 +281,7 @@ export async function updateRestaurant(
     name: input.name.trim(),
     category: input.category,
     sheet_type: input.sheet_type,
+    region: input.region,
     menu: input.menu?.trim() ? input.menu.trim() : null,
     note: input.note?.trim() ? input.note.trim() : null,
     naver_url: input.naver_url?.trim() ? input.naver_url.trim() : null,

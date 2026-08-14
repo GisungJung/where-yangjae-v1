@@ -26,7 +26,6 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
     // 운영 환경에서는 별도 수집기로 보낼 자리. 사내 서비스라 콘솔 충분.
-    // eslint-disable-next-line no-console
     console.error('[ErrorBoundary]', error, info.componentStack)
   }
 
