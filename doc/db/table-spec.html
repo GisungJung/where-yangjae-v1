@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>비즈밥 · 테이블정의서</title>
+<style>
+  :root {
+    --primary: #2e75b6; --primary-dark: #1f3864; --primary-soft: #d5e8f0;
+    --accent: #ff6b35; --ink-900: #1a1a1a; --ink-700: #3d3d3d; --ink-500: #6b6b6b;
+    --surface-muted: #f5f7fa; --border: #dde3ea; --warn-soft: #fff2cc; --danger-soft: #fce4d6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 20px 80px; background: var(--surface-muted);
+    font-family: 'Pretendard', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
+    color: var(--ink-900); line-height: 1.6; font-size: 14px;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; }
+  header.doc { background: var(--primary-dark); color: #fff; border-radius: 14px; padding: 28px 32px; margin-bottom: 28px; }
+  header.doc h1 { margin: 0 0 6px; font-size: 24px; }
+  header.doc p { margin: 0; opacity: .85; font-size: 13px; }
+  h2 { font-size: 18px; color: var(--primary-dark); border-bottom: 2px solid var(--primary); padding-bottom: 6px; margin: 40px 0 14px; }
+  h3 { font-size: 15px; margin: 26px 0 8px; color: var(--ink-900); }
+  h3 code { background: var(--primary-soft); color: var(--primary-dark); padding: 1px 8px; border-radius: 6px; font-size: 14px; }
+  p.desc { margin: 4px 0 10px; color: var(--ink-700); font-size: 13px; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 8px 0 4px; }
+  th { background: var(--primary-soft); color: var(--primary-dark); text-align: left; padding: 7px 10px; border: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 6px 10px; border: 1px solid var(--border); vertical-align: top; }
+  td code, p code, li code { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 4px; padding: 0 5px; font-size: 12px; font-family: Consolas, 'D2Coding', monospace; }
+  .pk { font-weight: 700; color: var(--primary-dark); }
+  .badge { display: inline-block; border-radius: 999px; padding: 0 8px; font-size: 11px; font-weight: 700; line-height: 18px; vertical-align: 1px; }
+  .badge.pk { background: var(--primary-dark); color: #fff; }
+  .badge.fk { background: var(--primary-soft); color: var(--primary-dark); }
+  .badge.dep { background: var(--danger-soft); color: #a32d2d; }
+  .badge.uq { background: var(--warn-soft); color: #8a6100; }
+  .note { background: var(--warn-soft); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin: 10px 0; }
+  .diagram { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 18px 24px; font-family: Consolas, 'D2Coding', monospace; font-size: 13px; white-space: pre; overflow-x: auto; line-height: 1.7; color: var(--ink-700); }
+  .toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 4px; }
+  .toc a { background: #fff; border: 1px solid var(--border); border-radius: 999px; padding: 4px 14px; font-size: 13px; color: var(--primary-dark); text-decoration: none; font-weight: 600; }
+  .toc a:hover { background: var(--primary-soft); }
+  footer { margin-top: 48px; font-size: 12px; color: var(--ink-500); text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="doc">
+  <h1>🍚 비즈밥 테이블정의서</h1>
+  <p>Supabase (PostgreSQL 15+) · anon 키 + RLS (정식 Auth 없음) · 기준일 2026-09-03 · DDL 단일 출처: <code style="background:rgba(255,255,255,.15);border:none;color:#fff">doc/db/schema.sql</code></p>
+</header>
+
+<nav class="toc">
+  <a href="#overview">개요</a>
+  <a href="#restaurants">restaurants</a>
+  <a href="#reviewers">reviewers</a>
+  <a href="#ratings">ratings</a>
+  <a href="#rating_photos">rating_photos</a>
+  <a href="#regions">regions</a>
+  <a href="#view">뷰</a>
+  <a href="#functions">함수·트리거</a>
+  <a href="#rls">RLS</a>
+  <a href="#storage">Storage</a>
+  <a href="#history">변경 이력</a>
+</nav>
+
+<h2 id="overview">1. 개요 · 관계</h2>
+<div class="diagram">reviewers ─┬─&lt; restaurants.registered_by   (ON DELETE SET NULL)
+           └─&lt; ratings.reviewer_id          (ON DELETE CASCADE)
+restaurants ──&lt; ratings.restaurant_id       (ON DELETE CASCADE)
+ratings     ──&lt; rating_photos.rating_id     (ON DELETE CASCADE → Storage 객체 동반 삭제)
+regions     ·· 식당과 FK 없음 — 지역은 좌표 최근접 기준점으로 <b>파생</b>
+restaurant_stats (뷰) = restaurants ⟕ ratings(리뷰어별 최신 1건만 집계)</div>
+<div class="card">
+  <p class="desc" style="margin:0">
+    공통 규칙 — PK는 <code>uuid DEFAULT gen_random_uuid()</code> (regions만 name PK) ·
+    <code>created_at</code>/<code>updated_at</code>은 <code>timestamptz DEFAULT now()</code>,
+    updated_at은 BEFORE UPDATE 트리거 자동 갱신 ·
+    삭제는 soft delete(<code>restaurants.status</code>) 원칙, 클라이언트 DELETE는 RLS로 차단(ratings·사진 본인 것 제외).
+  </p>
+</div>
+
+<h2 id="restaurants">2. 테이블 정의</h2>
+
+<h3><code>public.restaurants</code> — 식당 마스터</h3>
+<p class="desc">soft delete(status) 기반. 좌표·카카오 장소 ID는 옵션. ~80건 규모.</p>
+<div class="card">
+<table>
+  <tr><th>컬럼</th><th>타입</th><th>NULL</th><th>기본값</th><th>제약</th><th>설명</th></tr>
+  <tr><td class="pk">id <span class="badge pk">PK</span></td><td>uuid</td><td>N</td><td>gen_random_uuid()</td><td></td><td>식당 ID</td></tr>
+  <tr><td>name</td><td>text</td><td>N</td><td></td><td></td><td>상호명</td></tr>
+  <tr><td>category</td><td>text</td><td>N</td><td></td><td>CHECK IN (한식·일식·중식·분식·패스트푸드·아시안·카페·기타)</td><td>카테고리</td></tr>
+  <tr><td>menu</td><td>text</td><td>Y</td><td></td><td></td><td>대표 메뉴 (자유 텍스트)</td></tr>
+  <tr><td>sheet_type</td><td>text</td><td>N</td><td></td><td>CHECK IN (lunch, dinner)</td><td>점심 / 저녁회식 구분</td></tr>
+  <tr><td>region</td><td>text</td><td>Y</td><td>—</td><td>—</td><td>동 이름 — 등록/수정 시 클라이언트가 카카오 역지오코딩(법정동)으로 채움. null=미지정(표시 계층이 regions 최근접 파생으로 폴백)</td></tr>
+  <tr><td>naver_url</td><td>text</td><td>Y</td><td></td><td></td><td>네이버 지도 링크</td></tr>
+  <tr><td>note</td><td>text</td><td>Y</td><td></td><td></td><td>비고</td></tr>
+  <tr><td>status</td><td>text</td><td>N</td><td>'운영중'</td><td>CHECK IN (운영중, 휴업, 폐업)</td><td>운영 상태 — 폐업도 레코드 보존</td></tr>
+  <tr><td>lat / lng</td><td>float8</td><td>Y</td><td></td><td></td><td>좌표 (카카오 장소 선택 시 채움). 없으면 지역 미지정</td></tr>
+  <tr><td>kakao_place_id</td><td>text</td><td>Y</td><td></td><td></td><td>카카오 장소 ID (중복 등록 사전 체크용)</td></tr>
+  <tr><td>registered_by <span class="badge fk">FK</span></td><td>uuid</td><td>Y</td><td></td><td>→ reviewers(id) ON DELETE SET NULL</td><td>등록자</td></tr>
+  <tr><td>created_at / updated_at</td><td>timestamptz</td><td>N</td><td>now()</td><td></td><td>updated_at은 트리거 자동 갱신</td></tr>
+</table>
+<p class="desc">인덱스: <code>idx_restaurants_category</code> · <code>idx_restaurants_sheet_type</code> · <code>idx_restaurants_status</code></p>
+</div>
+
+<h3 id="reviewers"><code>public.reviewers</code> — 평가자(닉네임)</h3>
+<p class="desc">익명 식별의 단일 출처는 id(uuid) — 클라이언트가 <code>x-reviewer-id</code> 헤더로 전달. 닉네임은 표시용 텍스트로 중복 허용 (UNIQUE 제약 2026-05-15 제거).</p>
+<div class="card">
+<table>
+  <tr><th>컬럼</th><th>타입</th><th>NULL</th><th>기본값</th><th>제약</th><th>설명</th></tr>
+  <tr><td class="pk">id <span class="badge pk">PK</span></td><td>uuid</td><td>N</td><td>gen_random_uuid()</td><td></td><td>평가자 ID (헤더 매칭 키)</td></tr>
+  <tr><td>nickname</td><td>text</td><td>N</td><td></td><td></td><td>닉네임 — 중복 허용, 본인만 수정 가능(RLS)</td></tr>
+  <tr><td>created_at</td><td>timestamptz</td><td>N</td><td>now()</td><td></td><td></td></tr>
+</table>
+</div>
+
+<h3 id="ratings"><code>public.ratings</code> — 평가 (별점 + 한줄평)</h3>
+<p class="desc">1인 N평가 허용 (UNIQUE 제약 2026-05-15 제거) — 평균 왜곡은 restaurant_stats 뷰가 리뷰어별 최신 1건만 반영해 방지. INSERT는 rate-limit 트리거(1분 1회·1시간 10회) 적용.</p>
+<div class="card">
+<table>
+  <tr><th>컬럼</th><th>타입</th><th>NULL</th><th>기본값</th><th>제약</th><th>설명</th></tr>
+  <tr><td class="pk">id <span class="badge pk">PK</span></td><td>uuid</td><td>N</td><td>gen_random_uuid()</td><td></td><td></td></tr>
+  <tr><td>restaurant_id <span class="badge fk">FK</span></td><td>uuid</td><td>N</td><td></td><td>→ restaurants(id) ON DELETE CASCADE</td><td></td></tr>
+  <tr><td>reviewer_id <span class="badge fk">FK</span></td><td>uuid</td><td>N</td><td></td><td>→ reviewers(id) ON DELETE CASCADE</td><td></td></tr>
+  <tr><td>score</td><td>numeric(2,1)</td><td>N</td><td></td><td>0.0~5.0, 0.5 단위 (mod = 0)</td><td>별점</td></tr>
+  <tr><td>comment</td><td>text</td><td>Y</td><td></td><td>≤ 200자</td><td>한줄평</td></tr>
+  <tr><td>created_at / updated_at</td><td>timestamptz</td><td>N</td><td>now()</td><td></td><td>updated_at은 트리거 자동 갱신</td></tr>
+</table>
+<p class="desc">인덱스: <code>idx_ratings_reviewer_id</code> · <code>idx_ratings_restaurant_reviewer</code> (restaurant_id, reviewer_id)</p>
+</div>
+
+<h3 id="rating_photos"><code>public.rating_photos</code> — 한줄평 사진 메타</h3>
+<p class="desc">평가당 0~3장. 클라이언트에서 1024px 리사이즈·JPEG 0.8 압축 후 업로드 (300KB 하드캡). row 삭제 시 트리거가 Storage 객체 동반 삭제.</p>
+<div class="card">
+<table>
+  <tr><th>컬럼</th><th>타입</th><th>NULL</th><th>기본값</th><th>제약</th><th>설명</th></tr>
+  <tr><td class="pk">id <span class="badge pk">PK</span></td><td>uuid</td><td>N</td><td>gen_random_uuid()</td><td></td><td></td></tr>
+  <tr><td>rating_id <span class="badge fk">FK</span></td><td>uuid</td><td>N</td><td></td><td>→ ratings(id) ON DELETE CASCADE · <span class="badge uq">UNIQUE</span>(rating_id, sort_order)</td><td></td></tr>
+  <tr><td>storage_path</td><td>text</td><td>N</td><td></td><td></td><td>rating-photos 버킷 내 경로 — <code>&lt;rating_id&gt;/&lt;nanoid&gt;.jpg</code></td></tr>
+  <tr><td>sort_order</td><td>smallint</td><td>N</td><td>0</td><td>0~2</td><td>표시 순서 (최대 3장)</td></tr>
+  <tr><td>byte_size</td><td>integer</td><td>Y</td><td></td><td>≤ 307200 (300KB)</td><td>업로드 시 기록</td></tr>
+  <tr><td>width / height</td><td>smallint</td><td>Y</td><td></td><td>&gt; 0</td><td>표시용</td></tr>
+  <tr><td>created_at</td><td>timestamptz</td><td>N</td><td>now()</td><td></td><td></td></tr>
+</table>
+<p class="desc">인덱스: <code>idx_rating_photos_rating_id</code></p>
+</div>
+
+<h3 id="regions"><code>public.regions</code> — 서비스 지역 기준점 <small>(2026-09-03 신설)</small></h3>
+<p class="desc">2026-09-03 2차 전환 후 용도: 식당 지역의 1차 출처는 <code>restaurants.region</code>(역지오코딩 동 이름)이고, 이 테이블은 <b>region이 null인 과거 데이터의 파생 폴백</b>(가장 가까운 기준점, <code>src/utils/region.ts</code>)에 쓰인다.</p>
+<div class="card">
+<table>
+  <tr><th>컬럼</th><th>타입</th><th>NULL</th><th>기본값</th><th>제약</th><th>설명</th></tr>
+  <tr><td class="pk">name <span class="badge pk">PK</span></td><td>text</td><td>N</td><td></td><td></td><td>지역 이름 (토글 라벨 그대로 사용)</td></tr>
+  <tr><td>lat / lng</td><td>double precision</td><td>N</td><td></td><td></td><td>기준점 좌표 (대표 지하철역) — 지역 선택 시 지도 중심</td></tr>
+  <tr><td>sort_order</td><td>int</td><td>N</td><td>0</td><td></td><td>토글 버튼 순서</td></tr>
+  <tr><td>created_at</td><td>timestamptz</td><td>N</td><td>now()</td><td></td><td></td></tr>
+</table>
+<p class="desc">시드: 양재 (37.4842, 127.0344, 1) · 남부터미널 (37.4765, 127.0048, 2)</p>
+<div class="note">지역 추가 예시: <code>INSERT INTO regions (name, lat, lng, sort_order) VALUES ('강남', 37.4979, 127.0276, 3);</code></div>
+</div>
+
+<h2 id="view">3. 뷰</h2>
+<h3><code>public.restaurant_stats</code></h3>
+<div class="card">
+<table>
+  <tr><th>컬럼</th><th>타입</th><th>설명</th></tr>
+  <tr><td>id / name</td><td>uuid / text</td><td>식당 식별</td></tr>
+  <tr><td>rating_count</td><td>bigint</td><td>평가한 <b>고유 사용자 수</b> (행 수 아님)</td></tr>
+  <tr><td>avg_score</td><td>numeric</td><td>평균 별점 (소수 1자리). 리뷰어별 <b>최신 1건만</b> 반영 — 도배 왜곡 방지. 평가 없으면 NULL</td></tr>
+</table>
+</div>
+
+<h2 id="functions">4. 함수 · 트리거 · RPC</h2>
+<div class="card">
+<table>
+  <tr><th>객체</th><th>종류</th><th>설명</th></tr>
+  <tr><td><code>set_updated_at()</code></td><td>트리거 함수</td><td>restaurants·ratings BEFORE UPDATE — updated_at 자동 갱신</td></tr>
+  <tr><td><code>ratings_rate_limit()</code></td><td>트리거 함수 (BEFORE INSERT)</td><td>reviewer_id별 1분 1회 · 1시간 10회 초과 시 <code>ERRCODE 54000</code>으로 거부. 예외 메시지가 그대로 사용자 안내문</td></tr>
+  <tr><td><code>cleanup_rating_photo_object()</code></td><td>트리거 함수 (AFTER DELETE, SECURITY DEFINER)</td><td>rating_photos 삭제 시 Storage 객체 동반 삭제. 우회 범위는 rating-photos 버킷 + storage_path 정확 일치로 제한</td></tr>
+  <tr><td><code>pick_random_restaurant(p_sheet_type, p_categories, p_include_closed, p_region)</code></td><td>RPC (SQL, STABLE)</td><td>룰렛용 랜덤 1건. p_region은 <b>최근접 기준점 파생</b>으로 비교 (좌표 없는 식당은 지역 필터 시 제외). 거리 공식: <code>Δlat² + (Δlng·cos 37.48°)²</code></td></tr>
+</table>
+</div>
+
+<h2 id="rls">5. RLS 정책 요약</h2>
+<p class="desc">"본인" = 클라이언트가 보낸 <code>x-reviewer-id</code> 헤더가 row의 reviewer_id(또는 reviewers.id)와 일치. 강한 보안이 아닌 어뷰징 1차 방지용 소프트 게이트. 대상 role: anon, authenticated.</p>
+<div class="card">
+<table>
+  <tr><th>테이블</th><th>SELECT</th><th>INSERT</th><th>UPDATE</th><th>DELETE</th></tr>
+  <tr><td>restaurants</td><td>모두</td><td>모두</td><td>모두 (휴업/폐업 토글)</td><td>차단 (RESTRICTIVE)</td></tr>
+  <tr><td>reviewers</td><td>모두</td><td>모두</td><td>본인만</td><td>차단 (RESTRICTIVE)</td></tr>
+  <tr><td>ratings</td><td>모두</td><td>모두 (+ rate-limit 트리거)</td><td>본인만</td><td>본인만</td></tr>
+  <tr><td>rating_photos</td><td>모두</td><td>본인 평가만</td><td>차단 (RESTRICTIVE)</td><td>본인 평가만</td></tr>
+  <tr><td>regions</td><td>모두</td><td colspan="3" style="text-align:center">정책 없음 — 관리자 SQL로만 변경</td></tr>
+  <tr><td>storage.objects (rating-photos)</td><td>모두</td><td><code>&lt;uuid&gt;/&lt;file&gt;</code> 경로 형식 강제</td><td>차단 (RESTRICTIVE)</td><td>본인 평가 사진만</td></tr>
+</table>
+</div>
+
+<h2 id="storage">6. Storage</h2>
+<div class="card">
+<table>
+  <tr><th>버킷</th><th>공개</th><th>파일 크기 제한</th><th>허용 MIME</th><th>용도</th></tr>
+  <tr><td><code>rating-photos</code></td><td>public read</td><td>307,200 B (300KB)</td><td>image/jpeg, image/webp</td><td>한줄평 사진. 경로 <code>&lt;rating_id&gt;/&lt;nanoid&gt;.jpg</code></td></tr>
+</table>
+</div>
+
+<h2 id="history">7. 변경 이력 (구 마이그레이션 요약)</h2>
+<p class="desc">2026-09-03에 supabase/migrations/ 이력 관리를 종료하고 본 문서 + schema.sql로 전환. 아래는 적용 완료된 이력의 요약 (원문은 git 이력 <code>supabase/migrations/</code> 참조).</p>
+<div class="card">
+<table>
+  <tr><th>적용일</th><th>버전</th><th>내용</th></tr>
+  <tr><td>2026-05-14</td><td>120001~120008</td><td>초기 스키마(reviewers·restaurants·ratings·stats 뷰·트리거) + RLS + 시드/실데이터 + 좌표 백필 + 룰렛 RPC + RLS 재정비</td></tr>
+  <tr><td>2026-05-15</td><td>000001~000004</td><td>1인 1평가 UNIQUE 제거(뷰 최신 1건 정규화 + rate-limit 트리거) · rating_photos + Storage · direction 컬럼 제거 · 닉네임 UNIQUE 제거(본인 수정 허용)</td></tr>
+  <tr><td>2026-08-12</td><td>0812-000001~2</td><td>region 컬럼 추가(양재/남부터미널) + 좌표 백필 + RPC p_region · 남부터미널 좌표 교정</td></tr>
+  <tr><td>2026-09-03</td><td>0903-000001</td><td>regions 기준점 테이블 신설 — 지역을 저장 enum에서 최근접 파생으로 전환. restaurants.region은 DEPRECATED(컬럼 유지)</td></tr>
+  <tr><td>2026-09-03</td><td>schema.sql</td><td>restaurants_region_check CHECK 제거 — 등록 지역 제한 해제. 룰렛은 지역 필터 대신 내 위치 3km 반경(클라이언트)으로 전환, RPC p_region은 클라이언트 미사용</td></tr>
+  <tr><td>2026-09-03</td><td>schema.sql</td><td>region 2차 전환 — DEFAULT/NOT NULL 제거, 역지오코딩된 동 이름 저장(카카오 coord2RegionCode 법정동). null은 regions 최근접 파생 폴백. 기존 enum 값은 1회성 UPDATE로 NULL 정리</td></tr>
+</table>
+</div>
+
+<footer>비즈밥 (where-yangjae) · 테이블정의서 v1.0 · 2026-09-03 · 스키마 변경 시 doc/db/schema.sql과 함께 갱신할 것</footer>
+
+</div>
+</body>
+</html>

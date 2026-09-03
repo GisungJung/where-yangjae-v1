@@ -1,6 +1,6 @@
 /**
  * 데스크톱 워크스페이스 좌측 리스트 패널 (네이버 지도 포맷) — 목업 참고: 설계 문서
- * `doc/plan/2026-08-12-desktop-naver-layout-design.md` §2.
+ * `doc/plan/features/2026-08-12-desktop-naver-layout-design.md` §2.
  *
  * - 폭 400px 고정, 세로 flex: 상단(검색·필터·정렬) 고정 + 목록만 내부 스크롤.
  * - 필터 상태(useRestaurantFilters)는 HomeWorkspaceLayout이 소유 — 지도 마커와 공유.
@@ -9,7 +9,6 @@
 
 import { useEffect, useRef } from 'react'
 import { CategoryChip } from './CategoryChip'
-import { RegionToggle } from './RegionToggle'
 import { RestaurantCard } from './RestaurantCard'
 import { SheetTypeToggle } from './SheetTypeToggle'
 import { ErrorBox, HomeEmptyState, SkeletonList } from './homeListStates'
@@ -44,8 +43,6 @@ export function RestaurantListPanel({
   const {
     keyword,
     setKeyword,
-    region,
-    setRegion,
     sheetType,
     setSheetType,
     selectedCategories,
@@ -117,10 +114,6 @@ export function RestaurantListPanel({
           </div>
         </label>
 
-        <div>
-          <RegionToggle value={region} onChange={setRegion} />
-        </div>
-
         <div className="flex flex-wrap items-center gap-2">
           <SheetTypeToggle value={sheetType} onChange={setSheetType} />
           <label className="ml-auto inline-flex items-center gap-1.5 text-xs text-ink-700">
@@ -187,9 +180,7 @@ export function RestaurantListPanel({
             missingTable={missingTable}
             keyword={keyword}
             hasFilters={
-              selectedCategories.length > 0 ||
-              sheetType !== 'all' ||
-              region !== 'all'
+              selectedCategories.length > 0 || sheetType !== 'all'
             }
             onClearKeyword={() => setKeyword('')}
             onClearFilters={clearFilters}

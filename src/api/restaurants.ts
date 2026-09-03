@@ -17,10 +17,17 @@ import {
   type RestaurantStats,
   type RestaurantWithStats,
 } from '../types/domain'
+import { distanceKm } from '../utils/region'
 import { upsertReviewerByNickname } from './reviewers'
 
+/**
+ * api 레이어 반환형 — region은 저장된 동 이름 그대로(raw).
+ * "저장값 ?? 최근접 기준점 파생" 폴백 합류는 훅(useRestaurants)에서 처리한다.
+ */
+export type RestaurantWithStatsRow = RestaurantWithStats
+
 export interface FetchRestaurantsResult {
-  data: RestaurantWithStats[]
+  data: RestaurantWithStatsRow[]
   /** restaurants 테이블 자체가 없으면 true (마이그레이션 대기 상태) */
   missingTable: boolean
 }
@@ -73,10 +80,10 @@ export async function fetchRestaurantsWithStats(): Promise<FetchRestaurantsResul
   return { data, missingTable: false }
 }
 
-/** 단일 식당 + 통계 */
+/** 단일 식당 + 통계 (지역 폴백 합류는 useRestaurant 훅에서 처리) */
 export async function fetchRestaurantById(
   id: string,
-): Promise<RestaurantWithStats | null> {
+): Promise<RestaurantWithStatsRow | null> {
   const { data, error } = await supabase
     .from('restaurants')
     .select('*')
@@ -129,8 +136,11 @@ export interface PickRandomRestaurantInput {
   sheetType: 'lunch' | 'dinner' | null
   categories: string[] | null
   includeClosed: boolean
-  /** '양재' | '남부터미널' | null(전체) — 룰렛 지역 필터 */
-  region: string | null
+  /**
+   * 내 위치 반경 필터 — null이면 전체에서 추첨 (2026-09-03 지역 필터 대체).
+   * 좌표 없는 식당은 거리 판단이 불가해 반경 필터 시 후보에서 제외된다.
+   */
+  near: { lat: number; lng: number; radiusKm: number } | null
 }
 
 /**
@@ -142,10 +152,17 @@ export interface PickRandomRestaurantInput {
  * RPC가 아직 배포되지 않은 경우(`does not exist`)에는
  * 폴백으로 `fetchRestaurantsWithStats()` 결과를 클라이언트 필터링 후
  * Math.random()으로 추첨한다.
+ *
+ * `near`(내 위치 반경)가 지정된 경우 RPC에 거리 파라미터가 없어
+ * 항상 클라이언트 추첨을 사용한다 — 식당 ~80건 규모라 비용 무시 가능.
  */
 export async function pickRandomRestaurant(
   input: PickRandomRestaurantInput,
 ): Promise<Restaurant | null> {
+  if (input.near) {
+    return pickRandomClientFallback(input)
+  }
+
   // RPC Args가 optional·non-null로 정의되어 있어 null 대신 undefined를 넘긴다.
   const { data, error } = await supabase.rpc('pick_random_restaurant', {
     p_sheet_type: input.sheetType ?? undefined,
@@ -154,7 +171,6 @@ export async function pickRandomRestaurant(
         ? input.categories
         : undefined,
     p_include_closed: input.includeClosed,
-    p_region: input.region ?? undefined,
   })
 
   if (error) {
@@ -183,7 +199,15 @@ async function pickRandomClientFallback(
   const pool = data.filter((r) => {
     if (!input.includeClosed && r.status !== '운영중') return false
     if (input.sheetType && r.sheet_type !== input.sheetType) return false
-    if (input.region && r.region !== input.region) return false
+    if (input.near) {
+      if (r.lat === null || r.lng === null) return false
+      if (
+        distanceKm(r.lat, r.lng, input.near.lat, input.near.lng) >
+        input.near.radiusKm
+      ) {
+        return false
+      }
+    }
     if (
       input.categories &&
       input.categories.length > 0 &&
@@ -208,6 +232,20 @@ export interface InsertRestaurantResult {
 }
 
 /**
+ * region 스키마 미적용(구 CHECK '양재','남부터미널' + NOT NULL) 상태에서
+ * 동 이름/null을 보내면 나는 제약 위반인지 판별 — 폴백(재시도) 트리거.
+ */
+function isLegacyRegionError(error: {
+  code?: string
+  message: string
+}): boolean {
+  return (
+    (error.code === '23514' || error.code === '23502') &&
+    error.message.includes('region')
+  )
+}
+
+/**
  * 새 식당 INSERT — 등록자 닉네임을 reviewer로 upsert 후 `registered_by`에 박는다.
  *
  * 카카오 장소가 선택된 경우 lat/lng/kakao_place_id가 함께 채워진다.
@@ -218,11 +256,10 @@ export async function insertRestaurant(
 ): Promise<InsertRestaurantResult> {
   const reviewer = await upsertReviewerByNickname(input.nickname)
 
-  const payload = {
+  const basePayload = {
     name: input.name.trim(),
     category: input.category,
     sheet_type: input.sheet_type,
-    region: input.region,
     menu: input.menu?.trim() ? input.menu.trim() : null,
     note: input.note?.trim() ? input.note.trim() : null,
     naver_url: input.naver_url?.trim() ? input.naver_url.trim() : null,
@@ -232,11 +269,25 @@ export async function insertRestaurant(
     registered_by: reviewer.id,
   }
 
-  const { data, error } = await supabase
+  // 동 이름 (역지오코딩) — 실패·좌표 없음은 null(미지정, 표시 계층 폴백).
+  let { data, error } = await supabase
     .from('restaurants')
-    .insert(payload)
+    .insert({ ...basePayload, region: input.region })
     .select()
     .single()
+
+  // 구 스키마(region CHECK/NOT NULL) 미적용 상태 폴백 — region 없이 재시도.
+  if (error && isLegacyRegionError(error)) {
+    console.warn(
+      '[restaurants] region 스키마 미적용 — region 없이 등록 폴백.',
+      error.message,
+    )
+    ;({ data, error } = await supabase
+      .from('restaurants')
+      .insert(basePayload)
+      .select()
+      .single())
+  }
 
   if (error) {
     throw new Error(`맛집을 등록하지 못했어요. (${error.message})`)
@@ -261,13 +312,13 @@ export type UpdateRestaurantInput = Pick<
   | 'name'
   | 'category'
   | 'sheet_type'
-  | 'region'
   | 'menu'
   | 'note'
   | 'naver_url'
   | 'lat'
   | 'lng'
   | 'kakao_place_id'
+  | 'region'
 >
 
 export async function updateRestaurant(
@@ -277,11 +328,10 @@ export async function updateRestaurant(
   // dba 가이드 (task #3 답신):
   // - payload에 `updated_at` 포함 X → BEFORE UPDATE 트리거가 갱신.
   // - payload에 `registered_by` 포함 X → 미명시 컬럼은 기존 값 보존.
-  const payload = {
+  const basePayload = {
     name: input.name.trim(),
     category: input.category,
     sheet_type: input.sheet_type,
-    region: input.region,
     menu: input.menu?.trim() ? input.menu.trim() : null,
     note: input.note?.trim() ? input.note.trim() : null,
     naver_url: input.naver_url?.trim() ? input.naver_url.trim() : null,
@@ -290,12 +340,26 @@ export async function updateRestaurant(
     kakao_place_id: input.kakao_place_id,
   }
 
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('restaurants')
-    .update(payload)
+    .update({ ...basePayload, region: input.region })
     .eq('id', id)
     .select()
     .maybeSingle()
+
+  // 구 스키마(region CHECK/NOT NULL) 미적용 상태 폴백 — region 없이 재시도.
+  if (error && isLegacyRegionError(error)) {
+    console.warn(
+      '[restaurants] region 스키마 미적용 — region 없이 수정 폴백.',
+      error.message,
+    )
+    ;({ data, error } = await supabase
+      .from('restaurants')
+      .update(basePayload)
+      .eq('id', id)
+      .select()
+      .maybeSingle())
+  }
 
   if (error) {
     // Postgres CHECK violation (category·sheet_type·status enum 어김).

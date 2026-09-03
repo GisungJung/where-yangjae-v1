@@ -35,6 +35,9 @@ coverage
 # Vite cache
 .vite
 
+# Claude Code — 개인 로컬 설정은 제외 (공유 설정 settings.json은 추적)
+.claude/settings.local.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -45,8 +48,3 @@ coverage
 *.njsproj
 *.sln
 *.sw?
-
-# Supabase — 마이그레이션(DB SSOT)과 config는 추적, 나머지(.temp, mig 원본 엑셀 등)는 제외
-supabase/*
-!supabase/migrations
-!supabase/config.toml

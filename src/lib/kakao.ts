@@ -65,7 +65,24 @@ type KakaoPlaces = {
     ) => void,
   ) => void
 }
-type KakaoGeocoder = unknown
+
+/** coord2RegionCode 결과 행 — B=법정동, H=행정동. */
+export type KakaoRegionCode = {
+  region_type: 'B' | 'H'
+  region_1depth_name: string
+  region_2depth_name: string
+  region_3depth_name: string
+}
+type KakaoGeocoder = {
+  coord2RegionCode: (
+    x: number, // lng
+    y: number, // lat
+    callback: (
+      result: KakaoRegionCode[],
+      status: 'OK' | 'ZERO_RESULT' | 'ERROR',
+    ) => void,
+  ) => void
+}
 
 declare global {
   interface Window {
@@ -78,18 +95,9 @@ const KAKAO_SDK_URL = 'https://dapi.kakao.com/v2/maps/sdk.js'
 /**
  * 양재역 좌표 — 사내 컨텍스트 기준 지도 fallback 중심.
  * 사용처: `KakaoMapView` 좌표가 전혀 없을 때의 기본 중심값.
+ * 지역별 지도 중심은 DB `regions` 테이블 좌표를 사용한다 (2026-09-03 파생 전환).
  */
 export const YANGJAE_STATION = { lat: 37.4837, lng: 127.0359 } as const
-
-/**
- * 남부터미널역(3호선) 좌표 — 지역(양재/남부터미널) 구분용.
- * 사용처: 데스크톱 워크스페이스에서 지역 '남부터미널' 선택 시 지도 중심.
- * (마이그레이션 20260812000002 재분류 기준 좌표와 동일 — 사용자 제공 좌표)
- */
-export const NAMBU_TERMINAL_STATION = {
-  lat: 37.485013,
-  lng: 127.016189,
-} as const
 
 let loaderPromise: Promise<KakaoMaps> | null = null
 
@@ -190,4 +198,41 @@ export async function searchKakaoPlaces(
       }
     })
   })
+}
+
+/**
+ * 좌표 → 동 이름 역지오코딩 (예: '양재동').
+ *
+ * 식당의 지역 라벨 저장용 (2026-09-03 2차 전환 — 기준점 파생에서 행정구역
+ * 저장으로). 법정동('B')을 우선하고 없으면 행정동('H')을 쓴다 —
+ * 행정동은 '양재1동'처럼 쪼개져 있어 생활권 라벨로는 법정동이 자연스럽다.
+ *
+ * 실패(네트워크·SDK 미로드·결과 없음)는 전부 null — 호출부는 null을
+ * "미지정"으로 저장하고, 표시 계층이 최근접 기준점 파생으로 폴백한다.
+ */
+export async function getDongName(
+  lat: number,
+  lng: number,
+): Promise<string | null> {
+  try {
+    const maps = await loadKakaoMaps()
+    const Geocoder = maps.services?.Geocoder
+    const Status = maps.services?.Status
+    if (!Geocoder || !Status) return null
+
+    return await new Promise<string | null>((resolve) => {
+      new Geocoder().coord2RegionCode(lng, lat, (result, status) => {
+        if (status !== Status.OK) {
+          resolve(null)
+          return
+        }
+        const row =
+          result.find((r) => r.region_type === 'B') ??
+          result.find((r) => r.region_type === 'H')
+        resolve(row?.region_3depth_name || null)
+      })
+    })
+  } catch {
+    return null
+  }
 }

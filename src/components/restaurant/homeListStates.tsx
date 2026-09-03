@@ -81,7 +81,7 @@ export function HomeEmptyState({
           데이터베이스 마이그레이션이 아직 적용되지 않았어요.
         </p>
         <p className="mt-1 text-xs">
-          관리자에게 <code>supabase/migrations</code> 적용을 요청해 주세요.
+          관리자에게 DB 스키마(<code>doc/db/schema.sql</code>) 적용을 요청해 주세요.
         </p>
       </div>
     )

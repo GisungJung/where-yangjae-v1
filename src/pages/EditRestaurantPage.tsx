@@ -13,7 +13,7 @@
  * `updated_at`은 DB BEFORE UPDATE 트리거가 갱신.
  */
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { AppShell } from '../components/layout/AppShell'
@@ -22,13 +22,11 @@ import {
   type PickedPlace,
 } from '../components/restaurant/KakaoPlaceSearch'
 import { KakaoMapView } from '../components/map/KakaoMapView'
-import { YANGJAE_STATION } from '../lib/kakao'
+import { YANGJAE_STATION, getDongName } from '../lib/kakao'
 import { updateRestaurant, type UpdateRestaurantInput } from '../api/restaurants'
 import {
   CATEGORIES,
-  REGIONS,
   type Category,
-  type Region,
   type Restaurant,
   type SheetType,
 } from '../types/domain'
@@ -78,8 +76,6 @@ function EditForm({ restaurant }: EditFormProps) {
   const [name, setName] = useState(restaurant.name)
   const [category, setCategory] = useState<Category>(restaurant.category)
   const [sheetType, setSheetType] = useState<SheetType>(restaurant.sheet_type)
-  // 좌표 백필 오분류의 교정 경로 — 지역 확대 설계 §4
-  const [region, setRegion] = useState<Region>(restaurant.region)
   const [menu, setMenu] = useState(restaurant.menu ?? '')
   const [note, setNote] = useState(restaurant.note ?? '')
   const [naverUrl, setNaverUrl] = useState(restaurant.naver_url ?? '')
@@ -93,6 +89,25 @@ function EditForm({ restaurant }: EditFormProps) {
   const [kakaoPlaceId, setKakaoPlaceId] = useState<string | null>(
     restaurant.kakao_place_id,
   )
+  /**
+   * 저장·표시용 동 이름 (역지오코딩) — undefined=조회 중, null=미지정.
+   * 좌표가 있으면 mount 시 1회 재산출 — 역지오코딩 도입 전 데이터도
+   * 수정 저장을 거치며 자연스럽게 백필된다.
+   */
+  const [dong, setDong] = useState<string | null | undefined>(
+    restaurant.lat !== null && restaurant.lng !== null ? undefined : null,
+  )
+  /** 빠른 재선택 시 늦은 응답이 덮어쓰지 않도록 시퀀스 가드. */
+  const dongSeqRef = useRef(0)
+  useEffect(() => {
+    if (restaurant.lat === null || restaurant.lng === null) return
+    const seq = ++dongSeqRef.current
+    void getDongName(restaurant.lat, restaurant.lng).then((d) => {
+      if (dongSeqRef.current === seq) setDong(d)
+    })
+    // prefill 좌표 기준 1회 — 이후 좌표 변경은 handleRepick/clearCoords가 처리.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const [validationError, setValidationError] = useState<string | null>(null)
 
   const mutation = useMutation({
@@ -113,12 +128,19 @@ function EditForm({ restaurant }: EditFormProps) {
     setKakaoPlaceId(place.kakaoPlaceId)
     // 상호명이 비어있을 리는 거의 없지만 안전망: 비었을 때만 prefill.
     if (!name.trim()) setName(place.name)
+    const seq = ++dongSeqRef.current
+    setDong(undefined)
+    void getDongName(place.lat, place.lng).then((d) => {
+      if (dongSeqRef.current === seq) setDong(d)
+    })
   }
 
   const clearCoords = () => {
     setLat(null)
     setLng(null)
     setKakaoPlaceId(null)
+    dongSeqRef.current += 1
+    setDong(null)
   }
 
   const onSubmit = (e: React.FormEvent) => {
@@ -147,13 +169,13 @@ function EditForm({ restaurant }: EditFormProps) {
       name: trimmed,
       category,
       sheet_type: sheetType,
-      region,
       menu: menu.trim() || undefined,
       note: note.trim() || undefined,
       naver_url: naverUrl.trim() || undefined,
       lat,
       lng,
       kakao_place_id: kakaoPlaceId,
+      region: dong ?? null,
     }
     mutation.mutate(payload)
   }
@@ -209,6 +231,12 @@ function EditForm({ restaurant }: EditFormProps) {
                     kakao_place_id: {kakaoPlaceId}
                   </p>
                 )}
+                {/* 지역은 좌표 역지오코딩(동 이름)으로 자동 저장 — 수동 선택 없음 */}
+                <p className="mt-0.5 font-medium text-brand-primary">
+                  📍{' '}
+                  {dong === undefined ? '지역 확인 중…' : dong ?? '미지정'}{' '}
+                  지역으로 표시됩니다
+                </p>
                 <button
                   type="button"
                   onClick={clearCoords}
@@ -218,7 +246,10 @@ function EditForm({ restaurant }: EditFormProps) {
                 </button>
               </>
             ) : (
-              <p className="text-ink-500">좌표 미등록 상태</p>
+              <p className="text-ink-500">
+                좌표 미등록 상태 — 지역 미지정으로 표시되어 "전체" 필터에서만
+                보여요.
+              </p>
             )}
           </div>
 
@@ -326,42 +357,6 @@ function EditForm({ restaurant }: EditFormProps) {
                   )
                 })}
               </div>
-            </div>
-          </div>
-
-          {/* 지역 — 좌표 백필 오분류는 여기서 교정 */}
-          <div>
-            <span
-              id="edit-region-label"
-              className="block text-sm font-medium text-ink-700"
-            >
-              지역 <span className="text-brand-accent">*</span>
-            </span>
-            <div
-              role="radiogroup"
-              aria-labelledby="edit-region-label"
-              className="mt-1 flex gap-0.5 rounded-lg bg-surface-muted p-1"
-            >
-              {REGIONS.map((r) => {
-                const active = region === r
-                return (
-                  <button
-                    key={r}
-                    type="button"
-                    role="radio"
-                    aria-checked={active}
-                    onClick={() => setRegion(r)}
-                    className={[
-                      'flex-1 rounded-md py-2 text-sm font-semibold transition-colors',
-                      active
-                        ? 'bg-white text-brand-primary shadow-sm'
-                        : 'text-ink-700',
-                    ].join(' ')}
-                  >
-                    {r}
-                  </button>
-                )
-              })}
             </div>
           </div>
 
