@@ -28,7 +28,7 @@
 - **스택**: Vite + React 19 + TypeScript + Tailwind 4 / **Supabase Free Tier (PostgreSQL 15+)** / Kakao Map / Supabase Storage / Vercel 배포
 - **인증 모델**: 정식 Auth 없음. 닉네임 익명 평가.
 - **운영 비용**: 월 0원. 유료 기능·플랜 도입 금지.
-- **단일 출처**: 기획·데이터 모델·화면 흐름은 `doc/plan/yangjai_plan.html` 가 정답. 모호하면 기획서를 따른다.
+- **단일 출처**: 기획·데이터 모델·화면 흐름은 `doc/plan/spec/yangjai_plan.html` 가 정답. 모호하면 기획서를 따른다.
 
 ---
 
@@ -85,7 +85,7 @@
 **주요 역할**: Supabase 스키마/RLS/Storage 관리, 시나리오별 테스트 데이터 공급
 
 **담당 범위**
-- `supabase/migrations/` (SQL 마이그레이션 — 파일명: **`YYYYMMDDHHMMSS_<name>.sql`** 14자리 timestamp + 단일 underscore + snake_case 이름. 예: `20260514120008_rls_repair.sql`. Supabase CLI 및 `supabase_migrations.schema_migrations.version` 규약과 일치시키기 위해 `_NNN_` 형태의 시퀀스 prefix는 사용 금지.)
+- `doc/db/schema.sql` (DB 스키마 단일 출처 — 멱등 DDL. 2026-09-03에 `supabase/migrations/` 이력 관리 종료. 스키마 변경 = schema.sql 수정 + 변경 구문 수동 실행 + `doc/db/table-spec.html` 테이블정의서 동기화.)
 - `supabase/seed.sql` (시드 데이터)
 - `supabase/` 하위의 기타 설정
 

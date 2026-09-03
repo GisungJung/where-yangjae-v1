@@ -1,7 +1,7 @@
 /**
  * 데스크톱 워크스페이스 상세 패널 — 목록 패널 옆에 열리는 두 번째 패널.
  *
- * 설계: doc/plan/2026-08-12-desktop-naver-layout-design.md §2·§4
+ * 설계: doc/plan/features/2026-08-12-desktop-naver-layout-design.md §2·§4
  * - 헤더: 식당명 + ⋯(액션시트) + 닫기(X → `/`)
  * - 본문: RestaurantDetailContent 재사용 (미니 지도 없음 — 우측 전체 지도가 포커스)
  * - 내부 스크롤. 지도는 그대로 유지된 채 열리고 닫힌다.

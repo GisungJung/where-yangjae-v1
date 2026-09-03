@@ -80,8 +80,6 @@ export function AppHeader({
             </Link>
           </div>
         )}
-
-        <div className="text-xs text-ink-500">양재 · 남부터미널</div>
       </div>
     </header>
   )

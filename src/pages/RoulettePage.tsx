@@ -7,6 +7,8 @@
  *   C (result)   — confetti + 결과 카드 + "이 식당 갈래!" / "다시 굴리기"
  *
  * - 휴업/폐업 식당은 룰렛 풀에서 항상 제외 (룰렛 휴업/폐업 토글 없음).
+ * - 내 위치 기반 반경 3km 후보 필터 (2026-09-03 지역 필터 대체).
+ *   위치 권한이 없으면 전체에서 추첨 — 좌표 없는 식당은 반경 필터 시 제외.
  * - 빈 결과 분기 UX 유지.
  * - PullToRefresh로 다시 굴리기 외에 후보 풀 새로고침.
  */
@@ -21,8 +23,9 @@ import { KakaoMapView } from '../components/map/KakaoMapView'
 import { Icon } from '../components/ui/Icon'
 import { EmptyState } from '../components/empty/EmptyState'
 import { pickRandomRestaurant } from '../api/restaurants'
-import type { RegionFilter } from '../components/restaurant/RegionToggle'
+import { useGeolocation, type GeolocationStatus } from '../hooks/useGeolocation'
 import { restaurantsKeys, useRestaurants } from '../hooks/useRestaurants'
+import { distanceKm } from '../utils/region'
 import {
   CATEGORIES,
   type Category,
@@ -33,6 +36,9 @@ import {
 
 /** 슬롯 회전 최소 1.5초. 너무 짧으면 "굴렸다"는 정서가 안 산다. */
 const MIN_SPIN_MS = 1500
+
+/** 내 위치 기반 후보 반경(km) — 도보 점심 이동 가능 거리 기준. */
+const NEAR_RADIUS_KM = 3
 
 /**
  * 슬롯 회전 보조 — candidates 배열에서 임의 1개 (task #22).
@@ -68,9 +74,10 @@ export default function RoulettePage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { data: restaurantsResult } = useRestaurants()
+  // 내 위치 — 페이지 진입 시 1회 요청. 거부/미지원이면 전체에서 추첨.
+  const { status: geoStatus, coords } = useGeolocation()
 
   const [sheetType, setSheetType] = useState<SheetType>('lunch')
-  const [region, setRegion] = useState<RegionFilter>('all')
   const [selectedCategories, setSelectedCategories] = useState<Category[]>([])
   const [result, setResult] = useState<Restaurant | null | undefined>(undefined)
 
@@ -80,13 +87,23 @@ export default function RoulettePage() {
     )
   }
 
-  /** 풀 사이즈 미리보기 — "조건에 맞는 식당 N곳" 힌트용. */
-  const poolSize = useMemo(() => {
+  /**
+   * 후보 풀 — 풀 사이즈 미리보기("조건에 맞는 식당 N곳")와 슬롯 후보가 공유.
+   * 내 위치를 알면 반경 3km 이내만 (좌표 없는 식당은 거리 판단 불가로 제외).
+   */
+  const pool = useMemo(() => {
     const list = restaurantsResult?.data ?? []
     return list.filter((r) => {
       if (r.status !== '운영중') return false
       if (r.sheet_type !== sheetType) return false
-      if (region !== 'all' && r.region !== region) return false
+      if (coords) {
+        if (r.lat === null || r.lng === null) return false
+        if (
+          distanceKm(r.lat, r.lng, coords.lat, coords.lng) > NEAR_RADIUS_KM
+        ) {
+          return false
+        }
+      }
       if (
         selectedCategories.length > 0 &&
         !selectedCategories.includes(r.category)
@@ -94,8 +111,10 @@ export default function RoulettePage() {
         return false
       }
       return true
-    }).length
-  }, [restaurantsResult?.data, sheetType, region, selectedCategories])
+    })
+  }, [restaurantsResult?.data, sheetType, coords, selectedCategories])
+
+  const poolSize = pool.length
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -106,7 +125,7 @@ export default function RoulettePage() {
         categories:
           selectedCategories.length > 0 ? [...selectedCategories] : null,
         includeClosed: false,
-        region: region === 'all' ? null : region,
+        near: coords ? { ...coords, radiusKm: NEAR_RADIUS_KM } : null,
       })
       const elapsed = Date.now() - started
       if (elapsed < MIN_SPIN_MS) {
@@ -120,7 +139,6 @@ export default function RoulettePage() {
   const reset = () => {
     setSelectedCategories([])
     setSheetType('lunch')
-    setRegion('all')
     setResult(undefined)
     mutation.reset()
   }
@@ -129,28 +147,14 @@ export default function RoulettePage() {
 
   // 풀에서 슬롯 회전 중 흘러갈 후보 이름들 (시각 효과용).
   const slotCandidates = useMemo(() => {
-    const list = restaurantsResult?.data ?? []
-    const pool = list
-      .filter((r) => {
-        if (r.status !== '운영중') return false
-        if (r.sheet_type !== sheetType) return false
-        if (region !== 'all' && r.region !== region) return false
-        if (
-          selectedCategories.length > 0 &&
-          !selectedCategories.includes(r.category)
-        ) {
-          return false
-        }
-        return true
-      })
-      .map((r) => r.name)
-    if (pool.length >= 5) return pool.slice(0, 8)
+    const names = pool.map((r) => r.name)
+    if (names.length >= 5) return names.slice(0, 8)
     // 부족하면 반복해서 5개 채움
-    if (pool.length === 0) return ['?', '?', '?', '?', '?']
+    if (names.length === 0) return ['?', '?', '?', '?', '?']
     const filled: string[] = []
-    while (filled.length < 5) filled.push(...pool)
+    while (filled.length < 5) filled.push(...names)
     return filled.slice(0, 8)
-  }, [restaurantsResult?.data, sheetType, region, selectedCategories])
+  }, [pool])
 
   return (
     <AppShell>
@@ -184,11 +188,10 @@ export default function RoulettePage() {
           <SelectionStage
             sheetType={sheetType}
             onSheetType={setSheetType}
-            region={region}
-            onRegion={setRegion}
             selectedCategories={selectedCategories}
             onToggleCategory={toggleCategory}
             poolSize={poolSize}
+            geoStatus={geoStatus}
             onSpin={() => mutation.mutate()}
             error={
               mutation.isError
@@ -210,21 +213,19 @@ export default function RoulettePage() {
 function SelectionStage({
   sheetType,
   onSheetType,
-  region,
-  onRegion,
   selectedCategories,
   onToggleCategory,
   poolSize,
+  geoStatus,
   onSpin,
   error,
 }: {
   sheetType: SheetType
   onSheetType: (s: SheetType) => void
-  region: RegionFilter
-  onRegion: (r: RegionFilter) => void
   selectedCategories: Category[]
   onToggleCategory: (c: Category) => void
   poolSize: number
+  geoStatus: GeolocationStatus
   onSpin: () => void
   error: string | null
 }) {
@@ -238,6 +239,14 @@ function SelectionStage({
         </h1>
         <p className="mt-1 text-xs text-ink-500">
           카테고리를 1개 이상 골라주세요
+        </p>
+        {/* 내 위치 기반 반경 필터 상태 — 거부/미지원이면 전체에서 추첨 */}
+        <p className="mt-1 text-[11px] text-ink-500">
+          {geoStatus === 'loading' && '📍 내 위치 확인 중…'}
+          {geoStatus === 'granted' &&
+            `📍 내 위치 ${NEAR_RADIUS_KM}km 이내에서 뽑아요`}
+          {geoStatus === 'unavailable' &&
+            '위치 권한이 없어 전체 식당에서 뽑아요'}
         </p>
       </header>
 
@@ -292,19 +301,6 @@ function SelectionStage({
             )
           })}
         </div>
-      </section>
-
-      <section>
-        <h2 className="mb-2 text-sm font-bold text-ink-900">지역</h2>
-        <SegmentedToggle
-          value={region}
-          onChange={onRegion}
-          options={[
-            { value: 'all', label: '전체' },
-            { value: '양재', label: '양재' },
-            { value: '남부터미널', label: '남부터미널' },
-          ]}
-        />
       </section>
 
       <section>

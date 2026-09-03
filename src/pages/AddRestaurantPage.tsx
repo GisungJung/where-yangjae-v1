@@ -1,18 +1,16 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
 import { AppShell } from '../components/layout/AppShell'
 import { KakaoPlaceSearch, type PickedPlace } from '../components/restaurant/KakaoPlaceSearch'
 import { KakaoMapView } from '../components/map/KakaoMapView'
-import { YANGJAE_STATION } from '../lib/kakao'
+import { YANGJAE_STATION, getDongName } from '../lib/kakao'
 import { insertRestaurant } from '../api/restaurants'
 import {
   CATEGORIES,
   NewRestaurantInputSchema,
-  REGIONS,
   type Category,
   type NewRestaurantInput,
-  type Region,
   type RestaurantWithStats,
   type SheetType,
 } from '../types/domain'
@@ -29,11 +27,14 @@ export default function AddRestaurantPage() {
   const [name, setName] = useState('')
   const [category, setCategory] = useState<Category>('한식')
   const [sheetType, setSheetType] = useState<SheetType>('lunch')
-  const [region, setRegion] = useState<Region>('양재')
   const [menu, setMenu] = useState('')
   const [note, setNote] = useState('')
   const [naverUrl, setNaverUrl] = useState('')
   const [picked, setPicked] = useState<PickedPlace | null>(null)
+  /** 선택 좌표의 동 이름 (역지오코딩) — undefined=조회 중, null=미확인(미지정 저장). */
+  const [dong, setDong] = useState<string | null | undefined>(null)
+  /** 빠른 재선택 시 늦게 도착한 이전 역지오코딩 응답이 덮어쓰지 않도록 시퀀스 가드. */
+  const dongSeqRef = useRef(0)
   const [nickname, setNickname] = useState(storedNickname ?? '')
   const [validationError, setValidationError] = useState<string | null>(null)
   /** 사용자가 중복 경고를 무시하고 진행하기로 명시한 경우 true. */
@@ -107,13 +108,13 @@ export default function AddRestaurantPage() {
       name: name.trim(),
       category,
       sheet_type: sheetType,
-      region,
       menu: menu.trim() || undefined,
       note: note.trim() || undefined,
       naver_url: naverUrl.trim() || undefined,
       lat: picked?.lat ?? null,
       lng: picked?.lng ?? null,
       kakao_place_id: picked?.kakaoPlaceId ?? null,
+      region: dong ?? null,
       nickname: nickname.trim(),
     }
 
@@ -140,6 +141,12 @@ export default function AddRestaurantPage() {
     setPicked(place)
     // 상호명이 비어있으면 카카오 결과로 prefill
     if (!name.trim()) setName(place.name)
+    // 지역(동 이름) 역지오코딩 — 미리보기 + 저장값
+    const seq = ++dongSeqRef.current
+    setDong(undefined)
+    void getDongName(place.lat, place.lng).then((d) => {
+      if (dongSeqRef.current === seq) setDong(d)
+    })
   }
 
   return (
@@ -180,9 +187,19 @@ export default function AddRestaurantPage() {
               <p className="mt-0.5 text-ink-500">
                 좌표: {picked.lat.toFixed(5)}, {picked.lng.toFixed(5)}
               </p>
+              {/* 지역은 좌표 역지오코딩(동 이름)으로 자동 저장 — 수동 선택 없음 */}
+              <p className="mt-0.5 font-medium text-brand-primary">
+                📍{' '}
+                {dong === undefined ? '지역 확인 중…' : dong ?? '미지정'}{' '}
+                지역으로 표시됩니다
+              </p>
               <button
                 type="button"
-                onClick={() => setPicked(null)}
+                onClick={() => {
+                  setPicked(null)
+                  dongSeqRef.current += 1
+                  setDong(null)
+                }}
                 className="mt-2 text-xs font-medium text-brand-primary underline"
               >
                 선택 취소
@@ -195,7 +212,7 @@ export default function AddRestaurantPage() {
             <p className="text-[11px] font-medium text-ink-500">
               {picked
                 ? '선택한 장소가 맞나요?'
-                : '장소를 검색·선택하면 여기 표시됩니다.'}
+                : '장소를 검색·선택하면 여기 표시됩니다. 위치 없이 등록하면 지역 미지정 — "전체" 필터에서만 보여요.'}
             </p>
             <div className="h-48 overflow-hidden rounded-card border border-surface-border bg-surface-muted">
               {picked ? (
@@ -304,42 +321,6 @@ export default function AddRestaurantPage() {
                   )
                 })}
               </div>
-            </div>
-          </div>
-
-          {/* 지역 — 2026-08-12 지역 확대 (양재/남부터미널) */}
-          <div>
-            <span
-              id="add-region-label"
-              className="block text-sm font-medium text-ink-700"
-            >
-              지역 <span className="text-brand-accent">*</span>
-            </span>
-            <div
-              role="radiogroup"
-              aria-labelledby="add-region-label"
-              className="mt-1 flex gap-0.5 rounded-lg bg-surface-muted p-1"
-            >
-              {REGIONS.map((r) => {
-                const active = region === r
-                return (
-                  <button
-                    key={r}
-                    type="button"
-                    role="radio"
-                    aria-checked={active}
-                    onClick={() => setRegion(r)}
-                    className={[
-                      'flex-1 rounded-md py-2 text-sm font-semibold transition-colors',
-                      active
-                        ? 'bg-white text-brand-primary shadow-sm'
-                        : 'text-ink-700',
-                    ].join(' ')}
-                  >
-                    {r}
-                  </button>
-                )
-              })}
             </div>
           </div>
 

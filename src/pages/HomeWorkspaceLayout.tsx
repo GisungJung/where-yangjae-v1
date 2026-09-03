@@ -1,7 +1,7 @@
 /**
  * 홈 워크스페이스 레이아웃 라우트 — `/` 와 `/restaurants/:id` 를 감싼다.
  *
- * 설계: doc/plan/2026-08-12-desktop-naver-layout-design.md
+ * 설계: doc/plan/features/2026-08-12-desktop-naver-layout-design.md
  * - 모바일(<1024px): `<Outlet/>`만 렌더 → 기존 HomePage / RestaurantDetailPage 그대로.
  * - 데스크톱(≥1024px): 네이버 지도 포맷 워크스페이스.
  *     [SideRail 64px | 리스트 패널 400px | (상세 패널 400px = Outlet) | 지도 flex-1]
@@ -20,7 +20,7 @@ import { RestaurantListPanel } from '../components/restaurant/RestaurantListPane
 import { useMediaQuery } from '../hooks/useMediaQuery'
 import { useRestaurants } from '../hooks/useRestaurants'
 import { useRestaurantFilters } from '../hooks/useRestaurantFilters'
-import { NAMBU_TERMINAL_STATION, YANGJAE_STATION } from '../lib/kakao'
+import { YANGJAE_STATION } from '../lib/kakao'
 
 export default function HomeWorkspaceLayout() {
   // lg 미만에서는 카카오 SDK·워크스페이스가 아예 마운트되지 않아야 한다
@@ -39,16 +39,6 @@ function DesktopWorkspace() {
   const { data, isLoading, isError, error, refetch, isFetching } =
     useRestaurants()
   const filters = useRestaurantFilters(data?.data)
-
-  // 상세 패널이 열린 상태에서 지역 토글을 누르면 패널을 닫고
-  // 해당 지역 지도(역 센터 + 지역 핀 전체)로 전환한다.
-  const panelFilters: typeof filters = {
-    ...filters,
-    setRegion: (next) => {
-      filters.setRegion(next)
-      if (selectedId) navigate('/')
-    },
-  }
 
   // 지도 마커:
   // - 선택 없음(`/`): 페이지네이션(visible)과 무관하게 "필터·정렬된 전체"를 표시.
@@ -76,7 +66,7 @@ function DesktopWorkspace() {
       <SideRail />
 
       <RestaurantListPanel
-        filters={panelFilters}
+        filters={filters}
         isLoading={isLoading}
         isError={isError}
         errorMessage={error instanceof Error ? error.message : '알 수 없는 오류'}
@@ -99,16 +89,11 @@ function DesktopWorkspace() {
       </Suspense>
 
       {/* 지도 — 남는 영역 전체. center를 항상 넘겨 좌표 0건이어도 지도는 렌더.
-         지역 토글 선택 시 해당 역(양재역/남부터미널역)으로 센터 이동 —
-         '전체'는 양재역 기준 유지. 식당 선택 중에는 selectedId 센터링이 우선. */}
+         식당 선택 중에는 selectedId 센터링이 우선. */}
       <main className="relative min-w-0 flex-1 bg-surface-muted">
         <KakaoMapView
           markers={mapMarkers}
-          center={
-            filters.region === '남부터미널'
-              ? NAMBU_TERMINAL_STATION
-              : YANGJAE_STATION
-          }
+          center={YANGJAE_STATION}
           selectedId={selectedId}
           onMarkerClick={(id) => navigate(`/restaurants/${id}`)}
           className="h-full w-full"

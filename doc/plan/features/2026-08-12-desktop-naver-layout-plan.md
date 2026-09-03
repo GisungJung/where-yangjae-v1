@@ -1,7 +1,7 @@
 # 데스크톱 네이버 포맷 레이아웃 — 구현 계획
 
 > **For Claude:** REQUIRED SUB-SKILL: superpowers:executing-plans 로 태스크 단위 실행.
-> 설계 문서: `doc/plan/2026-08-12-desktop-naver-layout-design.md`
+> 설계 문서: `doc/plan/features/2026-08-12-desktop-naver-layout-design.md`
 
 **Goal:** lg(≥1024px)에서 네이버 지도 포맷(아이콘 레일 + 리스트 패널 + 상세 패널 + 전체 지도) 워크스페이스를 제공한다. 모바일은 100% 현행 유지.
 

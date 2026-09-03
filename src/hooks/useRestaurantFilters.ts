@@ -13,7 +13,6 @@
 import { useMemo, useState } from 'react'
 import type { Category, RestaurantWithStats } from '../types/domain'
 import type { SheetTypeFilter } from '../components/restaurant/SheetTypeToggle'
-import type { RegionFilter } from '../components/restaurant/RegionToggle'
 
 export type SortKey = 'score' | 'count' | 'name'
 
@@ -33,7 +32,6 @@ export function useRestaurantFilters(
   list: RestaurantWithStats[] | undefined,
 ) {
   const [keyword, setKeyword] = useState('')
-  const [region, setRegion] = useState<RegionFilter>('all')
   const [sheetType, setSheetType] = useState<SheetTypeFilter>('all')
   const [selectedCategories, setSelectedCategories] = useState<Category[]>([])
   const [showInactive, setShowInactive] = useState(false)
@@ -53,7 +51,6 @@ export function useRestaurantFilters(
     const kw = keyword.trim().toLowerCase()
     return safeList.filter((r) => {
       if (!showInactive && r.status !== '운영중') return false
-      if (region !== 'all' && r.region !== region) return false
       if (sheetType !== 'all' && r.sheet_type !== sheetType) return false
       if (
         selectedCategories.length > 0 &&
@@ -67,7 +64,7 @@ export function useRestaurantFilters(
       }
       return true
     })
-  }, [safeList, keyword, region, sheetType, selectedCategories, showInactive])
+  }, [safeList, keyword, sheetType, selectedCategories, showInactive])
 
   const sorted = useMemo(() => {
     const arr = [...filtered]
@@ -94,7 +91,7 @@ export function useRestaurantFilters(
   }, [filtered, sortKey])
 
   // 검색/필터/정렬 변경 시 페이지를 첫 페이지로 리셋 (렌더 중 비교 후 setState).
-  const filterKey = `${keyword}|${region}|${sheetType}|${selectedCategories.join(',')}|${showInactive}|${sortKey}`
+  const filterKey = `${keyword}|${sheetType}|${selectedCategories.join(',')}|${showInactive}|${sortKey}`
   const [prevFilterKey, setPrevFilterKey] = useState(filterKey)
   if (filterKey !== prevFilterKey) {
     setPrevFilterKey(filterKey)
@@ -115,14 +112,11 @@ export function useRestaurantFilters(
   const clearFilters = () => {
     setSelectedCategories([])
     setSheetType('all')
-    setRegion('all')
   }
 
   return {
     keyword,
     setKeyword,
-    region,
-    setRegion,
     sheetType,
     setSheetType,
     selectedCategories,

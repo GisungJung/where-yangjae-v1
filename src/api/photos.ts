@@ -1,7 +1,7 @@
 /**
  * 평가 사진 API (task #12)
  *
- * dba C-3 패턴 (`supabase/migrations/20260515000002_rating_photos_and_storage.sql`):
+ * dba C-3 패턴 (rating_photos + Storage 정책 — `doc/db/schema.sql` §2.4·§8):
  *   1. 클라에서 `shortRandomId()` 로 `${ratingId}/${id}.jpg` 경로 결정
  *   2. `INSERT INTO rating_photos (...)` — DB row 먼저
  *   3. `storage.upload(path, blob, { cacheControl: '604800', upsert: false })`

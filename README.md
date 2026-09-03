@@ -34,6 +34,6 @@ pnpm test              # vitest
 pnpm lint
 ```
 
-DB 변경은 `supabase/migrations/` 에 timestamped SQL로 산출. 원격 적용은 사용자가 수동 진행 (`supabase db push` 등).
+DB 스키마는 `doc/db/schema.sql`(멱등 DDL)이 단일 출처 — 변경 시 이 파일을 수정하고 변경 구문만 Supabase SQL Editor에서 수동 실행. 테이블정의서는 [doc/db/table-spec.html](doc/db/table-spec.html).
 
-자세한 기획은 [doc/plan/yangjai_plan.html](doc/plan/yangjai_plan.html) 참고.
+자세한 기획은 [doc/plan/spec/yangjai_plan.html](doc/plan/spec/yangjai_plan.html) 참고.

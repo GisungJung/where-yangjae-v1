@@ -31,11 +31,17 @@ export const CategorySchema = z.enum(CATEGORIES)
 
 // `direction` 컬럼/스키마 제거됨 (task #15·#16 — 비즈데이터 회사 위치 기준이라 일반화 불가).
 
-// 서비스 지역 (2026-08-12 지역 확대 — doc/plan/2026-08-12-region-split-design.md).
-// CHECK 제약과 쌍 — 지역 추가는 마이그레이션과 함께.
-export const REGIONS = ['양재', '남부터미널'] as const
-export type Region = (typeof REGIONS)[number]
-export const RegionSchema = z.enum(REGIONS)
+// 서비스 지역 기준점 (2026-09-03 파생 구조 전환 —
+// doc/plan/features/2026-09-03-region-derived-design.md).
+// 지역은 더 이상 enum/저장 컬럼이 아니라 DB `regions` 테이블의 행이며,
+// 식당의 지역은 "최근접 기준점"으로 파생된다 (src/utils/region.ts).
+export const RegionSchema = z.object({
+  name: z.string().min(1),
+  lat: z.number(),
+  lng: z.number(),
+  sort_order: z.number().int().default(0),
+})
+export type Region = z.infer<typeof RegionSchema>
 
 export const SHEET_TYPES = ['lunch', 'dinner'] as const
 export type SheetType = (typeof SHEET_TYPES)[number]
@@ -55,8 +61,9 @@ export const RestaurantSchema = z.object({
   category: CategorySchema,
   menu: z.string().nullable().default(null),
   sheet_type: SheetTypeSchema,
-  // DB 마이그레이션(20260812000001) 미적용 상태에서도 목록이 살도록 default.
-  region: RegionSchema.default('양재'),
+  // 저장 지역 = 동 이름 (카카오 역지오코딩, 2026-09-03 2차 전환 — 예: '양재동').
+  // null = 미지정 — 표시 계층(useRestaurants)이 최근접 기준점 파생으로 폴백.
+  region: z.string().nullable().default(null),
   naver_url: z.string().url().nullable().default(null),
   note: z.string().nullable().default(null),
   status: RestaurantStatusSchema.default('운영중'),
@@ -156,10 +163,15 @@ export const RestaurantStatsSchema = z.object({
 })
 export type RestaurantStats = z.infer<typeof RestaurantStatsSchema>
 
-/** 카드 표시용: 식당 본체 + 평점 집계 */
+/** 카드 표시용: 식당 본체 + 평점 집계 + 표시용 지역 */
 export type RestaurantWithStats = Restaurant & {
   rating_count: number
   avg_score: number | null
+  /**
+   * 표시용 지역 — 저장된 동 이름(region) 우선, 없으면 최근접 기준점 파생.
+   * 좌표·저장값 모두 없으면 null(미지정).
+   */
+  region: string | null
 }
 
 /* ──────────────────────────────────────────────────────────
@@ -191,7 +203,6 @@ export const NewRestaurantInputSchema = z.object({
     .max(100, '상호명은 100자 이하여야 합니다.'),
   category: CategorySchema,
   sheet_type: SheetTypeSchema,
-  region: RegionSchema,
   menu: z
     .string()
     .max(500, '메뉴는 500자 이하여야 합니다.')
@@ -210,6 +221,8 @@ export const NewRestaurantInputSchema = z.object({
   lat: z.number().min(-90).max(90).nullable().default(null),
   lng: z.number().min(-180).max(180).nullable().default(null),
   kakao_place_id: z.string().nullable().default(null),
+  /** 동 이름 — 좌표 선택 시 카카오 역지오코딩으로 자동 채움. 실패 시 null(미지정). */
+  region: z.string().max(50).nullable().default(null),
   nickname: z
     .string()
     .min(1, '등록자 닉네임을 입력해 주세요.')

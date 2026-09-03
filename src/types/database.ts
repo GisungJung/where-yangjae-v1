@@ -4,6 +4,7 @@
  * 본 파일은 원격 스키마를 기준으로 `supabase gen types typescript`(또는 MCP)
  * 결과를 그대로 채택한다. 2026-08-12 이력 정리로 로컬 마이그레이션 전체
  * (rating_photos·direction 제거·region 포함)가 원격에 적용된 상태와 일치한다.
+ * regions 테이블은 20260903000001 마이그레이션 기준 수기 추가 (적용 후 gen types로 교차 검증).
  */
 
 export type Json =
@@ -72,6 +73,30 @@ export type Database = {
           },
         ]
       }
+      regions: {
+        Row: {
+          created_at: string
+          lat: number
+          lng: number
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          lat: number
+          lng: number
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          lat?: number
+          lng?: number
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       restaurants: {
         Row: {
           category: string
@@ -84,7 +109,7 @@ export type Database = {
           name: string
           naver_url: string | null
           note: string | null
-          region: string
+          region: string | null
           registered_by: string | null
           sheet_type: string
           status: string
@@ -101,7 +126,7 @@ export type Database = {
           name: string
           naver_url?: string | null
           note?: string | null
-          region?: string
+          region?: string | null
           registered_by?: string | null
           sheet_type: string
           status?: string
@@ -118,7 +143,7 @@ export type Database = {
           name?: string
           naver_url?: string | null
           note?: string | null
-          region?: string
+          region?: string | null
           registered_by?: string | null
           sheet_type?: string
           status?: string
@@ -232,7 +257,7 @@ export type Database = {
           name: string
           naver_url: string | null
           note: string | null
-          region: string
+          region: string | null
           registered_by: string | null
           sheet_type: string
           status: string
