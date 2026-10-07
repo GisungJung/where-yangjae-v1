@@ -143,6 +143,38 @@ COMMENT ON COLUMN public.rating_photos.storage_path IS
   'rating-photos 버킷 내 객체 경로. ''<rating_id>/<nanoid>.jpg'' 권장.';
 
 -- ----------------------------------------------------------------------------
+-- 2.4b restaurant_photos — 식당 사진 (식당당 0~3장, 대표 1장) (2026-10-07)
+--     평가 사진(2.4) 대신 식당 단위로 관리 — 용량 억제.
+--     원본(1024px)과 썸네일(240px)을 함께 저장 — 목록은 썸네일만 로드(egress 절감).
+--     대표 = is_cover=true 행, 없으면 sort_order 최소 행 (클라이언트 규칙).
+--     식당 정보와 동일하게 누구나 추가·삭제·대표 변경 가능.
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.restaurant_photos (
+  id             uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  restaurant_id  uuid        NOT NULL
+    REFERENCES public.restaurants(id) ON DELETE CASCADE,
+  storage_path   text        NOT NULL,
+  thumb_path     text        NOT NULL,
+  sort_order     smallint    NOT NULL DEFAULT 0
+    CHECK (sort_order BETWEEN 0 AND 2),
+  is_cover       boolean     NOT NULL DEFAULT false,
+  byte_size      integer     CHECK (byte_size IS NULL OR byte_size <= 307200),
+  width          smallint    CHECK (width  IS NULL OR width  > 0),
+  height         smallint    CHECK (height IS NULL OR height > 0),
+  created_at     timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT restaurant_photos_order_unique UNIQUE (restaurant_id, sort_order)
+);
+
+COMMENT ON TABLE public.restaurant_photos IS
+  '식당 사진 0~3장(대표 1장). Storage 원본·썸네일 정리는 클라이언트가 행 삭제 후 수행.';
+COMMENT ON COLUMN public.restaurant_photos.storage_path IS
+  'restaurant-photos 버킷 원본(1024px) 경로. ''<restaurant_id>/<id>.jpg''.';
+COMMENT ON COLUMN public.restaurant_photos.thumb_path IS
+  'restaurant-photos 버킷 썸네일(240px) 경로. ''<restaurant_id>/<id>_t.jpg''.';
+COMMENT ON COLUMN public.restaurant_photos.is_cover IS
+  '대표 사진 여부. 목록 카드 썸네일에 사용. 없으면 sort_order 최소 행이 대표.';
+
+-- ----------------------------------------------------------------------------
 -- 2.5 regions — 서비스 지역 기준점 (2026-09-03 파생 구조 전환)
 --     식당의 지역은 저장하지 않고 "최근접 기준점"으로 파생.
 --     새 지역 추가 = INSERT 한 줄 (토글·룰렛·지도 중심 자동 반영, 코드 수정 없음).
@@ -173,6 +205,7 @@ CREATE INDEX IF NOT EXISTS idx_restaurants_status             ON public.restaura
 CREATE INDEX IF NOT EXISTS idx_ratings_reviewer_id            ON public.ratings (reviewer_id);
 CREATE INDEX IF NOT EXISTS idx_ratings_restaurant_reviewer    ON public.ratings (restaurant_id, reviewer_id);
 CREATE INDEX IF NOT EXISTS idx_rating_photos_rating_id        ON public.rating_photos (rating_id);
+-- restaurant_photos(restaurant_id)는 UNIQUE(restaurant_id, sort_order) 인덱스가 커버.
 
 -- ============================================================================
 -- 4. 트리거
@@ -257,6 +290,10 @@ DROP TRIGGER IF EXISTS trg_rating_photos_after_delete ON public.rating_photos;
 CREATE TRIGGER trg_rating_photos_after_delete
   AFTER DELETE ON public.rating_photos
   FOR EACH ROW EXECUTE FUNCTION public.cleanup_rating_photo_object();
+
+-- 4.4 식당 사진(restaurant_photos)은 Storage 정리 트리거를 두지 않는다 (2026-10-07).
+--     Supabase가 storage.objects 직접 DELETE를 막는 추세라, 클라이언트가
+--     행 삭제 후 Storage API remove()로 원본·썸네일을 정리한다 (§9 DELETE 정책).
 
 -- ============================================================================
 -- 5. 뷰 — restaurant_stats
@@ -344,6 +381,7 @@ ALTER TABLE public.restaurants   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ratings       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.rating_photos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.regions       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.restaurant_photos ENABLE ROW LEVEL SECURITY;
 
 -- 7.1 restaurants — SELECT/INSERT/UPDATE 모두, DELETE 차단
 DROP POLICY IF EXISTS restaurants_select_all   ON public.restaurants;
@@ -433,6 +471,21 @@ DROP POLICY IF EXISTS regions_select_all ON public.regions;
 CREATE POLICY regions_select_all ON public.regions
   FOR SELECT TO anon, authenticated USING (true);
 
+-- 7.6 restaurant_photos — 식당 정보와 동일하게 모두 허용 (2026-10-07 사용자 결정)
+DROP POLICY IF EXISTS restaurant_photos_select_all ON public.restaurant_photos;
+DROP POLICY IF EXISTS restaurant_photos_insert_all ON public.restaurant_photos;
+DROP POLICY IF EXISTS restaurant_photos_update_all ON public.restaurant_photos;
+DROP POLICY IF EXISTS restaurant_photos_delete_all ON public.restaurant_photos;
+
+CREATE POLICY restaurant_photos_select_all ON public.restaurant_photos
+  FOR SELECT TO anon, authenticated USING (true);
+CREATE POLICY restaurant_photos_insert_all ON public.restaurant_photos
+  FOR INSERT TO anon, authenticated WITH CHECK (true);
+CREATE POLICY restaurant_photos_update_all ON public.restaurant_photos
+  FOR UPDATE TO anon, authenticated USING (true) WITH CHECK (true);
+CREATE POLICY restaurant_photos_delete_all ON public.restaurant_photos
+  FOR DELETE TO anon, authenticated USING (true);
+
 -- ============================================================================
 -- 8. Storage — rating-photos 버킷 (public read, 300KB, JPEG/WebP)
 -- ============================================================================
@@ -474,6 +527,36 @@ CREATE POLICY rating_photos_delete_own ON storage.objects
   );
 CREATE POLICY rating_photos_update_block ON storage.objects
   AS RESTRICTIVE FOR UPDATE TO anon, authenticated USING (false) WITH CHECK (false);
+-- ※ 위 RESTRICTIVE UPDATE 차단은 버킷 무관 전체 storage.objects에 적용된다.
+
+-- ============================================================================
+-- 9. Storage — restaurant-photos 버킷 (2026-10-07, public read, 300KB, JPEG)
+--    객체 삭제는 클라이언트가 행 삭제 후 Storage API로 수행 (4.4 참고) —
+--    식당 사진은 누구나 삭제 가능하므로 버킷 범위 DELETE 허용.
+-- ============================================================================
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('restaurant-photos', 'restaurant-photos', true, 307200, ARRAY['image/jpeg'])
+ON CONFLICT (id) DO UPDATE SET
+  public             = EXCLUDED.public,
+  file_size_limit    = EXCLUDED.file_size_limit,
+  allowed_mime_types = EXCLUDED.allowed_mime_types;
+
+DROP POLICY IF EXISTS restaurant_photos_obj_select_all         ON storage.objects;
+DROP POLICY IF EXISTS restaurant_photos_obj_insert_uuid_prefix ON storage.objects;
+DROP POLICY IF EXISTS restaurant_photos_obj_delete_all         ON storage.objects;
+
+CREATE POLICY restaurant_photos_obj_select_all ON storage.objects
+  FOR SELECT TO anon, authenticated
+  USING (bucket_id = 'restaurant-photos');
+CREATE POLICY restaurant_photos_obj_insert_uuid_prefix ON storage.objects
+  FOR INSERT TO anon, authenticated
+  WITH CHECK (
+    bucket_id = 'restaurant-photos'
+    AND name ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[^/]+$'
+  );
+CREATE POLICY restaurant_photos_obj_delete_all ON storage.objects
+  FOR DELETE TO anon, authenticated
+  USING (bucket_id = 'restaurant-photos');
 
 -- ============================================================================
 -- End of schema.sql

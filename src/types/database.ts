@@ -177,6 +177,54 @@ export type Database = {
         }
         Relationships: []
       }
+      // doc/db/schema.sql §2.4b restaurant_photos (2026-10-07)
+      restaurant_photos: {
+        Row: {
+          byte_size: number | null
+          created_at: string
+          height: number | null
+          id: string
+          is_cover: boolean
+          restaurant_id: string
+          sort_order: number
+          storage_path: string
+          thumb_path: string
+          width: number | null
+        }
+        Insert: {
+          byte_size?: number | null
+          created_at?: string
+          height?: number | null
+          id?: string
+          is_cover?: boolean
+          restaurant_id: string
+          sort_order?: number
+          storage_path: string
+          thumb_path: string
+          width?: number | null
+        }
+        Update: {
+          byte_size?: number | null
+          created_at?: string
+          height?: number | null
+          id?: string
+          is_cover?: boolean
+          restaurant_id?: string
+          sort_order?: number
+          storage_path?: string
+          thumb_path?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'restaurant_photos_restaurant_id_fkey'
+            columns: ['restaurant_id']
+            isOneToOne: false
+            referencedRelation: 'restaurants'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       // 20260515000002_rating_photos_and_storage.sql — 마이그레이션 SQL과 1:1 매칭.
       rating_photos: {
         Row: {

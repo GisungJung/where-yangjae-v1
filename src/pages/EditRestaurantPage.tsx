@@ -31,13 +31,29 @@ import {
   type SheetType,
 } from '../types/domain'
 import { restaurantsKeys, useRestaurant } from '../hooks/useRestaurants'
+import {
+  restaurantPhotosKeys,
+  useRestaurantPhotos,
+} from '../hooks/useRestaurantPhotos'
+import {
+  getRestaurantPhotoUrl,
+  saveRestaurantPhotos,
+} from '../api/restaurantPhotos'
+import {
+  RestaurantPhotoEditor,
+  type EditorPhotoSlot,
+} from '../components/restaurant/RestaurantPhotoEditor'
+import { pickCover } from '../utils/restaurantPhotos'
+import type { RestaurantPhoto } from '../types/domain'
 
 export default function EditRestaurantPage() {
   const { id } = useParams<{ id: string }>()
   const { data: restaurant, isLoading, isError, error } = useRestaurant(id)
+  // 기존 사진으로 편집기 초기화 — 로드 완료 후 폼 마운트.
+  const { photos, isLoading: photosLoading } = useRestaurantPhotos(id)
 
   if (!id) return <AppShell><MissingId /></AppShell>
-  if (isLoading) {
+  if (isLoading || photosLoading) {
     return (
       <AppShell>
         <div className="p-6 text-sm text-ink-500">불러오는 중…</div>
@@ -61,16 +77,31 @@ export default function EditRestaurantPage() {
   }
 
   // 데이터 로드 후 키를 식당 id로 박아 form state 재초기화를 보장.
-  return <EditForm key={restaurant.id} restaurant={restaurant} />
+  return (
+    <EditForm key={restaurant.id} restaurant={restaurant} photos={photos} />
+  )
 }
 
 interface EditFormProps {
   restaurant: Restaurant
+  photos: RestaurantPhoto[]
 }
 
-function EditForm({ restaurant }: EditFormProps) {
+function EditForm({ restaurant, photos }: EditFormProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+
+  // 사진 편집기 — 기존 사진은 savedId + 원격 썸네일로 슬롯화. 저장 시 diff 반영.
+  const [photoSlots, setPhotoSlots] = useState<EditorPhotoSlot[]>(() =>
+    photos.map((p) => ({
+      key: p.id,
+      savedId: p.id,
+      previewUrl: getRestaurantPhotoUrl(p.thumb_path),
+    })),
+  )
+  const [coverKey, setCoverKey] = useState<string | null>(
+    () => pickCover(photos)?.id ?? null,
+  )
 
   // prefill — 빈 문자열로 안전 정규화
   const [name, setName] = useState(restaurant.name)
@@ -111,13 +142,24 @@ function EditForm({ restaurant }: EditFormProps) {
   const [validationError, setValidationError] = useState<string | null>(null)
 
   const mutation = useMutation({
-    mutationFn: (payload: UpdateRestaurantInput) =>
-      updateRestaurant(restaurant.id, payload),
-    onSuccess: (updated) => {
+    mutationFn: async (payload: UpdateRestaurantInput) => {
+      const updated = await updateRestaurant(restaurant.id, payload)
+      // 사진 diff 반영 — 일부 실패해도 정보 수정은 유지(경고만).
+      const photoWarning = await saveRestaurantPhotos(
+        updated.id,
+        photos,
+        photoSlots,
+        coverKey,
+      )
+      return { updated, photoWarning }
+    },
+    onSuccess: ({ updated, photoWarning }) => {
       void queryClient.invalidateQueries({ queryKey: restaurantsKeys.all })
       void queryClient.invalidateQueries({
         queryKey: restaurantsKeys.detail(updated.id),
       })
+      void queryClient.invalidateQueries({ queryKey: restaurantPhotosKeys.all })
+      if (photoWarning) window.alert(`정보는 저장됐어요.\n${photoWarning}`)
       navigate(`/restaurants/${updated.id}`)
     },
   })
@@ -413,6 +455,20 @@ function EditForm({ restaurant }: EditFormProps) {
               className="mt-1 w-full rounded-input border border-surface-border bg-white px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
             />
           </div>
+        </section>
+
+        <section className="space-y-2 rounded-card border border-surface-border bg-white p-4">
+          <p className="text-sm font-medium text-ink-700">
+            사진 <span className="text-xs text-ink-500">(선택, 최대 3장)</span>
+          </p>
+          <RestaurantPhotoEditor
+            slots={photoSlots}
+            coverKey={coverKey}
+            onChange={(slots, cover) => {
+              setPhotoSlots(slots)
+              setCoverKey(cover)
+            }}
+          />
         </section>
 
         {errorMessage && (

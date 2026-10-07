@@ -6,6 +6,12 @@ import { KakaoPlaceSearch, type PickedPlace } from '../components/restaurant/Kak
 import { KakaoMapView } from '../components/map/KakaoMapView'
 import { YANGJAE_STATION, getDongName } from '../lib/kakao'
 import { insertRestaurant } from '../api/restaurants'
+import { saveRestaurantPhotos } from '../api/restaurantPhotos'
+import {
+  RestaurantPhotoEditor,
+  type EditorPhotoSlot,
+} from '../components/restaurant/RestaurantPhotoEditor'
+import { restaurantPhotosKeys } from '../hooks/useRestaurantPhotos'
 import {
   CATEGORIES,
   NewRestaurantInputSchema,
@@ -39,6 +45,9 @@ export default function AddRestaurantPage() {
   const [validationError, setValidationError] = useState<string | null>(null)
   /** 사용자가 중복 경고를 무시하고 진행하기로 명시한 경우 true. */
   const [overrideDuplicate, setOverrideDuplicate] = useState(false)
+  /** 식당 사진 (최대 3장) + 대표 슬롯 key — 등록 성공 후 일괄 업로드. */
+  const [photoSlots, setPhotoSlots] = useState<EditorPhotoSlot[]>([])
+  const [coverKey, setCoverKey] = useState<string | null>(null)
 
   // 저장된 닉네임이 (persist 하이드레이션 등으로) 뒤늦게 들어오면 input 동기화.
   // effect 대신 "이전 값과 비교 후 렌더 중 setState" 패턴 — cascading render 방지.
@@ -84,11 +93,21 @@ export default function AddRestaurantPage() {
   }
 
   const mutation = useMutation({
-    mutationFn: (input: NewRestaurantInput) => insertRestaurant(input),
-    onSuccess: ({ restaurant, reviewerId }) => {
+    mutationFn: async (input: NewRestaurantInput) => {
+      const result = await insertRestaurant(input)
+      // 사진은 식당 저장 후 업로드 — 일부 실패해도 식당 등록은 유지(경고만).
+      const photoWarning =
+        photoSlots.length > 0
+          ? await saveRestaurantPhotos(result.restaurant.id, [], photoSlots, coverKey)
+          : null
+      return { ...result, photoWarning }
+    },
+    onSuccess: ({ restaurant, reviewerId, photoWarning }) => {
       // 등록자 정체성 저장 → 다음 평가 폼 prefill·자기 평가 수정에 사용
       setIdentity(nickname.trim(), reviewerId)
       queryClient.invalidateQueries({ queryKey: restaurantsKeys.all })
+      queryClient.invalidateQueries({ queryKey: restaurantPhotosKeys.all })
+      if (photoWarning) window.alert(`식당은 등록됐어요.\n${photoWarning}`)
       navigate(`/restaurants/${restaurant.id}`)
     },
   })
@@ -377,6 +396,20 @@ export default function AddRestaurantPage() {
               className="mt-1 w-full rounded-input border border-surface-border bg-white px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
             />
           </div>
+        </section>
+
+        <section className="space-y-2 rounded-card border border-surface-border bg-white p-4">
+          <p className="text-sm font-medium text-ink-700">
+            사진 <span className="text-xs text-ink-500">(선택, 최대 3장)</span>
+          </p>
+          <RestaurantPhotoEditor
+            slots={photoSlots}
+            coverKey={coverKey}
+            onChange={(slots, cover) => {
+              setPhotoSlots(slots)
+              setCoverKey(cover)
+            }}
+          />
         </section>
 
         <section className="space-y-2 rounded-card border border-surface-border bg-white p-4">
