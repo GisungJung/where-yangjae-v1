@@ -24,8 +24,11 @@ import { EmptyState } from '../empty/EmptyState'
 import { useRestaurant, restaurantsKeys } from '../../hooks/useRestaurants'
 import { useReviewer } from '../../hooks/useReviewers'
 import { useRatings } from '../../hooks/useRatings'
+import { useRestaurantPhotos } from '../../hooks/useRestaurantPhotos'
+import { getRestaurantPhotoUrl } from '../../api/restaurantPhotos'
+import { pickCover } from '../../utils/restaurantPhotos'
 import { updateRestaurantStatus } from '../../api/restaurants'
-import type { RestaurantStatus } from '../../types/domain'
+import type { RestaurantPhoto, RestaurantStatus } from '../../types/domain'
 
 interface Props {
   id: string
@@ -48,6 +51,7 @@ export function RestaurantDetailContent({
   const { data: ratings, isLoading: ratingsLoading } = useRatings(id)
   // 등록자 닉네임 — registered_by가 없거나 reviewer가 삭제된 경우 조용히 생략.
   const { data: registrant } = useReviewer(restaurant?.registered_by)
+  const { photos } = useRestaurantPhotos(id)
 
   const [confirmCloseOpen, setConfirmCloseOpen] = useState(false)
   const [statusError, setStatusError] = useState<string | null>(null)
@@ -179,6 +183,8 @@ export function RestaurantDetailContent({
               </p>
             )}
           </header>
+
+          {photos.length > 0 && <PhotoStrip photos={photos} name={restaurant.name} />}
 
           {restaurant.lat !== null && restaurant.lng !== null ? (
             showMiniMap ? (
@@ -327,6 +333,41 @@ export function RestaurantDetailContent({
         }}
       />
     </>
+  )
+}
+
+/** 식당 사진 0~3장 — 대표 사진을 맨 앞에. 클릭 시 원본을 새 탭으로 (2026-10-07). */
+function PhotoStrip({
+  photos,
+  name,
+}: {
+  photos: RestaurantPhoto[]
+  name: string
+}) {
+  const cover = pickCover(photos)
+  const ordered = cover
+    ? [cover, ...photos.filter((p) => p.id !== cover.id)]
+    : photos
+  return (
+    <section aria-label="식당 사진" className="grid grid-cols-3 gap-2">
+      {ordered.map((p, i) => (
+        <a
+          key={p.id}
+          href={getRestaurantPhotoUrl(p.storage_path)}
+          target="_blank"
+          rel="noreferrer"
+          className="block aspect-square overflow-hidden rounded-card bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+        >
+          <img
+            src={getRestaurantPhotoUrl(p.storage_path)}
+            alt={`${name} 사진 ${i + 1}`}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover"
+          />
+        </a>
+      ))}
+    </section>
   )
 }
 

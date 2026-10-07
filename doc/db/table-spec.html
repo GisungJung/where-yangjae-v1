@@ -57,6 +57,7 @@
   <a href="#reviewers">reviewers</a>
   <a href="#ratings">ratings</a>
   <a href="#rating_photos">rating_photos</a>
+  <a href="#restaurant_photos">restaurant_photos</a>
   <a href="#regions">regions</a>
   <a href="#view">뷰</a>
   <a href="#functions">함수·트리거</a>
@@ -70,6 +71,7 @@
            └─&lt; ratings.reviewer_id          (ON DELETE CASCADE)
 restaurants ──&lt; ratings.restaurant_id       (ON DELETE CASCADE)
 ratings     ──&lt; rating_photos.rating_id     (ON DELETE CASCADE → Storage 객체 동반 삭제)
+restaurants ──&lt; restaurant_photos.restaurant_id (ON DELETE CASCADE, 최대 3장 · 대표 1장)
 regions     ·· 식당과 FK 없음 — 지역은 좌표 최근접 기준점으로 <b>파생</b>
 restaurant_stats (뷰) = restaurants ⟕ ratings(리뷰어별 최신 1건만 집계)</div>
 <div class="card">
@@ -145,6 +147,25 @@ restaurant_stats (뷰) = restaurants ⟕ ratings(리뷰어별 최신 1건만 집
   <tr><td>created_at</td><td>timestamptz</td><td>N</td><td>now()</td><td></td><td></td></tr>
 </table>
 <p class="desc">인덱스: <code>idx_rating_photos_rating_id</code></p>
+<div class="note">2026-10-07 기준 UI 비활성 (<code>RatingForm</code> 토글) — 사진은 식당 단위(restaurant_photos)로 운영.</div>
+</div>
+
+<h3 id="restaurant_photos"><code>public.restaurant_photos</code> — 식당 사진 <small>(2026-10-07 신설)</small></h3>
+<p class="desc">식당당 0~3장, 대표 1장. 원본(1024px)과 썸네일(240px)을 함께 저장 — 목록 카드는 썸네일만 로드. 누구나 추가·삭제·대표 변경. Storage 객체는 클라이언트가 row 삭제 후 Storage API로 정리(트리거 없음).</p>
+<div class="card">
+<table>
+  <tr><th>컬럼</th><th>타입</th><th>NULL</th><th>기본값</th><th>제약</th><th>설명</th></tr>
+  <tr><td class="pk">id <span class="badge pk">PK</span></td><td>uuid</td><td>N</td><td>gen_random_uuid()</td><td></td><td></td></tr>
+  <tr><td>restaurant_id <span class="badge fk">FK</span></td><td>uuid</td><td>N</td><td></td><td>→ restaurants(id) ON DELETE CASCADE · <span class="badge uq">UNIQUE</span>(restaurant_id, sort_order)</td><td></td></tr>
+  <tr><td>storage_path</td><td>text</td><td>N</td><td></td><td></td><td>restaurant-photos 버킷 원본 — <code>&lt;restaurant_id&gt;/&lt;id&gt;.jpg</code></td></tr>
+  <tr><td>thumb_path</td><td>text</td><td>N</td><td></td><td></td><td>썸네일 — <code>&lt;restaurant_id&gt;/&lt;id&gt;_t.jpg</code></td></tr>
+  <tr><td>sort_order</td><td>smallint</td><td>N</td><td>0</td><td>0~2</td><td>표시 순서 (최대 3장)</td></tr>
+  <tr><td>is_cover</td><td>boolean</td><td>N</td><td>false</td><td></td><td>대표 사진. 없으면 sort_order 최소 행이 대표 (클라이언트 규칙)</td></tr>
+  <tr><td>byte_size</td><td>integer</td><td>Y</td><td></td><td>≤ 307200 (300KB)</td><td>원본 크기</td></tr>
+  <tr><td>width / height</td><td>smallint</td><td>Y</td><td></td><td>&gt; 0</td><td>원본 크기</td></tr>
+  <tr><td>created_at</td><td>timestamptz</td><td>N</td><td>now()</td><td></td><td></td></tr>
+</table>
+<p class="desc">인덱스: UNIQUE(restaurant_id, sort_order)가 restaurant_id 조회를 커버</p>
 </div>
 
 <h3 id="regions"><code>public.regions</code> — 서비스 지역 기준점 <small>(2026-09-03 신설)</small></h3>
@@ -192,8 +213,10 @@ restaurant_stats (뷰) = restaurants ⟕ ratings(리뷰어별 최신 1건만 집
   <tr><td>reviewers</td><td>모두</td><td>모두</td><td>본인만</td><td>차단 (RESTRICTIVE)</td></tr>
   <tr><td>ratings</td><td>모두</td><td>모두 (+ rate-limit 트리거)</td><td>본인만</td><td>본인만</td></tr>
   <tr><td>rating_photos</td><td>모두</td><td>본인 평가만</td><td>차단 (RESTRICTIVE)</td><td>본인 평가만</td></tr>
+  <tr><td>restaurant_photos</td><td>모두</td><td>모두</td><td>모두 (대표 변경)</td><td>모두</td></tr>
   <tr><td>regions</td><td>모두</td><td colspan="3" style="text-align:center">정책 없음 — 관리자 SQL로만 변경</td></tr>
   <tr><td>storage.objects (rating-photos)</td><td>모두</td><td><code>&lt;uuid&gt;/&lt;file&gt;</code> 경로 형식 강제</td><td>차단 (RESTRICTIVE)</td><td>본인 평가 사진만</td></tr>
+  <tr><td>storage.objects (restaurant-photos)</td><td>모두</td><td><code>&lt;uuid&gt;/&lt;file&gt;</code> 경로 형식 강제</td><td>차단 (RESTRICTIVE)</td><td>모두</td></tr>
 </table>
 </div>
 
@@ -202,6 +225,7 @@ restaurant_stats (뷰) = restaurants ⟕ ratings(리뷰어별 최신 1건만 집
 <table>
   <tr><th>버킷</th><th>공개</th><th>파일 크기 제한</th><th>허용 MIME</th><th>용도</th></tr>
   <tr><td><code>rating-photos</code></td><td>public read</td><td>307,200 B (300KB)</td><td>image/jpeg, image/webp</td><td>한줄평 사진. 경로 <code>&lt;rating_id&gt;/&lt;nanoid&gt;.jpg</code></td></tr>
+  <tr><td><code>restaurant-photos</code></td><td>public read</td><td>307,200 B (300KB)</td><td>image/jpeg</td><td>식당 사진 원본·썸네일 (2026-10-07). 경로 <code>&lt;restaurant_id&gt;/&lt;id&gt;.jpg</code> · <code>_t.jpg</code></td></tr>
 </table>
 </div>
 
@@ -216,6 +240,7 @@ restaurant_stats (뷰) = restaurants ⟕ ratings(리뷰어별 최신 1건만 집
   <tr><td>2026-09-03</td><td>0903-000001</td><td>regions 기준점 테이블 신설 — 지역을 저장 enum에서 최근접 파생으로 전환. restaurants.region은 DEPRECATED(컬럼 유지)</td></tr>
   <tr><td>2026-09-03</td><td>schema.sql</td><td>restaurants_region_check CHECK 제거 — 등록 지역 제한 해제. 룰렛은 지역 필터 대신 내 위치 3km 반경(클라이언트)으로 전환, RPC p_region은 클라이언트 미사용</td></tr>
   <tr><td>2026-09-03</td><td>schema.sql</td><td>region 2차 전환 — DEFAULT/NOT NULL 제거, 역지오코딩된 동 이름 저장(카카오 coord2RegionCode 법정동). null은 regions 최근접 파생 폴백. 기존 enum 값은 1회성 UPDATE로 NULL 정리</td></tr>
+  <tr><td>2026-10-07</td><td>schema.sql</td><td>restaurant_photos 테이블 + restaurant-photos 버킷 신설 — 식당당 사진 3장·대표 1장, 누구나 편집. 평가 사진 UI는 비활성 유지</td></tr>
 </table>
 </div>
 

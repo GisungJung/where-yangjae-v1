@@ -152,6 +152,24 @@ export const RatingPhotoSchema = z.object({
 export type RatingPhoto = z.infer<typeof RatingPhotoSchema>
 
 /* ──────────────────────────────────────────────────────────
+ * 4.6 RestaurantPhoto (2026-10-07) — 식당당 0~3장, 대표 1장
+ * ────────────────────────────────────────────────────────── */
+
+export const RestaurantPhotoSchema = z.object({
+  id: z.string().uuid(),
+  restaurant_id: z.string().uuid(),
+  storage_path: z.string(),
+  thumb_path: z.string(),
+  sort_order: z.number().int().min(0).max(2),
+  is_cover: z.boolean().default(false),
+  byte_size: z.number().int().nonnegative().nullable().default(null),
+  width: z.number().int().nonnegative().nullable().default(null),
+  height: z.number().int().nonnegative().nullable().default(null),
+  created_at: z.string(),
+})
+export type RestaurantPhoto = z.infer<typeof RestaurantPhotoSchema>
+
+/* ──────────────────────────────────────────────────────────
  * 5. RestaurantStats (뷰: 기획서 §6.5)
  * ────────────────────────────────────────────────────────── */
 

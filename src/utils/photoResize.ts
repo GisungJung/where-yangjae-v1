@@ -56,8 +56,12 @@ export class OversizedImageError extends Error {
  * 사진 파일을 1024px·JPEG q=0.8로 리사이즈해 Blob 반환.
  * - 실패(HEIC 디코드 불가 등) → `UnsupportedImageFormatError`
  * - q=0.7 재시도 후에도 300KB 초과 → `OversizedImageError`
+ * - maxDimension: 식당 사진 썸네일(240px) 생성용 (2026-10-07)
  */
-export async function resizePhoto(file: File): Promise<ResizedImage> {
+export async function resizePhoto(
+  file: Blob,
+  maxDimension = MAX_DIMENSION,
+): Promise<ResizedImage> {
   let bitmap: ImageBitmap
   try {
     bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' })
@@ -69,7 +73,7 @@ export async function resizePhoto(file: File): Promise<ResizedImage> {
     const { width: targetW, height: targetH } = scaleContain(
       bitmap.width,
       bitmap.height,
-      MAX_DIMENSION,
+      maxDimension,
     )
 
     // OffscreenCanvas가 있으면 사용 (워커·메인 모두에서 가능, 메모리 효율).
