@@ -13,8 +13,8 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { KakaoMap, KakaoMarker } from '../../lib/kakao'
-import { loadKakaoMaps, YANGJAE_STATION } from '../../lib/kakao'
+import type { KakaoMap, KakaoMarker } from '@/lib/kakao'
+import { loadKakaoMaps, YANGJAE_STATION } from '@/lib/kakao'
 
 export interface KakaoMarkerData {
   id: string

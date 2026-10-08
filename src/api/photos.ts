@@ -19,13 +19,13 @@
  * 평가 삭제 시 CASCADE 트리거가 rating_photos + storage 객체 자동 정리 — 클라 무관.
  */
 
-import { supabase } from '../lib/supabase'
-import { RatingPhotoSchema, type RatingPhoto } from '../types/domain'
+import { supabase } from '@/lib/supabase'
+import { RatingPhotoSchema, type RatingPhoto } from '@/types/domain'
 import {
   resizePhoto,
   shortRandomId,
   type ResizedImage,
-} from '../utils/photoResize'
+} from '@/utils/photoResize'
 
 export const STORAGE_BUCKET = 'rating-photos'
 export const MAX_PHOTOS_PER_RATING = 3

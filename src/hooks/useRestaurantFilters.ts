@@ -11,14 +11,16 @@
  */
 
 import { useMemo, useState } from 'react'
-import type { Category, RestaurantWithStats } from '../types/domain'
-import type { SheetTypeFilter } from '../components/restaurant/SheetTypeToggle'
+import type { Category, RestaurantWithStats } from '@/types/domain'
+import type { SheetTypeFilter } from '@/components/restaurant/SheetTypeToggle'
 
-export type SortKey = 'score' | 'count' | 'name'
+export type SortKey = 'score' | 'count' | 'visits' | 'name'
 
 export const SORT_OPTIONS = [
   { value: 'score' as const, label: '평점 높은 순' },
   { value: 'count' as const, label: '평가 많은 순' },
+  // 2026-10-08 방문 체크인 — 최근 7일 방문 → 누적 방문 → 평점
+  { value: 'visits' as const, label: '요즘 많이 가는 순' },
   { value: 'name' as const, label: '이름 가나다순' },
 ]
 
@@ -79,6 +81,13 @@ export function useRestaurantFilters(
         const sb = b.avg_score ?? -1
         return sb - sa
       })
+    } else if (sortKey === 'visits') {
+      arr.sort(
+        (a, b) =>
+          b.visits_7d - a.visits_7d ||
+          b.visits_total - a.visits_total ||
+          (b.avg_score ?? -1) - (a.avg_score ?? -1),
+      )
     } else {
       arr.sort((a, b) => {
         const sa = a.avg_score ?? -1

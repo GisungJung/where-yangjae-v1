@@ -7,7 +7,7 @@
  * - 리스트 패널의 검색·필터와 무관한 전체 기준.
  */
 
-import type { RestaurantWithStats, SheetType } from '../types/domain'
+import type { RestaurantWithStats, SheetType } from '@/types/domain'
 
 export const MIN_RATING_COUNT = 2
 

@@ -3,7 +3,7 @@
  * 설계: doc/plan/features/2026-10-07-restaurant-photos-design.md §3
  */
 
-import type { RestaurantPhoto } from '../types/domain'
+import type { RestaurantPhoto } from '@/types/domain'
 
 export const MAX_PHOTOS_PER_RESTAURANT = 3
 

@@ -58,6 +58,7 @@
   <a href="#ratings">ratings</a>
   <a href="#rating_photos">rating_photos</a>
   <a href="#restaurant_photos">restaurant_photos</a>
+  <a href="#restaurant_visits">restaurant_visits</a>
   <a href="#regions">regions</a>
   <a href="#view">뷰</a>
   <a href="#functions">함수·트리거</a>
@@ -72,6 +73,7 @@
 restaurants ──&lt; ratings.restaurant_id       (ON DELETE CASCADE)
 ratings     ──&lt; rating_photos.rating_id     (ON DELETE CASCADE → Storage 객체 동반 삭제)
 restaurants ──&lt; restaurant_photos.restaurant_id (ON DELETE CASCADE, 최대 3장 · 대표 1장)
+restaurants ──&lt; restaurant_visits.restaurant_id  (ON DELETE CASCADE) &gt;── reviewers (방문 체크인, 하루 1회)
 regions     ·· 식당과 FK 없음 — 지역은 좌표 최근접 기준점으로 <b>파생</b>
 restaurant_stats (뷰) = restaurants ⟕ ratings(리뷰어별 최신 1건만 집계)</div>
 <div class="card">
@@ -168,6 +170,20 @@ restaurant_stats (뷰) = restaurants ⟕ ratings(리뷰어별 최신 1건만 집
 <p class="desc">인덱스: UNIQUE(restaurant_id, sort_order)가 restaurant_id 조회를 커버</p>
 </div>
 
+<h3 id="restaurant_visits"><code>public.restaurant_visits</code> — 방문 체크인 <small>(2026-10-08 신설)</small></h3>
+<p class="desc">룰렛 "이 식당 갈래!" 또는 상세 "오늘 여기 먹었어요"로 기록. 개별 기록은 <b>본인만</b> 조회(RLS), 화면에는 <code>restaurant_visit_stats()</code> 집계 숫자만 노출. 룰렛의 "최근 7일 내가 간 곳 빼기"에 사용.</p>
+<div class="card">
+<table>
+  <tr><th>컬럼</th><th>타입</th><th>NULL</th><th>기본값</th><th>제약</th><th>설명</th></tr>
+  <tr><td class="pk">id <span class="badge pk">PK</span></td><td>uuid</td><td>N</td><td>gen_random_uuid()</td><td></td><td></td></tr>
+  <tr><td>restaurant_id <span class="badge fk">FK</span></td><td>uuid</td><td>N</td><td></td><td>→ restaurants(id) ON DELETE CASCADE</td><td></td></tr>
+  <tr><td>reviewer_id <span class="badge fk">FK</span></td><td>uuid</td><td>N</td><td></td><td>→ reviewers(id) ON DELETE CASCADE</td><td>방문자 (기기별 식별자)</td></tr>
+  <tr><td>visited_on</td><td>date</td><td>N</td><td>KST 오늘</td><td><span class="badge uq">UNIQUE</span>(reviewer_id, restaurant_id, visited_on)</td><td>방문 날짜(KST). 같은 식당 하루 1회. INSERT는 KST 오늘만(RLS)</td></tr>
+  <tr><td>created_at</td><td>timestamptz</td><td>N</td><td>now()</td><td></td><td></td></tr>
+</table>
+<p class="desc">인덱스: UNIQUE(reviewer_id, restaurant_id, visited_on)가 본인 기록 조회를 커버</p>
+</div>
+
 <h3 id="regions"><code>public.regions</code> — 서비스 지역 기준점 <small>(2026-09-03 신설)</small></h3>
 <p class="desc">2026-09-03 2차 전환 후 용도: 식당 지역의 1차 출처는 <code>restaurants.region</code>(역지오코딩 동 이름)이고, 이 테이블은 <b>region이 null인 과거 데이터의 파생 폴백</b>(가장 가까운 기준점, <code>src/utils/region.ts</code>)에 쓰인다.</p>
 <div class="card">
@@ -200,7 +216,8 @@ restaurant_stats (뷰) = restaurants ⟕ ratings(리뷰어별 최신 1건만 집
   <tr><td><code>set_updated_at()</code></td><td>트리거 함수</td><td>restaurants·ratings BEFORE UPDATE — updated_at 자동 갱신</td></tr>
   <tr><td><code>ratings_rate_limit()</code></td><td>트리거 함수 (BEFORE INSERT)</td><td>reviewer_id별 1분 1회 · 1시간 10회 초과 시 <code>ERRCODE 54000</code>으로 거부. 예외 메시지가 그대로 사용자 안내문</td></tr>
   <tr><td><code>cleanup_rating_photo_object()</code></td><td>트리거 함수 (AFTER DELETE, SECURITY DEFINER)</td><td>rating_photos 삭제 시 Storage 객체 동반 삭제. 우회 범위는 rating-photos 버킷 + storage_path 정확 일치로 제한</td></tr>
-  <tr><td><code>pick_random_restaurant(p_sheet_type, p_categories, p_include_closed, p_region)</code></td><td>RPC (SQL, STABLE)</td><td>룰렛용 랜덤 1건. p_region은 <b>최근접 기준점 파생</b>으로 비교 (좌표 없는 식당은 지역 필터 시 제외). 거리 공식: <code>Δlat² + (Δlng·cos 37.48°)²</code></td></tr>
+  <tr><td><code>pick_random_restaurant(p_sheet_type, p_categories, p_include_closed, p_region)</code></td><td>RPC (SQL, STABLE)</td><td>룰렛용 랜덤 1건 (2026-10-08부터 클라이언트 미사용 — 브라우저 가중 추첨으로 대체, 함수는 보존). p_region은 <b>최근접 기준점 파생</b>으로 비교 (좌표 없는 식당은 지역 필터 시 제외). 거리 공식: <code>Δlat² + (Δlng·cos 37.48°)²</code></td></tr>
+  <tr><td><code>restaurant_visit_stats()</code></td><td>RPC (SQL, STABLE, SECURITY DEFINER)</td><td>식당별 <code>visits_7d</code>(KST 오늘 포함 7일)·<code>visits_total</code>만 반환. 개별 기록은 본인만 조회 가능하므로 RLS를 우회해 집계 숫자만 공개 (2026-10-08). 뷰가 아닌 함수 — Advisor 경고 회피·security_invoker 전환 시 집계 붕괴 방지</td></tr>
 </table>
 </div>
 
@@ -214,6 +231,7 @@ restaurant_stats (뷰) = restaurants ⟕ ratings(리뷰어별 최신 1건만 집
   <tr><td>ratings</td><td>모두</td><td>모두 (+ rate-limit 트리거)</td><td>본인만</td><td>본인만</td></tr>
   <tr><td>rating_photos</td><td>모두</td><td>본인 평가만</td><td>차단 (RESTRICTIVE)</td><td>본인 평가만</td></tr>
   <tr><td>restaurant_photos</td><td>모두</td><td>모두</td><td>모두 (대표 변경)</td><td>모두</td></tr>
+  <tr><td>restaurant_visits</td><td>본인만</td><td>본인 + KST 오늘만</td><td>정책 없음(차단)</td><td>본인만</td></tr>
   <tr><td>regions</td><td>모두</td><td colspan="3" style="text-align:center">정책 없음 — 관리자 SQL로만 변경</td></tr>
   <tr><td>storage.objects (rating-photos)</td><td>모두</td><td><code>&lt;uuid&gt;/&lt;file&gt;</code> 경로 형식 강제</td><td>차단 (RESTRICTIVE)</td><td>본인 평가 사진만</td></tr>
   <tr><td>storage.objects (restaurant-photos)</td><td>모두</td><td><code>&lt;uuid&gt;/&lt;file&gt;</code> 경로 형식 강제</td><td>차단 (RESTRICTIVE)</td><td>모두</td></tr>
@@ -241,6 +259,7 @@ restaurant_stats (뷰) = restaurants ⟕ ratings(리뷰어별 최신 1건만 집
   <tr><td>2026-09-03</td><td>schema.sql</td><td>restaurants_region_check CHECK 제거 — 등록 지역 제한 해제. 룰렛은 지역 필터 대신 내 위치 3km 반경(클라이언트)으로 전환, RPC p_region은 클라이언트 미사용</td></tr>
   <tr><td>2026-09-03</td><td>schema.sql</td><td>region 2차 전환 — DEFAULT/NOT NULL 제거, 역지오코딩된 동 이름 저장(카카오 coord2RegionCode 법정동). null은 regions 최근접 파생 폴백. 기존 enum 값은 1회성 UPDATE로 NULL 정리</td></tr>
   <tr><td>2026-10-07</td><td>schema.sql</td><td>restaurant_photos 테이블 + restaurant-photos 버킷 신설 — 식당당 사진 3장·대표 1장, 누구나 편집. 평가 사진 UI는 비활성 유지</td></tr>
+  <tr><td>2026-10-08</td><td>schema.sql</td><td>restaurant_visits 테이블 + restaurant_visit_stats() RPC 신설 — 방문 체크인(본인만 조회, 집계만 공개). 룰렛은 최근 7일 방문 제외 + 평점 가중치(브라우저 추첨)로 전환</td></tr>
 </table>
 </div>
 

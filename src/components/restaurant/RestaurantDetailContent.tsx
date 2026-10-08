@@ -13,22 +13,23 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { KakaoMapView } from '../map/KakaoMapView'
-import { RatingList } from '../rating/RatingList'
-import { RatingForm } from '../rating/RatingForm'
-import { ScoreDistribution } from '../rating/ScoreDistribution'
-import { Icon } from '../ui/Icon'
-import { ActionSheet, type ActionSheetItem } from '../ui/ActionSheet'
-import { ConfirmDialog } from '../ui/ConfirmDialog'
-import { EmptyState } from '../empty/EmptyState'
-import { useRestaurant, restaurantsKeys } from '../../hooks/useRestaurants'
-import { useReviewer } from '../../hooks/useReviewers'
-import { useRatings } from '../../hooks/useRatings'
-import { useRestaurantPhotos } from '../../hooks/useRestaurantPhotos'
-import { getRestaurantPhotoUrl } from '../../api/restaurantPhotos'
-import { pickCover } from '../../utils/restaurantPhotos'
-import { updateRestaurantStatus } from '../../api/restaurants'
-import type { RestaurantPhoto, RestaurantStatus } from '../../types/domain'
+import { KakaoMapView } from '@/components/map/KakaoMapView'
+import { RatingList } from '@/components/rating/RatingList'
+import { RatingForm } from '@/components/rating/RatingForm'
+import { ScoreDistribution } from '@/components/rating/ScoreDistribution'
+import { Icon } from '@/components/ui/Icon'
+import { ActionSheet, type ActionSheetItem } from '@/components/ui/ActionSheet'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { EmptyState } from '@/components/empty/EmptyState'
+import { useRestaurant, restaurantsKeys } from '@/hooks/useRestaurants'
+import { useReviewer } from '@/hooks/useReviewers'
+import { useRatings } from '@/hooks/useRatings'
+import { useRestaurantPhotos } from '@/hooks/useRestaurantPhotos'
+import { getRestaurantPhotoUrl } from '@/api/restaurantPhotos'
+import { pickCover } from '@/utils/restaurantPhotos'
+import { VisitCheckIn } from '@/components/visit/VisitCheckIn'
+import { updateRestaurantStatus } from '@/api/restaurants'
+import type { RestaurantPhoto, RestaurantStatus } from '@/types/domain'
 
 interface Props {
   id: string
@@ -183,6 +184,13 @@ export function RestaurantDetailContent({
               </p>
             )}
           </header>
+
+          {/* 방문 체크인 + 집계 (2026-10-08) — 테이블 미적용 시 자동 숨김 */}
+          <VisitCheckIn
+            restaurantId={restaurant.id}
+            visits7d={restaurant.visits_7d}
+            visitsTotal={restaurant.visits_total}
+          />
 
           {photos.length > 0 && <PhotoStrip photos={photos} name={restaurant.name} />}
 

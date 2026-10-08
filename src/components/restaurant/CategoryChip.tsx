@@ -5,7 +5,7 @@
  * - `selected`가 없으면 정적 배지로 표시 (카드 메타 정보).
  */
 
-import { classNames } from '../../utils/format'
+import { classNames } from '@/utils/format'
 
 interface CategoryChipProps {
   label: string

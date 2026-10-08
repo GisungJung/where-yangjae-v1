@@ -15,25 +15,25 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { AppShell } from '../components/layout/AppShell'
-import { PullToRefresh } from '../components/layout/PullToRefresh'
-import { CategoryChip } from '../components/restaurant/CategoryChip'
-import { RestaurantCard } from '../components/restaurant/RestaurantCard'
-import { SheetTypeToggle } from '../components/restaurant/SheetTypeToggle'
-import { SortPill } from '../components/ui/SortPill'
-import { Icon } from '../components/ui/Icon'
+import { AppShell } from '@/components/layout/AppShell'
+import { PullToRefresh } from '@/components/layout/PullToRefresh'
+import { CategoryChip } from '@/components/restaurant/CategoryChip'
+import { RestaurantCard } from '@/components/restaurant/RestaurantCard'
+import { SheetTypeToggle } from '@/components/restaurant/SheetTypeToggle'
+import { SortPill } from '@/components/ui/SortPill'
+import { Icon } from '@/components/ui/Icon'
 import {
   ErrorBox,
   HomeEmptyState,
   SkeletonList,
-} from '../components/restaurant/homeListStates'
-import { restaurantsKeys, useRestaurants } from '../hooks/useRestaurants'
+} from '@/components/restaurant/homeListStates'
+import { restaurantsKeys, useRestaurants } from '@/hooks/useRestaurants'
 import {
   SORT_OPTIONS,
   useRestaurantFilters,
-} from '../hooks/useRestaurantFilters'
-import { CATEGORIES } from '../types/domain'
-import { isSupabaseConfigured } from '../lib/supabase'
+} from '@/hooks/useRestaurantFilters'
+import { CATEGORIES } from '@/types/domain'
+import { isSupabaseConfigured } from '@/lib/supabase'
 
 export default function HomePage() {
   const queryClient = useQueryClient()

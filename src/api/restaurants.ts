@@ -8,7 +8,7 @@
  * - 정렬은 클라이언트에서 처리. 식당 ~80개 규모로 충분.
  */
 
-import { supabase } from '../lib/supabase'
+import { supabase } from '@/lib/supabase'
 import {
   RestaurantSchema,
   RestaurantStatsSchema,
@@ -16,9 +16,9 @@ import {
   type Restaurant,
   type RestaurantStats,
   type RestaurantWithStats,
-} from '../types/domain'
-import { distanceKm } from '../utils/region'
+} from '@/types/domain'
 import { upsertReviewerByNickname } from './reviewers'
+import { fetchVisitStatsMap } from './visits'
 
 /**
  * api 레이어 반환형 — region은 저장된 동 이름 그대로(raw).
@@ -32,8 +32,12 @@ export interface FetchRestaurantsResult {
   missingTable: boolean
 }
 
-/** 모든 식당 + 통계를 가져온다. 통계 뷰가 없으면 0으로 채운다. */
+/**
+ * 모든 식당 + 통계를 가져온다. 통계 뷰가 없으면 0으로 채운다.
+ * 방문 집계(RPC restaurant_visit_stats, 2026-10-08)도 병렬로 합류 — 부재 시 0.
+ */
 export async function fetchRestaurantsWithStats(): Promise<FetchRestaurantsResult> {
+  const visitStatsPromise = fetchVisitStatsMap()
   const { data: restaurantRows, error: restaurantError } = await supabase
     .from('restaurants')
     .select('*')
@@ -72,10 +76,13 @@ export async function fetchRestaurantsWithStats(): Promise<FetchRestaurantsResul
     )
   }
 
+  const visitStats = await visitStatsPromise
   const data = restaurants.map((r) => ({
     ...r,
     rating_count: statsMap.get(r.id)?.rating_count ?? 0,
     avg_score: statsMap.get(r.id)?.avg_score ?? null,
+    visits_7d: visitStats.get(r.id)?.visits_7d ?? 0,
+    visits_total: visitStats.get(r.id)?.visits_total ?? 0,
   }))
   return { data, missingTable: false }
 }
@@ -84,6 +91,8 @@ export async function fetchRestaurantsWithStats(): Promise<FetchRestaurantsResul
 export async function fetchRestaurantById(
   id: string,
 ): Promise<RestaurantWithStatsRow | null> {
+  // 방문 집계 RPC는 전체(~80행)를 반환 — 단건에서도 그대로 쓰고 해당 행만 고른다.
+  const visitStatsPromise = fetchVisitStatsMap()
   const { data, error } = await supabase
     .from('restaurants')
     .select('*')
@@ -121,106 +130,21 @@ export async function fetchRestaurantById(
     console.warn('[restaurant_stats] 단건 조회 실패 — 0건으로 폴백.', err)
   }
 
+  const visitStats = (await visitStatsPromise).get(id)
   return {
     ...parsed.data,
     rating_count: stats?.rating_count ?? 0,
     avg_score: stats?.avg_score ?? null,
+    visits_7d: visitStats?.visits_7d ?? 0,
+    visits_total: visitStats?.visits_total ?? 0,
   }
 }
 
 /* ──────────────────────────────────────────────────────────
- * 룰렛 (기획서 §8.5)
+ * 룰렛 (기획서 §8.5) — 2026-10-08부터 RoulettePage가 이미 로드된 목록으로
+ * 브라우저 가중 추첨(utils/roulette.ts)을 한다. DB RPC pick_random_restaurant는
+ * schema.sql에 보존하되 클라이언트는 호출하지 않는다.
  * ────────────────────────────────────────────────────────── */
-
-export interface PickRandomRestaurantInput {
-  sheetType: 'lunch' | 'dinner' | null
-  categories: string[] | null
-  includeClosed: boolean
-  /**
-   * 내 위치 반경 필터 — null이면 전체에서 추첨 (2026-09-03 지역 필터 대체).
-   * 좌표 없는 식당은 거리 판단이 불가해 반경 필터 시 후보에서 제외된다.
-   */
-  near: { lat: number; lng: number; radiusKm: number } | null
-}
-
-/**
- * 무작위 식당 1건 추천.
- *
- * dba가 정의한 `pick_random_restaurant(p_sheet_type, p_categories, p_include_closed)`
- * RPC를 호출한다. 조건에 맞는 식당이 없으면 null.
- *
- * RPC가 아직 배포되지 않은 경우(`does not exist`)에는
- * 폴백으로 `fetchRestaurantsWithStats()` 결과를 클라이언트 필터링 후
- * Math.random()으로 추첨한다.
- *
- * `near`(내 위치 반경)가 지정된 경우 RPC에 거리 파라미터가 없어
- * 항상 클라이언트 추첨을 사용한다 — 식당 ~80건 규모라 비용 무시 가능.
- */
-export async function pickRandomRestaurant(
-  input: PickRandomRestaurantInput,
-): Promise<Restaurant | null> {
-  if (input.near) {
-    return pickRandomClientFallback(input)
-  }
-
-  // RPC Args가 optional·non-null로 정의되어 있어 null 대신 undefined를 넘긴다.
-  const { data, error } = await supabase.rpc('pick_random_restaurant', {
-    p_sheet_type: input.sheetType ?? undefined,
-    p_categories:
-      input.categories && input.categories.length > 0
-        ? input.categories
-        : undefined,
-    p_include_closed: input.includeClosed,
-  })
-
-  if (error) {
-    if (isMissingRelation(error.message) || error.message.includes('function')) {
-      console.warn(
-        '[pick_random_restaurant] RPC 미배포 — 클라이언트 폴백을 사용합니다.',
-        error.message,
-      )
-      return pickRandomClientFallback(input)
-    }
-    throw new Error(`추천을 가져오지 못했어요. (${error.message})`)
-  }
-  // dba가 RPC를 `RETURNS restaurants` 또는 `RETURNS SETOF restaurants` 어느 쪽으로
-  // 정의하든 안전하게 받기 위해 단일/배열 양쪽을 정규화한다.
-  const row = Array.isArray(data) ? data[0] : data
-  if (!row) return null
-  const parsed = RestaurantSchema.safeParse(row)
-  return parsed.success ? parsed.data : null
-}
-
-/** RPC 폴백 — 식당 ~80건 규모라 클라이언트 필터링도 가벼움. */
-async function pickRandomClientFallback(
-  input: PickRandomRestaurantInput,
-): Promise<Restaurant | null> {
-  const { data } = await fetchRestaurantsWithStats()
-  const pool = data.filter((r) => {
-    if (!input.includeClosed && r.status !== '운영중') return false
-    if (input.sheetType && r.sheet_type !== input.sheetType) return false
-    if (input.near) {
-      if (r.lat === null || r.lng === null) return false
-      if (
-        distanceKm(r.lat, r.lng, input.near.lat, input.near.lng) >
-        input.near.radiusKm
-      ) {
-        return false
-      }
-    }
-    if (
-      input.categories &&
-      input.categories.length > 0 &&
-      !input.categories.includes(r.category)
-    ) {
-      return false
-    }
-    return true
-  })
-  if (pool.length === 0) return null
-  const idx = Math.floor(Math.random() * pool.length)
-  return pool[idx]
-}
 
 /* ──────────────────────────────────────────────────────────
  * 맛집 등록 (기획서 §8.4)

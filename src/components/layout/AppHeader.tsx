@@ -14,7 +14,7 @@
 
 import type { ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Icon } from '../ui/Icon'
+import { Icon } from '@/components/ui/Icon'
 
 interface AppHeaderProps {
   /** 중앙에 표시될 제목. 지정 시 목업 §02 레이아웃으로 강제. */

@@ -44,7 +44,7 @@ DB 스키마의 단일 출처는 `doc/db/schema.sql`(멱등 DDL), 사람용 문�
 
 - `src/types/domain.ts`가 DB 스키마의 컨트랙트. 모든 Supabase 응답은 `safeParse`로 검증 후 사용. enum(`CATEGORIES`, `SHEET_TYPES`, `RESTAURANT_STATUSES`)은 DB CHECK 제약과 쌍 — **enum 값 추가는 반드시 schema.sql 변경과 함께**.
 - **지역은 역지오코딩된 동 이름** (2026-09-03 2차): 등록/수정 시 카카오 `coord2RegionCode`(법정동, `src/lib/kakao.ts`의 `getDongName`)로 `restaurants.region`에 저장. null(과거 데이터·역지오코딩 실패)이면 `useRestaurants`/`useRestaurant` 훅이 DB `regions` 기준점 최근접 계산(`src/utils/region.ts`)으로 폴백 합류. 지역 필터 UI는 제거됨 — 룰렛은 내 위치 3km 반경(`useGeolocation` + `distanceKm`).
-- `api/` 모듈들은 테이블 부재(`missingTable`), 뷰 부재(평점 0 폴백), RPC 미배포(클라이언트 추첨 폴백)를 각각 구분해 처리한다. 이 패턴을 새 쿼리에서도 유지할 것.
+- `api/` 모듈들은 테이블 부재(`missingTable`), 뷰 부재(평점 0 폴백), RPC 미배포(방문 집계 0 폴백 — `restaurant_visit_stats`)를 각각 구분해 처리한다. 이 패턴을 새 쿼리에서도 유지할 것.
 
 ### 반응형 이중 레이아웃 (1024px 분기)
 
@@ -59,6 +59,7 @@ DB 스키마의 단일 출처는 `doc/db/schema.sql`(멱등 DDL), 사람용 문�
 
 - 폐업 처리도 soft delete — `status` 전이만 하고 평가 데이터는 보존.
 - 디자인 토큰은 `src/index.css`의 Tailwind 4 `@theme` 디렉티브 (`bg-brand-primary`, `text-ink-500` 등).
+- import 경로: 상위 폴더는 `@/` 별칭(`@/api/visits`), 같은 폴더는 `./`. `../`는 쓰지 않는다 (tsconfig.app.json `paths` + vite.config.ts `resolve.alias`).
 - 사진 첨부는 클라이언트에서 1024px 리사이즈·JPEG 0.8 압축 후 Supabase Storage `rating-photos` 버킷에 저장 (`src/utils/photoResize.ts`).
 - 식당 ~80건 규모라 정렬·필터는 클라이언트 처리로 충분 — 서버 최적화 도입 전 규모를 먼저 고려.
 - 코드 주석·문서는 한국어로 작성하며 기획서 섹션(§)이나 task 번호를 참조하는 관례가 있다.

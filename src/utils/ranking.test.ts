@@ -4,7 +4,7 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import type { RestaurantWithStats } from '../types/domain'
+import type { RestaurantWithStats } from '@/types/domain'
 import { selectTopRanked } from './ranking'
 
 let seq = 0
@@ -28,6 +28,8 @@ function make(over: Partial<RestaurantWithStats>): RestaurantWithStats {
     updated_at: '2026-01-01T00:00:00Z',
     rating_count: 3,
     avg_score: 4,
+    visits_7d: 0,
+    visits_total: 0,
     ...over,
   }
 }

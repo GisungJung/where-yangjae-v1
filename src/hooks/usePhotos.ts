@@ -7,7 +7,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query'
-import { listPhotosByRestaurant } from '../api/photos'
+import { listPhotosByRestaurant } from '@/api/photos'
 
 const TWO_MINUTES = 2 * 60 * 1000
 

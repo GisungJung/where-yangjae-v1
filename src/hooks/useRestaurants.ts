@@ -13,9 +13,9 @@ import { useQuery } from '@tanstack/react-query'
 import {
   fetchRestaurantById,
   fetchRestaurantsWithStats,
-} from '../api/restaurants'
-import { FALLBACK_REGIONS } from '../api/regions'
-import { nearestRegion } from '../utils/region'
+} from '@/api/restaurants'
+import { FALLBACK_REGIONS } from '@/api/regions'
+import { nearestRegion } from '@/utils/region'
 import { useRegions } from './useRegions'
 
 const FIVE_MINUTES = 5 * 60 * 1000

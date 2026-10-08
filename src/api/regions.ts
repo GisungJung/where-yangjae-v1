@@ -7,8 +7,8 @@
  * - 지역 추가는 관리자 SQL INSERT — 클라이언트 쓰기 API 없음.
  */
 
-import { supabase } from '../lib/supabase'
-import { RegionSchema, type Region } from '../types/domain'
+import { supabase } from '@/lib/supabase'
+import { RegionSchema, type Region } from '@/types/domain'
 
 /** 마이그레이션 미적용 시 폴백 — 시드(20260903000001)와 동일 값. */
 export const FALLBACK_REGIONS: Region[] = [

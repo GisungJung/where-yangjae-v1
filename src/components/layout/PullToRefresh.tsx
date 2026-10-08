@@ -19,7 +19,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { Icon } from '../ui/Icon'
+import { Icon } from '@/components/ui/Icon'
 
 interface Props {
   /** 새로고침 핸들러. Promise resolve 시 인디케이터가 닫힌다. */

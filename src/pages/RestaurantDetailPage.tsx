@@ -11,16 +11,16 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { AppShell } from '../components/layout/AppShell'
-import { AppHeader } from '../components/layout/AppHeader'
-import { PullToRefresh } from '../components/layout/PullToRefresh'
+import { AppShell } from '@/components/layout/AppShell'
+import { AppHeader } from '@/components/layout/AppHeader'
+import { PullToRefresh } from '@/components/layout/PullToRefresh'
 import {
   NotFoundLike,
   RestaurantDetailContent,
-} from '../components/restaurant/RestaurantDetailContent'
-import { Icon } from '../components/ui/Icon'
-import { useRestaurant, restaurantsKeys } from '../hooks/useRestaurants'
-import { ratingsKeys } from '../hooks/useRatings'
+} from '@/components/restaurant/RestaurantDetailContent'
+import { Icon } from '@/components/ui/Icon'
+import { useRestaurant, restaurantsKeys } from '@/hooks/useRestaurants'
+import { ratingsKeys } from '@/hooks/useRatings'
 
 export default function RestaurantDetailPage() {
   const { id } = useParams<{ id: string }>()

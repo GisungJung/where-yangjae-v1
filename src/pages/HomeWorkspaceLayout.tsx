@@ -16,14 +16,14 @@
 
 import { Suspense, useMemo } from 'react'
 import { Outlet, useMatch, useNavigate } from 'react-router-dom'
-import { SideRail } from '../components/layout/SideRail'
-import { KakaoMapView } from '../components/map/KakaoMapView'
-import { RestaurantListPanel } from '../components/restaurant/RestaurantListPanel'
-import { TopRankingPanel } from '../components/restaurant/TopRankingPanel'
-import { useMediaQuery } from '../hooks/useMediaQuery'
-import { useRestaurants } from '../hooks/useRestaurants'
-import { useRestaurantFilters } from '../hooks/useRestaurantFilters'
-import { YANGJAE_STATION } from '../lib/kakao'
+import { SideRail } from '@/components/layout/SideRail'
+import { KakaoMapView } from '@/components/map/KakaoMapView'
+import { RestaurantListPanel } from '@/components/restaurant/RestaurantListPanel'
+import { TopRankingPanel } from '@/components/restaurant/TopRankingPanel'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
+import { useRestaurants } from '@/hooks/useRestaurants'
+import { useRestaurantFilters } from '@/hooks/useRestaurantFilters'
+import { YANGJAE_STATION } from '@/lib/kakao'
 
 export default function HomeWorkspaceLayout() {
   // lg 미만에서는 카카오 SDK·워크스페이스가 아예 마운트되지 않아야 한다

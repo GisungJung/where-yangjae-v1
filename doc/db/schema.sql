@@ -196,6 +196,28 @@ INSERT INTO public.regions (name, lat, lng, sort_order) VALUES
   ('남부터미널', 37.4765, 127.0048, 2)
 ON CONFLICT (name) DO NOTHING;
 
+-- ----------------------------------------------------------------------------
+-- 2.6 restaurant_visits — 방문 체크인 (2026-10-08)
+--     개별 기록은 본인만 조회(RLS), 화면엔 집계 RPC(§6.2)의 숫자만 노출.
+--     visited_on은 KST 날짜 — 같은 식당 하루 1회(UNIQUE), INSERT는 KST 오늘만(RLS).
+--     설계: doc/plan/features/2026-10-08-visit-checkin-roulette-design.md
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.restaurant_visits (
+  id             uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  restaurant_id  uuid        NOT NULL
+    REFERENCES public.restaurants(id) ON DELETE CASCADE,
+  reviewer_id    uuid        NOT NULL
+    REFERENCES public.reviewers(id)   ON DELETE CASCADE,
+  visited_on     date        NOT NULL DEFAULT ((now() AT TIME ZONE 'Asia/Seoul')::date),
+  created_at     timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT restaurant_visits_daily_unique UNIQUE (reviewer_id, restaurant_id, visited_on)
+);
+
+COMMENT ON TABLE public.restaurant_visits IS
+  '방문 체크인. 개별 기록은 본인만 조회, 집계는 restaurant_visit_stats() RPC로만 공개. 같은 식당 하루 1회.';
+COMMENT ON COLUMN public.restaurant_visits.visited_on IS
+  '방문 날짜(KST). 기본값 KST 오늘 — RLS가 INSERT를 KST 오늘로만 제한(소급 기록 차단).';
+
 -- ============================================================================
 -- 3. 인덱스
 -- ============================================================================
@@ -370,6 +392,37 @@ COMMENT ON FUNCTION public.pick_random_restaurant(text, text[], boolean, text) I
 
 GRANT EXECUTE ON FUNCTION public.pick_random_restaurant(text, text[], boolean, text)
   TO anon, authenticated;
+-- ※ 2026-10-08부터 클라이언트 룰렛은 브라우저 가중 추첨(최근 방문 제외·평점 가중치)을
+--   사용해 이 RPC를 호출하지 않는다. 함수는 보존.
+
+-- ============================================================================
+-- 6.2 RPC — restaurant_visit_stats (방문 집계, 2026-10-08)
+--    restaurant_visits는 본인 행만 SELECT 가능(RLS)하므로 전체 집계는
+--    SECURITY DEFINER(소유자 권한, RLS 우회)로 계산해 숫자만 반환한다.
+--    뷰가 아니라 함수인 이유: Advisor security_definer_view 경고 회피 +
+--    누가 뷰를 security_invoker로 바꾸면 집계가 조용히 "내 것만"이 되는 위험 방지.
+-- ============================================================================
+CREATE OR REPLACE FUNCTION public.restaurant_visit_stats()
+RETURNS TABLE (restaurant_id uuid, visits_7d integer, visits_total integer)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+  SELECT v.restaurant_id,
+         (COUNT(*) FILTER (
+            WHERE v.visited_on > (now() AT TIME ZONE 'Asia/Seoul')::date - 7
+         ))::integer AS visits_7d,
+         COUNT(*)::integer AS visits_total
+    FROM public.restaurant_visits v
+   GROUP BY v.restaurant_id;
+$$;
+
+COMMENT ON FUNCTION public.restaurant_visit_stats() IS
+  '식당별 방문 집계(최근 7일 KST 오늘 포함 / 누적). 개별 기록·방문자는 노출하지 않음.';
+
+REVOKE ALL ON FUNCTION public.restaurant_visit_stats() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.restaurant_visit_stats() TO anon, authenticated;
 
 -- ============================================================================
 -- 7. RLS (Row Level Security)
@@ -382,6 +435,7 @@ ALTER TABLE public.ratings       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.rating_photos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.regions       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.restaurant_photos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.restaurant_visits ENABLE ROW LEVEL SECURITY;
 
 -- 7.1 restaurants — SELECT/INSERT/UPDATE 모두, DELETE 차단
 DROP POLICY IF EXISTS restaurants_select_all   ON public.restaurants;
@@ -485,6 +539,24 @@ CREATE POLICY restaurant_photos_update_all ON public.restaurant_photos
   FOR UPDATE TO anon, authenticated USING (true) WITH CHECK (true);
 CREATE POLICY restaurant_photos_delete_all ON public.restaurant_photos
   FOR DELETE TO anon, authenticated USING (true);
+
+-- 7.7 restaurant_visits — SELECT·DELETE 본인만, INSERT 본인 + KST 오늘만, UPDATE 정책 없음(차단)
+DROP POLICY IF EXISTS restaurant_visits_select_own       ON public.restaurant_visits;
+DROP POLICY IF EXISTS restaurant_visits_insert_own_today ON public.restaurant_visits;
+DROP POLICY IF EXISTS restaurant_visits_delete_own       ON public.restaurant_visits;
+
+CREATE POLICY restaurant_visits_select_own ON public.restaurant_visits
+  FOR SELECT TO anon, authenticated
+  USING (reviewer_id::text = current_setting('request.headers', true)::json->>'x-reviewer-id');
+CREATE POLICY restaurant_visits_insert_own_today ON public.restaurant_visits
+  FOR INSERT TO anon, authenticated
+  WITH CHECK (
+    reviewer_id::text = current_setting('request.headers', true)::json->>'x-reviewer-id'
+    AND visited_on = (now() AT TIME ZONE 'Asia/Seoul')::date
+  );
+CREATE POLICY restaurant_visits_delete_own ON public.restaurant_visits
+  FOR DELETE TO anon, authenticated
+  USING (reviewer_id::text = current_setting('request.headers', true)::json->>'x-reviewer-id');
 
 -- ============================================================================
 -- 8. Storage — rating-photos 버킷 (public read, 300KB, JPEG/WebP)

@@ -1,7 +1,8 @@
 /**
  * 홈 목록의 식당 카드 — 목업 §01 rest-card.
  *
- * 상단: [이름 (truncate)]                     [★ 4.6 12명]   ← 카드 전체 폭
+ * 상단: [이름 (truncate)]          [🔥 5회] [★ 4.6 12명]   ← 카드 전체 폭
+ *       (🔥 = 최근 7일 방문 체크인 수, 있을 때만 — 2026-10-08)
  * 하단: [대표 사진 72px] [배지(지역·카테고리·시트·휴업/폐업) / 메뉴 / 비고]
  *       (2026-10-08 레이아웃 — 사진이 없으면 정보 영역이 전체 폭)
  *
@@ -11,13 +12,13 @@
  */
 
 import { Link } from 'react-router-dom'
-import type { RestaurantWithStats } from '../../types/domain'
-import { formatScore } from '../../utils/format'
-import { pickCover } from '../../utils/restaurantPhotos'
-import { getRestaurantPhotoUrl } from '../../api/restaurantPhotos'
-import { useRestaurantPhotos } from '../../hooks/useRestaurantPhotos'
+import type { RestaurantWithStats } from '@/types/domain'
+import { formatScore } from '@/utils/format'
+import { pickCover } from '@/utils/restaurantPhotos'
+import { getRestaurantPhotoUrl } from '@/api/restaurantPhotos'
+import { useRestaurantPhotos } from '@/hooks/useRestaurantPhotos'
 import { CategoryChip } from './CategoryChip'
-import { Icon } from '../ui/Icon'
+import { Icon } from '@/components/ui/Icon'
 
 interface Props {
   restaurant: RestaurantWithStats
@@ -53,6 +54,16 @@ export function RestaurantCard({ restaurant }: Props) {
         >
           {restaurant.name}
         </h3>
+        {/* 최근 7일 방문 체크인 집계 (2026-10-08) */}
+        {restaurant.visits_7d > 0 && (
+          <span
+            className="shrink-0 whitespace-nowrap text-[12px] font-semibold text-orange-600"
+            title={`최근 7일 방문 ${restaurant.visits_7d}회`}
+            aria-label={`최근 7일 방문 ${restaurant.visits_7d}회`}
+          >
+            🔥 {restaurant.visits_7d}회
+          </span>
+        )}
         {hasRating ? (
           <span className="shrink-0 whitespace-nowrap text-[13px] font-bold text-brand-accent">
             ★ {formatScore(restaurant.avg_score, '—')}

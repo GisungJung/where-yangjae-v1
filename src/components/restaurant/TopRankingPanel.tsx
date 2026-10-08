@@ -11,12 +11,12 @@
  */
 
 import { Link } from 'react-router-dom'
-import type { RestaurantWithStats, SheetType } from '../../types/domain'
-import { formatScore } from '../../utils/format'
-import { MIN_RATING_COUNT, selectTopRanked } from '../../utils/ranking'
-import { pickCover } from '../../utils/restaurantPhotos'
-import { getRestaurantPhotoUrl } from '../../api/restaurantPhotos'
-import { useRestaurantPhotos } from '../../hooks/useRestaurantPhotos'
+import type { RestaurantWithStats, SheetType } from '@/types/domain'
+import { formatScore } from '@/utils/format'
+import { MIN_RATING_COUNT, selectTopRanked } from '@/utils/ranking'
+import { pickCover } from '@/utils/restaurantPhotos'
+import { getRestaurantPhotoUrl } from '@/api/restaurantPhotos'
+import { useRestaurantPhotos } from '@/hooks/useRestaurantPhotos'
 import { CategoryChip } from './CategoryChip'
 
 interface Props {

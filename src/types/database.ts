@@ -177,6 +177,46 @@ export type Database = {
         }
         Relationships: []
       }
+      // doc/db/schema.sql §2.6 restaurant_visits (2026-10-08)
+      restaurant_visits: {
+        Row: {
+          created_at: string
+          id: string
+          restaurant_id: string
+          reviewer_id: string
+          visited_on: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          restaurant_id: string
+          reviewer_id: string
+          visited_on?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          restaurant_id?: string
+          reviewer_id?: string
+          visited_on?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'restaurant_visits_restaurant_id_fkey'
+            columns: ['restaurant_id']
+            isOneToOne: false
+            referencedRelation: 'restaurants'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'restaurant_visits_reviewer_id_fkey'
+            columns: ['reviewer_id']
+            isOneToOne: false
+            referencedRelation: 'reviewers'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       // doc/db/schema.sql §2.4b restaurant_photos (2026-10-07)
       restaurant_photos: {
         Row: {
@@ -280,6 +320,15 @@ export type Database = {
       }
     }
     Functions: {
+      // doc/db/schema.sql §6.2 (2026-10-08) — 방문 집계, SECURITY DEFINER
+      restaurant_visit_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          restaurant_id: string
+          visits_7d: number
+          visits_total: number
+        }[]
+      }
       category_counts: {
         Args: { p_sheet_type?: string }
         Returns: {

@@ -1,17 +1,17 @@
 import { useMemo, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
-import { AppShell } from '../components/layout/AppShell'
-import { KakaoPlaceSearch, type PickedPlace } from '../components/restaurant/KakaoPlaceSearch'
-import { KakaoMapView } from '../components/map/KakaoMapView'
-import { YANGJAE_STATION, getDongName } from '../lib/kakao'
-import { insertRestaurant } from '../api/restaurants'
-import { saveRestaurantPhotos } from '../api/restaurantPhotos'
+import { AppShell } from '@/components/layout/AppShell'
+import { KakaoPlaceSearch, type PickedPlace } from '@/components/restaurant/KakaoPlaceSearch'
+import { KakaoMapView } from '@/components/map/KakaoMapView'
+import { YANGJAE_STATION, getDongName } from '@/lib/kakao'
+import { insertRestaurant } from '@/api/restaurants'
+import { saveRestaurantPhotos } from '@/api/restaurantPhotos'
 import {
   RestaurantPhotoEditor,
   type EditorPhotoSlot,
-} from '../components/restaurant/RestaurantPhotoEditor'
-import { restaurantPhotosKeys } from '../hooks/useRestaurantPhotos'
+} from '@/components/restaurant/RestaurantPhotoEditor'
+import { restaurantPhotosKeys } from '@/hooks/useRestaurantPhotos'
 import {
   CATEGORIES,
   NewRestaurantInputSchema,
@@ -19,9 +19,9 @@ import {
   type NewRestaurantInput,
   type RestaurantWithStats,
   type SheetType,
-} from '../types/domain'
-import { restaurantsKeys, useRestaurants } from '../hooks/useRestaurants'
-import { useNicknameStore } from '../store/nicknameStore'
+} from '@/types/domain'
+import { restaurantsKeys, useRestaurants } from '@/hooks/useRestaurants'
+import { useNicknameStore } from '@/store/nicknameStore'
 
 export default function AddRestaurantPage() {
   const navigate = useNavigate()

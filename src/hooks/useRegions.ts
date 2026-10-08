@@ -6,7 +6,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query'
-import { fetchRegions } from '../api/regions'
+import { fetchRegions } from '@/api/regions'
 
 const THIRTY_MINUTES = 30 * 60 * 1000
 

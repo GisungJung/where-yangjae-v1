@@ -8,8 +8,8 @@
  */
 
 import { Link, useLocation } from 'react-router-dom'
-import { classNames } from '../../utils/format'
-import { Icon } from '../ui/Icon'
+import { classNames } from '@/utils/format'
+import { Icon } from '@/components/ui/Icon'
 import { NAV_ITEMS } from './navItems'
 
 export function SideRail() {
