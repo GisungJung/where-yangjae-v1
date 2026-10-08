@@ -25,6 +25,8 @@ dist-ssr
 
 # MCP config (contains Supabase PAT)
 .mcp.json
+# Codex MCP config (contains Supabase PAT) — git만 무시, Codex는 그대로 읽음
+.codex/config.toml
 
 # Vercel
 .vercel
