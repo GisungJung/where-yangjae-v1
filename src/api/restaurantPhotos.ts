@@ -12,14 +12,14 @@
  * - 테이블·버킷 미적용 시: 조회는 빈 배열 폴백, 저장은 경고 메시지로 보고.
  */
 
-import { supabase } from '../lib/supabase'
-import { RestaurantPhotoSchema, type RestaurantPhoto } from '../types/domain'
+import { supabase } from '@/lib/supabase'
+import { RestaurantPhotoSchema, type RestaurantPhoto } from '@/types/domain'
 import {
   resizePhoto,
   shortRandomId,
   type ResizedImage,
-} from '../utils/photoResize'
-import { planPhotoSave, type PhotoSlotRef } from '../utils/restaurantPhotos'
+} from '@/utils/photoResize'
+import { planPhotoSave, type PhotoSlotRef } from '@/utils/restaurantPhotos'
 
 export const RESTAURANT_PHOTO_BUCKET = 'restaurant-photos'
 const THUMB_DIMENSION = 240

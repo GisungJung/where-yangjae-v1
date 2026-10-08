@@ -11,28 +11,39 @@
  *   위치 권한이 없으면 전체에서 추첨 — 좌표 없는 식당은 반경 필터 시 제외.
  * - 빈 결과 분기 UX 유지.
  * - PullToRefresh로 다시 굴리기 외에 후보 풀 새로고침.
+ * - 방문 체크인 연동 (2026-10-08, doc/plan/features/2026-10-08-visit-checkin-roulette-design.md):
+ *   · 추첨 옵션 토글 — 최근 7일 내가 간 곳 빼기 / 평점 높은 곳 더 자주 (기본 켬, 기기에 기억)
+ *   · 추첨은 이미 로드된 목록으로 브라우저 가중 추첨 (utils/roulette.ts)
+ *   · "이 식당 갈래!" = 오늘 방문 즉시 기록 + 취소, 정체성 없으면 인라인 닉네임
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { AppShell } from '../components/layout/AppShell'
-import { PullToRefresh } from '../components/layout/PullToRefresh'
-import { CategoryChip } from '../components/restaurant/CategoryChip'
-import { KakaoMapView } from '../components/map/KakaoMapView'
-import { Icon } from '../components/ui/Icon'
-import { EmptyState } from '../components/empty/EmptyState'
-import { pickRandomRestaurant } from '../api/restaurants'
-import { useGeolocation, type GeolocationStatus } from '../hooks/useGeolocation'
-import { restaurantsKeys, useRestaurants } from '../hooks/useRestaurants'
-import { distanceKm } from '../utils/region'
+import { AppShell } from '@/components/layout/AppShell'
+import { PullToRefresh } from '@/components/layout/PullToRefresh'
+import { CategoryChip } from '@/components/restaurant/CategoryChip'
+import { KakaoMapView } from '@/components/map/KakaoMapView'
+import { Icon } from '@/components/ui/Icon'
+import { EmptyState } from '@/components/empty/EmptyState'
+import { NicknamePrompt } from '@/components/visit/NicknamePrompt'
+import { useGeolocation, type GeolocationStatus } from '@/hooks/useGeolocation'
+import { restaurantsKeys, useRestaurants } from '@/hooks/useRestaurants'
+import { useCheckIn } from '@/hooks/useVisits'
+import { distanceKm } from '@/utils/region'
+import {
+  applyRecentExclusion,
+  ratingWeights,
+  RECENT_VISIT_DAYS,
+  weightedPick,
+} from '@/utils/roulette'
 import {
   CATEGORIES,
   type Category,
   type Restaurant,
   type RestaurantWithStats,
   type SheetType,
-} from '../types/domain'
+} from '@/types/domain'
 
 /** 슬롯 회전 최소 1.5초. 너무 짧으면 "굴렸다"는 정서가 안 산다. */
 const MIN_SPIN_MS = 1500
@@ -58,6 +69,36 @@ function initialLines(candidates: string[]): string[] {
   return [0, 1, 2, 3, 4].map((i) => pool[(i * 3 + 1) % pool.length])
 }
 
+/** 추첨 옵션 — 기기별 편의 설정이라 localStorage (실패해도 기본값으로 동작). */
+interface RoulettePrefs {
+  excludeRecent: boolean
+  weightByRating: boolean
+}
+const PREFS_KEY = 'bizbab.roulette.prefs.v1'
+const DEFAULT_PREFS: RoulettePrefs = { excludeRecent: true, weightByRating: true }
+
+function loadPrefs(): RoulettePrefs {
+  try {
+    const raw = localStorage.getItem(PREFS_KEY)
+    if (!raw) return DEFAULT_PREFS
+    const p = JSON.parse(raw) as Partial<RoulettePrefs>
+    return {
+      excludeRecent: p.excludeRecent ?? DEFAULT_PREFS.excludeRecent,
+      weightByRating: p.weightByRating ?? DEFAULT_PREFS.weightByRating,
+    }
+  } catch {
+    return DEFAULT_PREFS
+  }
+}
+
+function savePrefs(prefs: RoulettePrefs) {
+  try {
+    localStorage.setItem(PREFS_KEY, JSON.stringify(prefs))
+  } catch {
+    /* 저장 불가 환경(시크릿 모드 등) — 이번 방문 동안만 유지 */
+  }
+}
+
 /** 룰렛 카테고리 셀의 우측 이모지 (목업 §05). */
 const CATEGORY_EMOJI: Record<Category, string> = {
   한식: '🍚',
@@ -77,9 +118,18 @@ export default function RoulettePage() {
   // 내 위치 — 페이지 진입 시 1회 요청. 거부/미지원이면 전체에서 추첨.
   const { status: geoStatus, coords } = useGeolocation()
 
+  const { available: visitsAvailable, recentIds } = useCheckIn()
+
   const [sheetType, setSheetType] = useState<SheetType>('lunch')
   const [selectedCategories, setSelectedCategories] = useState<Category[]>([])
   const [result, setResult] = useState<Restaurant | null | undefined>(undefined)
+  const [prefs, setPrefs] = useState<RoulettePrefs>(loadPrefs)
+
+  const updatePrefs = (patch: Partial<RoulettePrefs>) => {
+    const next = { ...prefs, ...patch }
+    setPrefs(next)
+    savePrefs(next)
+  }
 
   const toggleCategory = (cat: Category) => {
     setSelectedCategories((prev) =>
@@ -114,19 +164,26 @@ export default function RoulettePage() {
     })
   }, [restaurantsResult?.data, sheetType, coords, selectedCategories])
 
-  const poolSize = pool.length
+  // 최근 7일 내가 간 곳 제외 — 체크인 테이블이 없으면 적용하지 않음.
+  // 전부 최근 방문이면 제외를 풀고 fallbackUsed로 안내 (utils/roulette.ts).
+  const exclusion = useMemo(
+    () =>
+      prefs.excludeRecent && visitsAvailable
+        ? applyRecentExclusion(pool, recentIds)
+        : { candidates: pool, excludedCount: 0, fallbackUsed: false },
+    [pool, prefs.excludeRecent, visitsAvailable, recentIds],
+  )
+  const candidates = exclusion.candidates
+  const poolSize = candidates.length
 
   const mutation = useMutation({
     mutationFn: async () => {
       // 슬롯 애니메이션 시간 확보를 위해 최소 1.5초 보장.
       const started = Date.now()
-      const picked = await pickRandomRestaurant({
-        sheetType,
-        categories:
-          selectedCategories.length > 0 ? [...selectedCategories] : null,
-        includeClosed: false,
-        near: coords ? { ...coords, radiusKm: NEAR_RADIUS_KM } : null,
-      })
+      const weights = prefs.weightByRating
+        ? ratingWeights(candidates)
+        : candidates.map(() => 1)
+      const picked = weightedPick(candidates, weights)
       const elapsed = Date.now() - started
       if (elapsed < MIN_SPIN_MS) {
         await new Promise((r) => setTimeout(r, MIN_SPIN_MS - elapsed))
@@ -145,16 +202,16 @@ export default function RoulettePage() {
 
   const isSpinning = mutation.isPending
 
-  // 풀에서 슬롯 회전 중 흘러갈 후보 이름들 (시각 효과용).
+  // 후보에서 슬롯 회전 중 흘러갈 이름들 (시각 효과용).
   const slotCandidates = useMemo(() => {
-    const names = pool.map((r) => r.name)
+    const names = candidates.map((r) => r.name)
     if (names.length >= 5) return names.slice(0, 8)
     // 부족하면 반복해서 5개 채움
     if (names.length === 0) return ['?', '?', '?', '?', '?']
     const filled: string[] = []
     while (filled.length < 5) filled.push(...names)
     return filled.slice(0, 8)
-  }, [pool])
+  }, [candidates])
 
   return (
     <AppShell>
@@ -192,6 +249,11 @@ export default function RoulettePage() {
             onToggleCategory={toggleCategory}
             poolSize={poolSize}
             geoStatus={geoStatus}
+            prefs={prefs}
+            onPrefsChange={updatePrefs}
+            visitsAvailable={visitsAvailable}
+            excludedCount={exclusion.excludedCount}
+            fallbackUsed={exclusion.fallbackUsed}
             onSpin={() => mutation.mutate()}
             error={
               mutation.isError
@@ -217,6 +279,11 @@ function SelectionStage({
   onToggleCategory,
   poolSize,
   geoStatus,
+  prefs,
+  onPrefsChange,
+  visitsAvailable,
+  excludedCount,
+  fallbackUsed,
   onSpin,
   error,
 }: {
@@ -226,10 +293,17 @@ function SelectionStage({
   onToggleCategory: (c: Category) => void
   poolSize: number
   geoStatus: GeolocationStatus
+  prefs: RoulettePrefs
+  onPrefsChange: (patch: Partial<RoulettePrefs>) => void
+  visitsAvailable: boolean
+  excludedCount: number
+  fallbackUsed: boolean
   onSpin: () => void
   error: string | null
 }) {
   const disabled = poolSize === 0
+  const showExcluded =
+    visitsAvailable && prefs.excludeRecent && !fallbackUsed && excludedCount > 0
   return (
     <div className="space-y-5">
       <header className="text-center">
@@ -315,6 +389,36 @@ function SelectionStage({
         />
       </section>
 
+      <section className="space-y-2">
+        <h2 className="text-sm font-bold text-ink-900">추첨 옵션</h2>
+        {visitsAvailable && (
+          <ToggleRow
+            label={`최근 ${RECENT_VISIT_DAYS}일 내가 간 곳 빼기`}
+            hint={
+              !prefs.excludeRecent
+                ? '방문 기록과 상관없이 뽑아요'
+                : fallbackUsed
+                  ? '최근에 간 곳밖에 없어서 포함했어요'
+                  : excludedCount > 0
+                    ? `${excludedCount}곳 제외`
+                    : '최근 방문한 곳이 없어요'
+            }
+            checked={prefs.excludeRecent}
+            onChange={(v) => onPrefsChange({ excludeRecent: v })}
+          />
+        )}
+        <ToggleRow
+          label="평점 높은 곳 더 자주"
+          hint={
+            prefs.weightByRating
+              ? '평가 없는 곳도 평균 수준으로 나와요'
+              : '모든 곳이 같은 확률로 나와요'
+          }
+          checked={prefs.weightByRating}
+          onChange={(v) => onPrefsChange({ weightByRating: v })}
+        />
+      </section>
+
       {error && (
         <div
           role="alert"
@@ -342,6 +446,7 @@ function SelectionStage({
               조건에 맞는 식당{' '}
               <strong className="text-brand-accent">{poolSize}곳</strong> 중에서
               뽑아요
+              {showExcluded && ` (최근 방문 ${excludedCount}곳 제외)`}
             </>
           )}
         </p>
@@ -530,6 +635,32 @@ function ResultDisplay({
   const avg = stats?.avg_score ?? null
   const count = stats?.rating_count ?? 0
 
+  // 방문 체크인 — "이 식당 갈래!" = 오늘 방문 즉시 기록 (결과 화면에 머물며 취소 가능).
+  // ResultDisplay는 결과마다 remount되므로 로컬 상태도 결과 단위로 초기화된다.
+  const { available, hasIdentity, todayVisitFor, checkIn, undo } = useCheckIn()
+  const [askNickname, setAskNickname] = useState(false)
+  const [justRecorded, setJustRecorded] = useState(false)
+  const todayVisit = todayVisitFor(result.id)
+  const busy = checkIn.isPending || undo.isPending
+  const visitError = checkIn.error ?? undo.error
+
+  const record = (nickname?: string) =>
+    checkIn.mutate(
+      { restaurantId: result.id, nickname },
+      {
+        onSuccess: () => {
+          setAskNickname(false)
+          setJustRecorded(true)
+        },
+      },
+    )
+
+  const handleGo = () => {
+    if (!available) return onGo(result.id) // 체크인 미지원 — 기존처럼 상세로
+    if (!hasIdentity) return setAskNickname(true)
+    record()
+  }
+
   // 결과 위/아래에 흐릿하게 보이는 다른 후보 이름 (slot-fade).
   // 결과 식당 외 다른 후보 중 무작위로 2개.
   const others = candidates.filter((n) => n !== result.name)
@@ -623,14 +754,63 @@ function ResultDisplay({
       </article>
 
       <div className="flex flex-col gap-2">
-        <button
-          type="button"
-          onClick={() => onGo(result.id)}
-          className="flex h-[52px] w-full items-center justify-center gap-1.5 rounded-button bg-brand-accent text-base font-bold text-white shadow-lg shadow-orange-300/40 transition active:scale-[0.98]"
-        >
-          <Icon name="utensils" size={18} />
-          이 식당 갈래!
-        </button>
+        {todayVisit ? (
+          <div className="space-y-2 rounded-card border border-brand-primary/30 bg-brand-primary/5 p-3 text-center">
+            <p className="text-sm font-bold text-brand-primary">
+              {justRecorded
+                ? '✓ 오늘 방문으로 기록했어요'
+                : '✓ 오늘 이미 방문 기록이 있어요'}
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  undo.mutate(todayVisit, {
+                    onSuccess: () => setJustRecorded(false),
+                  })
+                }
+                disabled={busy}
+                className="flex h-11 flex-1 items-center justify-center rounded-button border border-surface-border bg-white text-sm font-medium text-ink-700 hover:bg-surface-muted disabled:opacity-50"
+              >
+                {undo.isPending ? '취소 중…' : '취소'}
+              </button>
+              <button
+                type="button"
+                onClick={() => onGo(result.id)}
+                className="flex h-11 flex-1 items-center justify-center gap-1 rounded-button bg-brand-accent text-sm font-bold text-white"
+              >
+                <Icon name="utensils" size={15} />
+                상세 보기
+              </button>
+            </div>
+          </div>
+        ) : askNickname ? (
+          <NicknamePrompt
+            submitLabel="기록하고 가기"
+            pending={checkIn.isPending}
+            onSubmit={(nickname) => record(nickname)}
+            onCancel={() => onGo(result.id)}
+            cancelLabel="기록 없이 상세 보기"
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={handleGo}
+            disabled={busy}
+            className="flex h-[52px] w-full items-center justify-center gap-1.5 rounded-button bg-brand-accent text-base font-bold text-white shadow-lg shadow-orange-300/40 transition active:scale-[0.98] disabled:opacity-60"
+          >
+            <Icon name="utensils" size={18} />
+            {checkIn.isPending ? '기록 중…' : '이 식당 갈래!'}
+          </button>
+        )}
+        {visitError && (
+          <p role="alert" className="text-center text-xs text-red-700">
+            {visitError instanceof Error
+              ? visitError.message
+              : '방문 기록 중 오류가 발생했어요.'}{' '}
+            다시 시도해 주세요.
+          </p>
+        )}
         <button
           type="button"
           onClick={onAgain}
@@ -682,6 +862,35 @@ function ConditionCrumb({
         </span>
       )}
     </div>
+  )
+}
+
+/** 추첨 옵션 한 줄 — 라벨 + 보조 설명 + 스위치 (2026-10-08) */
+function ToggleRow({
+  label,
+  hint,
+  checked,
+  onChange,
+}: {
+  label: string
+  hint: string
+  checked: boolean
+  onChange: (next: boolean) => void
+}) {
+  return (
+    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-[10px] border-[1.5px] border-surface-border bg-white px-3.5 py-3">
+      <span className="min-w-0">
+        <span className="block text-sm font-semibold text-ink-900">{label}</span>
+        <span className="block text-[11px] text-ink-500">{hint}</span>
+      </span>
+      <input
+        type="checkbox"
+        role="switch"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="h-5 w-5 shrink-0 accent-brand-accent"
+      />
+    </label>
   )
 }
 

@@ -13,8 +13,8 @@ import {
   NotFoundLike,
   RestaurantDetailContent,
 } from './RestaurantDetailContent'
-import { Icon } from '../ui/Icon'
-import { useRestaurant } from '../../hooks/useRestaurants'
+import { Icon } from '@/components/ui/Icon'
+import { useRestaurant } from '@/hooks/useRestaurants'
 
 export function RestaurantDetailPanel() {
   const { id } = useParams<{ id: string }>()

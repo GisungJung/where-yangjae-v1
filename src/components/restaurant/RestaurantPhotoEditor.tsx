@@ -13,10 +13,10 @@ import { useEffect, useRef, useState } from 'react'
 import {
   prepareRestaurantPhoto,
   type PhotoSlot,
-} from '../../api/restaurantPhotos'
-import { MAX_PHOTOS_PER_RESTAURANT } from '../../utils/restaurantPhotos'
-import { shortRandomId } from '../../utils/photoResize'
-import { Icon } from '../ui/Icon'
+} from '@/api/restaurantPhotos'
+import { MAX_PHOTOS_PER_RESTAURANT } from '@/utils/restaurantPhotos'
+import { shortRandomId } from '@/utils/photoResize'
+import { Icon } from '@/components/ui/Icon'
 
 /** 편집기 슬롯 — 미리보기 URL 포함 */
 export interface EditorPhotoSlot extends PhotoSlot {

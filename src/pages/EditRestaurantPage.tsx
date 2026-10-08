@@ -16,35 +16,35 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { AppShell } from '../components/layout/AppShell'
+import { AppShell } from '@/components/layout/AppShell'
 import {
   KakaoPlaceSearch,
   type PickedPlace,
-} from '../components/restaurant/KakaoPlaceSearch'
-import { KakaoMapView } from '../components/map/KakaoMapView'
-import { YANGJAE_STATION, getDongName } from '../lib/kakao'
-import { updateRestaurant, type UpdateRestaurantInput } from '../api/restaurants'
+} from '@/components/restaurant/KakaoPlaceSearch'
+import { KakaoMapView } from '@/components/map/KakaoMapView'
+import { YANGJAE_STATION, getDongName } from '@/lib/kakao'
+import { updateRestaurant, type UpdateRestaurantInput } from '@/api/restaurants'
 import {
   CATEGORIES,
   type Category,
   type Restaurant,
   type SheetType,
-} from '../types/domain'
-import { restaurantsKeys, useRestaurant } from '../hooks/useRestaurants'
+} from '@/types/domain'
+import { restaurantsKeys, useRestaurant } from '@/hooks/useRestaurants'
 import {
   restaurantPhotosKeys,
   useRestaurantPhotos,
-} from '../hooks/useRestaurantPhotos'
+} from '@/hooks/useRestaurantPhotos'
 import {
   getRestaurantPhotoUrl,
   saveRestaurantPhotos,
-} from '../api/restaurantPhotos'
+} from '@/api/restaurantPhotos'
 import {
   RestaurantPhotoEditor,
   type EditorPhotoSlot,
-} from '../components/restaurant/RestaurantPhotoEditor'
-import { pickCover } from '../utils/restaurantPhotos'
-import type { RestaurantPhoto } from '../types/domain'
+} from '@/components/restaurant/RestaurantPhotoEditor'
+import { pickCover } from '@/utils/restaurantPhotos'
+import type { RestaurantPhoto } from '@/types/domain'
 
 export default function EditRestaurantPage() {
   const { id } = useParams<{ id: string }>()

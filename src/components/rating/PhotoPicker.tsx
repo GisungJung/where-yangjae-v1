@@ -17,9 +17,9 @@ import {
   UnsupportedImageFormatError,
   OversizedImageError,
   type ResizedImage,
-} from '../../utils/photoResize'
-import { MAX_PHOTOS_PER_RATING } from '../../api/photos'
-import { Icon } from '../ui/Icon'
+} from '@/utils/photoResize'
+import { MAX_PHOTOS_PER_RATING } from '@/api/photos'
+import { Icon } from '@/components/ui/Icon'
 
 interface Props {
   /** 부모(RatingForm)에 현재 슬롯 상태 알림. submit 시 업로드용. */

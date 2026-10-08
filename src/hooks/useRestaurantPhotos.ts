@@ -7,9 +7,9 @@
 
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { fetchAllRestaurantPhotos } from '../api/restaurantPhotos'
-import type { RestaurantPhoto } from '../types/domain'
-import { groupPhotosByRestaurant } from '../utils/restaurantPhotos'
+import { fetchAllRestaurantPhotos } from '@/api/restaurantPhotos'
+import type { RestaurantPhoto } from '@/types/domain'
+import { groupPhotosByRestaurant } from '@/utils/restaurantPhotos'
 
 const FIVE_MINUTES = 5 * 60 * 1000
 const EMPTY: RestaurantPhoto[] = []

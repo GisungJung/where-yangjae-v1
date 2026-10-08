@@ -5,7 +5,7 @@
  * `/restaurants/...`는 홈 탭으로 인식 (상세·수정 진입 경로가 홈이므로).
  */
 
-import type { IconName } from '../ui/Icon'
+import type { IconName } from '@/components/ui/Icon'
 
 export interface NavItem {
   to: string

@@ -170,6 +170,26 @@ export const RestaurantPhotoSchema = z.object({
 export type RestaurantPhoto = z.infer<typeof RestaurantPhotoSchema>
 
 /* ──────────────────────────────────────────────────────────
+ * 4.7 RestaurantVisit (2026-10-08) — 방문 체크인 (본인 행만 조회됨)
+ * ────────────────────────────────────────────────────────── */
+
+export const RestaurantVisitSchema = z.object({
+  id: z.string().uuid(),
+  restaurant_id: z.string().uuid(),
+  reviewer_id: z.string().uuid(),
+  visited_on: z.string(), // 'YYYY-MM-DD' (KST)
+  created_at: z.string(),
+})
+export type RestaurantVisit = z.infer<typeof RestaurantVisitSchema>
+
+export const RestaurantVisitStatsSchema = z.object({
+  restaurant_id: z.string().uuid(),
+  visits_7d: z.number().int().nonnegative(),
+  visits_total: z.number().int().nonnegative(),
+})
+export type RestaurantVisitStats = z.infer<typeof RestaurantVisitStatsSchema>
+
+/* ──────────────────────────────────────────────────────────
  * 5. RestaurantStats (뷰: 기획서 §6.5)
  * ────────────────────────────────────────────────────────── */
 
@@ -181,10 +201,14 @@ export const RestaurantStatsSchema = z.object({
 })
 export type RestaurantStats = z.infer<typeof RestaurantStatsSchema>
 
-/** 카드 표시용: 식당 본체 + 평점 집계 + 표시용 지역 */
+/** 카드 표시용: 식당 본체 + 평점 집계 + 방문 집계 + 표시용 지역 */
 export type RestaurantWithStats = Restaurant & {
   rating_count: number
   avg_score: number | null
+  /** 최근 7일(KST, 오늘 포함) 방문 체크인 수 — RPC restaurant_visit_stats, 부재 시 0 */
+  visits_7d: number
+  /** 누적 방문 체크인 수 — 부재 시 0 */
+  visits_total: number
   /**
    * 표시용 지역 — 저장된 동 이름(region) 우선, 없으면 최근접 기준점 파생.
    * 좌표·저장값 모두 없으면 null(미지정).

@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { insertRating } from '../../api/ratings'
-import { uploadRatingPhotosBatch } from '../../api/photos'
-import { NewRatingInputSchema } from '../../types/domain'
-import { ratingsKeys, useRatings } from '../../hooks/useRatings'
-import { restaurantsKeys } from '../../hooks/useRestaurants'
-import { useNicknameStore } from '../../store/nicknameStore'
+import { insertRating } from '@/api/ratings'
+import { uploadRatingPhotosBatch } from '@/api/photos'
+import { NewRatingInputSchema } from '@/types/domain'
+import { ratingsKeys, useRatings } from '@/hooks/useRatings'
+import { restaurantsKeys } from '@/hooks/useRestaurants'
+import { useNicknameStore } from '@/store/nicknameStore'
 import { StarRating } from './StarRating'
 import { PhotoPicker } from './PhotoPicker'
-import { Icon } from '../ui/Icon'
-import type { ResizedImage } from '../../utils/photoResize'
+import { Icon } from '@/components/ui/Icon'
+import type { ResizedImage } from '@/utils/photoResize'
 
 // 사진 첨부 UI 토글 — 추후 재활성화 시 true로. (PhotoPicker/photos API는 보존)
 const ENABLE_PHOTO_UPLOAD = false

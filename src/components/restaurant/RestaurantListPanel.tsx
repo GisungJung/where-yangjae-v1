@@ -12,14 +12,14 @@ import { CategoryChip } from './CategoryChip'
 import { RestaurantCard } from './RestaurantCard'
 import { SheetTypeToggle } from './SheetTypeToggle'
 import { ErrorBox, HomeEmptyState, SkeletonList } from './homeListStates'
-import { SortPill } from '../ui/SortPill'
-import { Icon } from '../ui/Icon'
+import { SortPill } from '@/components/ui/SortPill'
+import { Icon } from '@/components/ui/Icon'
 import {
   SORT_OPTIONS,
   type RestaurantFilters,
-} from '../../hooks/useRestaurantFilters'
-import { CATEGORIES } from '../../types/domain'
-import { isSupabaseConfigured } from '../../lib/supabase'
+} from '@/hooks/useRestaurantFilters'
+import { CATEGORIES } from '@/types/domain'
+import { isSupabaseConfigured } from '@/lib/supabase'
 
 interface Props {
   filters: RestaurantFilters

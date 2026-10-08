@@ -8,15 +8,15 @@
 
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { RatingPhoto, RatingWithReviewer } from '../../types/domain'
-import { formatYmd } from '../../utils/format'
+import type { RatingPhoto, RatingWithReviewer } from '@/types/domain'
+import { formatYmd } from '@/utils/format'
 import { StarRating } from './StarRating'
-import { useNicknameStore } from '../../store/nicknameStore'
-import { deleteRating, updateRating } from '../../api/ratings'
-import { getPhotoPublicUrl } from '../../api/photos'
-import { ratingsKeys } from '../../hooks/useRatings'
-import { restaurantsKeys } from '../../hooks/useRestaurants'
-import { usePhotosByRestaurant } from '../../hooks/usePhotos'
+import { useNicknameStore } from '@/store/nicknameStore'
+import { deleteRating, updateRating } from '@/api/ratings'
+import { getPhotoPublicUrl } from '@/api/photos'
+import { ratingsKeys } from '@/hooks/useRatings'
+import { restaurantsKeys } from '@/hooks/useRestaurants'
+import { usePhotosByRestaurant } from '@/hooks/usePhotos'
 
 interface Props {
   ratings: RatingWithReviewer[]

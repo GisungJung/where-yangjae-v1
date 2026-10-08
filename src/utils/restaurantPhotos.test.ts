@@ -4,7 +4,7 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import type { RestaurantPhoto } from '../types/domain'
+import type { RestaurantPhoto } from '@/types/domain'
 import { groupPhotosByRestaurant, pickCover, planPhotoSave } from './restaurantPhotos'
 
 const R1 = '11111111-1111-4111-8111-111111111111'

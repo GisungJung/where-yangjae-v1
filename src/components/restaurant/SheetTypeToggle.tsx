@@ -5,8 +5,8 @@
  * 사내 컨텍스트에서는 점심 / 저녁회식 표기를 쓴다.
  */
 
-import type { SheetType } from '../../types/domain'
-import { classNames } from '../../utils/format'
+import type { SheetType } from '@/types/domain'
+import { classNames } from '@/utils/format'
 
 export type SheetTypeFilter = SheetType | 'all'
 

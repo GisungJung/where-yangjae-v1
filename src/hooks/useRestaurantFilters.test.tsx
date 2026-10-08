@@ -10,7 +10,7 @@
 
 import { describe, expect, it } from 'vitest'
 import { act, renderHook } from '@testing-library/react'
-import type { RestaurantWithStats } from '../types/domain'
+import type { RestaurantWithStats } from '@/types/domain'
 import {
   PAGE_SIZE,
   useRestaurantFilters,
@@ -37,6 +37,8 @@ function mk(over: Partial<RestaurantWithStats>): RestaurantWithStats {
     updated_at: '2026-01-01T00:00:00Z',
     rating_count: 0,
     avg_score: null,
+    visits_7d: 0,
+    visits_total: 0,
     ...over,
   }
 }
@@ -103,6 +105,19 @@ describe('useRestaurantFilters', () => {
 
     act(() => result.current.setSortKey('name'))
     expect(result.current.sorted.map((r) => r.name)).toEqual(['가', '나', '다'])
+  })
+
+  it('visits 정렬은 최근 7일 방문 내림차순, 동점이면 누적 방문 내림차순', () => {
+    const list = [
+      mk({ name: 'A', visits_7d: 2, visits_total: 10 }),
+      mk({ name: 'B', visits_7d: 5, visits_total: 5 }),
+      mk({ name: 'C', visits_7d: 2, visits_total: 20 }),
+      mk({ name: 'D', visits_7d: 0, visits_total: 0, avg_score: 5, rating_count: 3 }),
+    ]
+    const { result } = renderHook(() => useRestaurantFilters(list))
+
+    act(() => result.current.setSortKey('visits'))
+    expect(result.current.sorted.map((r) => r.name)).toEqual(['B', 'C', 'A', 'D'])
   })
 
   it('loadMore로 페이지가 늘고 필터가 바뀌면 PAGE_SIZE로 리셋된다', () => {

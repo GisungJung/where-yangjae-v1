@@ -7,7 +7,7 @@
  * 평가 0건일 때 좌측은 "—", 우측엔 빈 상태 안내.
  */
 
-import type { RatingWithReviewer } from '../../types/domain'
+import type { RatingWithReviewer } from '@/types/domain'
 import { StarRating } from './StarRating'
 
 interface Props {

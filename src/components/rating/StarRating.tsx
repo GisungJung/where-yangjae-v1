@@ -9,7 +9,7 @@
  */
 
 import { useState } from 'react'
-import { classNames } from '../../utils/format'
+import { classNames } from '@/utils/format'
 
 type Size = 'sm' | 'md' | 'lg'
 

@@ -7,13 +7,13 @@
  *   ERRCODE 54000으로 차단; 메시지는 트리거 측에서 사용자 친화적으로 제공.
  */
 
-import { supabase } from '../lib/supabase'
+import { supabase } from '@/lib/supabase'
 import { upsertReviewerByNickname } from './reviewers'
 import {
   RatingWithReviewerSchema,
   type Rating,
   type RatingWithReviewer,
-} from '../types/domain'
+} from '@/types/domain'
 
 /** 특정 식당의 평가 + 닉네임 조인 목록. */
 export async function fetchRatingsByRestaurant(

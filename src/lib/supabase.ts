@@ -14,8 +14,8 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
-import type { Database } from '../types/database'
-import { getCurrentReviewerId } from '../store/nicknameStore'
+import type { Database } from '@/types/database'
+import { getCurrentReviewerId } from '@/store/nicknameStore'
 
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const key =

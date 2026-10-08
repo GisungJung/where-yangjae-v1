@@ -5,9 +5,9 @@
  * 마크업은 기존 HomePage 내부 구현을 그대로 이동.
  */
 
-import { EmptyState } from '../empty/EmptyState'
-import { Icon } from '../ui/Icon'
-import type { Category } from '../../types/domain'
+import { EmptyState } from '@/components/empty/EmptyState'
+import { Icon } from '@/components/ui/Icon'
+import type { Category } from '@/types/domain'
 
 export function SkeletonList() {
   return (

@@ -1,6 +1,6 @@
-import { supabase } from '../lib/supabase'
-import { getCurrentReviewerId } from '../store/nicknameStore'
-import { ReviewerSchema, type Reviewer } from '../types/domain'
+import { supabase } from '@/lib/supabase'
+import { getCurrentReviewerId } from '@/store/nicknameStore'
+import { ReviewerSchema, type Reviewer } from '@/types/domain'
 
 /**
  * reviewer 단건 조회 — 상세 화면 등록자 표시용.

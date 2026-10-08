@@ -10,7 +10,7 @@ import { useState } from 'react'
 import {
   searchKakaoPlaces,
   type KakaoPlaceSearchResult,
-} from '../../lib/kakao'
+} from '@/lib/kakao'
 
 export interface PickedPlace {
   name: string
